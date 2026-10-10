@@ -2,14 +2,15 @@
 
 Wiked maintains operational knowledge in progressively navigated Markdown,
 using an instance contract, human-governed authoring, and a portable validator.
-This is the methodology's source tree. Consumer repositories install the
+This is the methodology's source tree, not an operational wiki or a consumer.
+Consumer repositories install the
 distribution and own their wiki, contract, ingestion material, and governance.
 
 ## Start here
 
 - [AGENTS.md](./AGENTS.md) and [context map](./CONTEXT-MAP.md): source authority.
 - [Source vocabulary](./docs/CONTEXT.md) and [development workflow](./docs/metodologia.md).
-- [Distribution manifest](./.agents/wiked-manifest.yaml): Wiked 1.4.0 and its 16 owned files.
+- [Distribution manifest](./distr/agents/wiked-manifest.yaml): Wiked 1.4.0 and its 16 owned files.
 - [Historical research](./reports/README.md): preserved research, not an approved product specification.
 
 ## Development
@@ -50,7 +51,9 @@ Defining product dependency provisioning remains separate future work.
 
 ## Distribution and publication
 
-The manifest paths are relative to `.agents/`. Those files are the copyable
+The distribution source lives in `distr/agents/`, outside automatic agent skill
+discovery. Manifest paths are relative to that directory at source and to
+`.agents/` when installed in a consumer. Those files are the copyable
 product; source tests, `docs/`, research, and agent-authoring context are not
 consumer runtime dependencies. Unlisted consumer files must be preserved.
 

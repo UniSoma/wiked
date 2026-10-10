@@ -29,9 +29,11 @@ Before creating or changing governed content, invoke the environment-provided
   agent's installed skill. Those operations belong to humans.
 - Run all Python commands through `uv run`. Runtime or test changes require
   `uv run pytest`; instruction-only changes require targeted textual checks.
-- `.agents/skills/wiked/` is the canonical source distribution here, not a local
+- `distr/agents/skills/wiked/` is the canonical source distribution here, not a local
   wiki installation. Its consumer workflows are not source-authoring instructions.
-- Preserve ownership boundaries in `.agents/wiked-manifest.yaml`. Consumer wiki,
+  Keep distribution sources outside automatic skill-discovery directories;
+  consumers install the manifested files under their own `.agents/`.
+- Preserve ownership boundaries in `distr/agents/wiked-manifest.yaml`. Consumer wiki,
   contract, ingestion material, governance, and unrelated agent files remain
   consumer-owned. Never embed a real consumer as a required source fixture.
 - The distributed runtime and instance contract are the active runtime interfaces.
@@ -39,9 +41,9 @@ Before creating or changing governed content, invoke the environment-provided
 
 ## Layout
 
-- `.agents/skills/wiked/`: copyable instructions, schema, and portable runtime.
-- `.agents/wiked-manifest.yaml`: version and exact distribution ownership.
-- `.agents/commands/wiked-setup.md`: thin consumer setup adapter.
+- `distr/agents/skills/wiked/`: copyable instructions, schema, and portable runtime.
+- `distr/agents/wiked-manifest.yaml`: version and exact distribution ownership.
+- `distr/agents/commands/wiked-setup.md`: thin consumer setup adapter.
 - `docs/`: source-development vocabulary and workflow.
 - `tests/`: synthetic coverage and explicitly selected external integration.
 - `reports/`: historical, non-normative research and its provenance.

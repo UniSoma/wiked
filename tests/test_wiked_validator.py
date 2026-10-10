@@ -12,11 +12,12 @@ import yaml
 
 
 ROOT = Path(__file__).parents[1]
-WIKED = ROOT / ".agents/skills/wiked"
+DISTRIBUTION = ROOT / "distr/agents"
+WIKED = DISTRIBUTION / "skills/wiked"
 
 
 def test_cutover_leaves_one_self_contained_manifested_distribution() -> None:
-    manifest = yaml.safe_load((ROOT / ".agents/wiked-manifest.yaml").read_text(encoding="utf-8"))
+    manifest = yaml.safe_load((DISTRIBUTION / "wiked-manifest.yaml").read_text(encoding="utf-8"))
     owned = {
         path
         for paths in manifest["components"].values()
@@ -25,12 +26,12 @@ def test_cutover_leaves_one_self_contained_manifested_distribution() -> None:
     distributed = {
         "wiked-manifest.yaml",
         "commands/wiked-setup.md",
-        *(str(path.relative_to(ROOT / ".agents")) for path in WIKED.rglob("*") if path.is_file()),
+        *(str(path.relative_to(DISTRIBUTION)) for path in WIKED.rglob("*") if path.is_file()),
     }
 
     assert manifest["preserve_unlisted_files"] is True
     assert owned == distributed
-    assert all((ROOT / ".agents" / path).is_file() for path in owned)
+    assert all((DISTRIBUTION / path).is_file() for path in owned)
     assert not (ROOT / "scripts/validate_wiki.py").exists()
     assert not (ROOT / "docs/contratos/estrutura-da-wiki.yaml").exists()
 
@@ -38,7 +39,7 @@ def test_cutover_leaves_one_self_contained_manifested_distribution() -> None:
     version = re.search(r'^METHODOLOGY_VERSION = "([^"]+)"$', runtime, re.MULTILINE)
     assert version and version.group(1) == str(manifest["distribution_version"])
 
-    text_artifacts = [ROOT / ".agents" / path for path in owned if Path(path).suffix in {".md", ".py", ".json", ".yaml"}]
+    text_artifacts = [DISTRIBUTION / path for path in owned if Path(path).suffix in {".md", ".py", ".json", ".yaml"}]
     assert not [path for path in text_artifacts if "docs/" in path.read_text(encoding="utf-8")]
 
 
@@ -129,8 +130,8 @@ def contract() -> dict[str, object]:
 
 
 def test_namespaced_setup_command_routes_to_the_distributed_guide() -> None:
-    manifest = yaml.safe_load((ROOT / ".agents/wiked-manifest.yaml").read_text(encoding="utf-8"))
-    command = (ROOT / ".agents/commands/wiked-setup.md").read_text(encoding="utf-8")
+    manifest = yaml.safe_load((DISTRIBUTION / "wiked-manifest.yaml").read_text(encoding="utf-8"))
+    command = (DISTRIBUTION / "commands/wiked-setup.md").read_text(encoding="utf-8")
 
     assert "commands/wiked-setup.md" in manifest["components"]["commands"]
     assert "guides/setup.md" in command

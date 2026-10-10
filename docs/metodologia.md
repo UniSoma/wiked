@@ -1,6 +1,6 @@
 # Wiked methodology evolution
 
-This document describes how Wiked is developed in its source repository. Executable consumer workflows live entirely in `.agents/skills/wiked/`; this document must not be copied as a runtime dependency or used as operational evidence.
+This document describes how Wiked is developed in its source repository. Executable consumer workflows are authored entirely in `distr/agents/skills/wiked/` and installed under `.agents/skills/wiked/` in consumers; this document must not be copied as a runtime dependency or used as operational evidence.
 
 ## Objective
 
@@ -10,7 +10,7 @@ This repository authors Wiked. Consumer repositories install the distribution an
 
 ## Source architecture
 
-The canonical distribution is `.agents/skills/wiked/`. Its `SKILL.md` classifies consumer requests and lazy-loads only the applicable guide. The distribution owns generic instructions, the contract schema, and the portable validator; `.agents/wiked-manifest.yaml` identifies every owned file and requires unrelated files to be preserved.
+The canonical distribution source is `distr/agents/skills/wiked/`, outside automatic skill-discovery directories. Its `SKILL.md` classifies consumer requests and lazy-loads only the applicable guide. The distribution owns generic instructions, the contract schema, and the portable validator; `distr/agents/wiked-manifest.yaml` identifies every owned file and requires unrelated files to be preserved. Manifest paths are relative to `distr/agents/` at source and to `.agents/` in the consumer installation. This repository is not a consumer and does not perform operational content indexing.
 
 A consumer owns `wiki/wiki-structure.yaml`, operational Markdown under `wiki/`, ingestion material under the fixed `raw/` workspace, and its Knot records. Pending local sources remain under `raw/`; validated indexing moves only ticket-selected material to `raw/archive/YYYY-MM-DD_<ticket-id>/`. The local contract configures Wiked but does not encode human qualification or ingestion paths, move consumer terminology or facts into the distribution, or decide whether ingestion material is persisted in Git. The skill must remain usable without `docs/`.
 
@@ -51,7 +51,7 @@ consumer operations, which use the installed skill and local Instance contract.
 
 - Instruction-only changes use Targeted textual checks. Verify active links, English generic instructions, explicit author-versus-consumer identity, absence of `docs/` dependencies from the skill, and correct routing to the local contract.
 - Python runtime or test changes use `uv run pytest`. The default suite covers generic fixtures without a real consumer or tracker. Optional integration uses `WIKED_CONSUMER_ROOT=/absolute/path/to/consumer uv run pytest -m integration`; the named external consumer must provide its contract and Knot environment.
-- The Distributed runtime can be invoked directly for an authorized external proof with `uv run --script .agents/skills/wiked/scripts/validate_wiki.py --repository-root /absolute/path/to/consumer`. The source root is not a consumer.
+- The Distributed runtime can be invoked directly for an authorized external proof with `uv run --script distr/agents/skills/wiked/scripts/validate_wiki.py --repository-root /absolute/path/to/consumer`. The source root is not a consumer.
 - Consumer wiki changes follow the validation selected by the installed skill and the Instance contract. Do not substitute a source-development command for the consumer route.
 
 Do not run redundant validation commands when one route already covers the changed file types. Errors block acceptance; warnings require explicit disposition but never authorize an automated semantic decision.

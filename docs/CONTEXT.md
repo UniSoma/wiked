@@ -6,7 +6,7 @@ Canonical vocabulary for maintaining and evolving Wiked at its source repository
 
 **Source repository**: the repository in which Wiked's distribution, schema, runtime, tests, and release material are authored and verified.
 
-**Consumer repository**: a repository that installs Wiked and contains a configured operational wiki. A source repository may temporarily also be a consumer, but the two authorities remain separate.
+**Consumer repository**: a repository that installs Wiked and contains a configured operational wiki. This source repository is not a consumer and does not perform operational content indexing; consumer behavior is exercised through synthetic tests or an explicitly selected external Reference instance.
 
 **Reference instance**: an external consumer explicitly selected to exercise Wiked integration without placing its domain knowledge in the generic distribution. It is optional and never required by the default source suite.
 
@@ -14,7 +14,7 @@ Canonical vocabulary for maintaining and evolving Wiked at its source repository
 
 ## Distribution and interfaces
 
-**Wiked distribution**: the versioned, copyable files owned by Wiked and listed exactly in `.agents/wiked-manifest.yaml`.
+**Wiked distribution**: the versioned, copyable files owned by Wiked and listed exactly in `distr/agents/wiked-manifest.yaml` at source. Distribution sources remain outside automatic skill-discovery directories; consumers install the manifested files under `.agents/`.
 
 **Distribution manifest**: the namespaced inventory that declares the distribution version, entrypoint, owned components, and preservation policy for unlisted files.
 
