@@ -1,0 +1,278 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wiked.dev/contracts/wiki-structure/1.0/schema.json",
+  "title": "Wiked wiki structure contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "methodology_version",
+    "language",
+    "initial_content",
+    "topology",
+    "naming",
+    "navigation",
+    "frontmatter",
+    "page_types",
+    "states",
+    "sections",
+    "assets",
+    "diagrams",
+    "provenance",
+    "pendency_tracking",
+    "proposal_tracking",
+    "rules"
+  ],
+  "allOf": [
+    {
+      "if": {"required": ["structured_sections"]},
+      "then": {"properties": {"rules": {"required": ["structured_sections"]}}}
+    }
+  ],
+  "properties": {
+    "contract_version": {"const": "1.0"},
+    "methodology_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "language": {"type": "string", "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$"},
+    "initial_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "purpose", "audience", "scope", "context_terms"],
+      "properties": {
+        "title": {"$ref": "#/$defs/nonEmptyString"},
+        "purpose": {"$ref": "#/$defs/nonEmptyString"},
+        "audience": {"$ref": "#/$defs/nonEmptyString"},
+        "scope": {"$ref": "#/$defs/nonEmptyString"},
+        "context_terms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["term", "definition"],
+            "properties": {
+              "term": {"$ref": "#/$defs/nonEmptyString"},
+              "definition": {"$ref": "#/$defs/nonEmptyString"}
+            }
+          }
+        }
+      }
+    },
+    "topology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trunks", "required_trunks", "sources_trunk", "max_depth", "assets_directory"],
+      "properties": {
+        "trunks": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/pathSegment"}},
+        "required_trunks": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/pathSegment"}},
+        "sources_trunk": {"$ref": "#/$defs/pathSegment"},
+        "max_depth": {"type": "integer", "minimum": 1},
+        "assets_directory": {"$ref": "#/$defs/pathSegment"}
+      }
+    },
+    "naming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pattern"],
+      "properties": {"pattern": {"type": "string", "minLength": 1}}
+    },
+    "navigation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root_index", "trunk_index", "context_file"],
+      "properties": {
+        "root_index": {"$ref": "#/$defs/markdownFile"},
+        "trunk_index": {"$ref": "#/$defs/markdownFile"},
+        "context_file": {"$ref": "#/$defs/markdownFile"},
+        "authoring_file": {"$ref": "#/$defs/markdownFile"}
+      }
+    },
+    "frontmatter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["marker", "exceptions"],
+      "properties": {
+        "marker": {"type": "string", "minLength": 1},
+        "exceptions": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/markdownFile"}}
+      }
+    },
+    "page_types": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/pageType"}
+    },
+    "states": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "sections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_record", "grounded_pages", "content_sources", "no_content"],
+      "properties": {
+        "source_record": {"$ref": "#/$defs/nonEmptyString"},
+        "grounded_pages": {"$ref": "#/$defs/nonEmptyString"},
+        "content_sources": {"$ref": "#/$defs/nonEmptyString"},
+        "no_content": {"$ref": "#/$defs/nonEmptyString"}
+      }
+    },
+    "structured_sections": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/structuredSection"}
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed_extensions", "forbidden_files", "allow_subdirectories"],
+      "properties": {
+        "allowed_extensions": {"$ref": "#/$defs/extensionList"},
+        "forbidden_files": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/nonEmptyString"}},
+        "allow_subdirectories": {"type": "boolean"}
+      }
+    },
+    "diagrams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_extensions", "source_extension", "visualization_extension", "applies_to_roles"],
+      "properties": {
+        "required_extensions": {"$ref": "#/$defs/extensionList"},
+        "source_extension": {"$ref": "#/$defs/extension"},
+        "visualization_extension": {"$ref": "#/$defs/extension"},
+        "applies_to_roles": {"$ref": "#/$defs/stringList"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_role", "content_roles", "record_fields", "publication_date_field", "publication_unknown", "date_fields", "indexed_field", "indexed_record_field", "no_content_states"],
+      "properties": {
+        "source_role": {"$ref": "#/$defs/nonEmptyString"},
+        "content_roles": {"$ref": "#/$defs/stringList"},
+        "record_fields": {"$ref": "#/$defs/stringList"},
+        "publication_date_field": {"$ref": "#/$defs/nonEmptyString"},
+        "publication_unknown": {"$ref": "#/$defs/nonEmptyString"},
+        "date_fields": {"$ref": "#/$defs/stringList"},
+        "indexed_field": {"$ref": "#/$defs/nonEmptyString"},
+        "indexed_record_field": {"$ref": "#/$defs/nonEmptyString"},
+        "no_content_states": {"$ref": "#/$defs/nonEmptyStringList"}
+      }
+    },
+    "pendency_tracking": {"$ref": "#/$defs/tracking"},
+    "proposal_tracking": {
+      "allOf": [
+        {"$ref": "#/$defs/tracking"},
+        {
+          "type": "object",
+          "required": ["frontmatter_field", "proposal_state"],
+          "properties": {
+            "frontmatter_field": {"$ref": "#/$defs/nonEmptyString"},
+            "proposal_state": {"$ref": "#/$defs/nonEmptyString"}
+          }
+        }
+      ]
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+       "required": ["contract", "topology", "navigation", "frontmatter", "h1", "reference", "assets", "diagrams", "provenance", "contextual_citation", "pendency_location", "pendency_association", "pendency_status", "pendency_inverse", "proposal_location", "proposal_association", "proposal_status", "proposal_inverse"],
+      "properties": {
+        "contract": {"$ref": "#/$defs/rule"},
+        "topology": {"$ref": "#/$defs/rule"},
+        "navigation": {"$ref": "#/$defs/rule"},
+        "frontmatter": {"$ref": "#/$defs/rule"},
+        "h1": {"$ref": "#/$defs/rule"},
+        "reference": {"$ref": "#/$defs/rule"},
+        "assets": {"$ref": "#/$defs/rule"},
+        "diagrams": {"$ref": "#/$defs/rule"},
+        "provenance": {"$ref": "#/$defs/rule"},
+        "contextual_citation": {"$ref": "#/$defs/rule"},
+        "pendency_location": {"$ref": "#/$defs/rule"},
+        "pendency_association": {"$ref": "#/$defs/rule"},
+        "pendency_status": {"$ref": "#/$defs/rule"},
+        "pendency_inverse": {"$ref": "#/$defs/rule"},
+        "proposal_location": {"$ref": "#/$defs/rule"},
+        "proposal_association": {"$ref": "#/$defs/rule"},
+        "proposal_status": {"$ref": "#/$defs/rule"},
+        "proposal_inverse": {"$ref": "#/$defs/rule"},
+        "structured_sections": {"$ref": "#/$defs/rule"}
+      }
+    }
+  },
+  "$defs": {
+    "pathSegment": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+    "markdownFile": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*\\.md$"},
+    "nonEmptyString": {"type": "string", "minLength": 1},
+    "stringList": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "nonEmptyStringList": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "extension": {"type": "string", "pattern": "^[A-Za-z0-9]+$"},
+    "extensionList": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/extension"}},
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["severity"],
+      "properties": {"severity": {"enum": ["error", "warning"]}}
+    },
+    "pageType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roles", "states", "fields", "sections"],
+      "properties": {
+        "roles": {"$ref": "#/$defs/stringList"},
+        "states": {"$ref": "#/$defs/nonEmptyStringList"},
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "optional", "date"],
+          "properties": {
+            "required": {"$ref": "#/$defs/nonEmptyStringList"},
+            "optional": {"$ref": "#/$defs/stringList"},
+            "date": {"$ref": "#/$defs/stringList"}
+          }
+        },
+        "sections": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required"],
+          "properties": {"required": {"$ref": "#/$defs/stringList"}}
+        }
+      }
+    },
+    "structuredSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["section", "page_types", "min_records", "max_records", "fields"],
+      "properties": {
+        "section": {"$ref": "#/$defs/nonEmptyString"},
+        "page_types": {"$ref": "#/$defs/stringList"},
+        "min_records": {"type": "integer", "minimum": 0},
+        "max_records": {"type": ["integer", "null"], "minimum": 0},
+        "fields": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/structuredField"}}
+      }
+    },
+    "structuredField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value_types", "min_items", "max_items"],
+      "properties": {
+        "name": {"$ref": "#/$defs/nonEmptyString"},
+        "value_types": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["text", "page"]}},
+        "min_items": {"type": "integer", "minimum": 0},
+        "max_items": {"type": ["integer", "null"], "minimum": 0},
+        "empty_value": {"$ref": "#/$defs/nonEmptyString"},
+        "disjoint_with": {"$ref": "#/$defs/stringList"}
+      }
+    },
+    "tracking": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roles", "section", "id_pattern", "tag", "valid_statuses", "warning_statuses"],
+      "properties": {
+        "roles": {"$ref": "#/$defs/nonEmptyStringList"},
+        "section": {"$ref": "#/$defs/nonEmptyString"},
+        "id_pattern": {"type": "string", "minLength": 1},
+        "tag": {"$ref": "#/$defs/nonEmptyString"},
+        "valid_statuses": {"$ref": "#/$defs/nonEmptyStringList"},
+        "warning_statuses": {"$ref": "#/$defs/stringList"},
+        "frontmatter_field": {"$ref": "#/$defs/nonEmptyString"},
+        "proposal_state": {"$ref": "#/$defs/nonEmptyString"}
+      }
+    }
+  }
+}

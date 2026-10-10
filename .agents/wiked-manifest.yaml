@@ -1,0 +1,27 @@
+namespace: wiked
+distribution_version: 1.4.0
+owner: Wiked
+entrypoint: skills/wiked/SKILL.md
+components:
+  metadata:
+    - wiked-manifest.yaml
+  instructions:
+    - skills/wiked/SKILL.md
+    - skills/wiked/guides/query.md
+    - skills/wiked/guides/assisted-indexing.md
+    - skills/wiked/guides/maintenance.md
+    - skills/wiked/guides/grill.md
+    - skills/wiked/guides/knot.md
+    - skills/wiked/guides/modeling.md
+    - skills/wiked/guides/setup.md
+    - skills/wiked/guides/d2.md
+    - skills/wiked/guides/export.md
+  commands:
+    - commands/wiked-setup.md
+  contracts:
+    - skills/wiked/contracts/README.md
+    - skills/wiked/contracts/wiki-structure.schema.json
+  runtime:
+    - skills/wiked/scripts/README.md
+    - skills/wiked/scripts/validate_wiki.py
+preserve_unlisted_files: true

@@ -1,0 +1,20 @@
+# Context map
+
+## Source authority
+
+- [Agent entrypoint](./AGENTS.md): source identity, governance, and invariants.
+- [Source vocabulary](./docs/CONTEXT.md): canonical methodology-development terms.
+- [Development workflow](./docs/metodologia.md): authoring, validation, and publication boundaries.
+- [Distribution manifest](./.agents/wiked-manifest.yaml): exact versioned ownership.
+
+## Product under development
+
+[The distributed skill](./.agents/skills/wiked/SKILL.md) routes workflows in an
+external consumer. It is maintained here as source; it must work without `docs/`.
+Consumer configuration and operational evidence belong to that consumer and are
+not prerequisites for the generic source suite.
+
+## Historical research
+
+[Research provenance](./reports/README.md) identifies the preserved report and
+its limits. Research and tickets are not methodology approval or operational evidence.

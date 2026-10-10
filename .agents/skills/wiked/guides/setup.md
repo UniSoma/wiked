@@ -1,0 +1,22 @@
+# Wiked Setup
+
+Load this guide only for an explicit Wiked initialization or contract migration. Setup is an agent-guided governance flow over human-prepared prerequisites, not an installer.
+
+## Preconditions
+
+- Work from the intended consumer repository root.
+- Require `uv` and `knot`; check optional `d2`, `pandoc`, `weasyprint`, and `rsvg-convert` only for requested capabilities.
+- Require the distributed schema at `contracts/wiki-structure.schema.json` and validator at `scripts/validate_wiki.py`.
+- Do not install tools, initialize or alter Git, replace this skill, or copy from repository-specific documentation.
+
+## Governed Flow
+
+1. Load `knot.md`; create or confirm an open setup ticket with objective and acceptance criteria.
+2. Load `grill.md` and resolve language, purpose, audience, scope, canonical terms and definitions, top-level branches, page types, states, provenance, Knot mappings, and whether approved local review criteria require an authoring reference. Record purpose, audience, scope, and resolved terms under contract `initial_content`.
+3. For an existing contract, validate compatibility and obtain explicit authorization for a defined migration. Never migrate automatically.
+4. Close the grill with an explicit summary and confirmation.
+5. Materialize only the configured root index, resolved context file, optional approved authoring reference, mandatory source index, agreed top-level indexes, schema-valid local contract, and fixed `raw/` and `raw/archive/` directories. The root index contains the configured title, purpose, audience, and scope and links exactly once to every configured reference and top-level index; the context contains every resolved term. Do not create an empty authoring reference or list fictional pages.
+6. Do not create fictional domain pages, placeholder operational claims, or placeholder files in the ingestion directories. Create the configured assets directory even when empty. Humans decide whether to persist ingestion material in Git.
+7. Run the distributed validator with the explicit consumer root and resolve errors before acceptance.
+
+An existing contract is compatible only with `contract_version: 1.0` and a `methodology_version` in the installed major that is not newer than the distribution. Preserve and validate a compatible contract. Otherwise, stop without writing and require a separately, explicitly authorized migration scope and closed grill. Repository-specific migration and generic adoption automation are outside this flow. If the schema or validator is absent or incompatible, report failure and do not claim success. Never rewrite or migrate a contract automatically.
