@@ -31,10 +31,18 @@ To opt in, supply an absolute consumer root (with its contract and Knot CLI):
 WIKED_CONSUMER_ROOT=/absolute/path/to/consumer uv run pytest -m integration
 ```
 
-Methodology changes require an approved open ticket and a closed Methodological
-grill. Authors need environment-provided `grilling` and `knot` skills; these are
-not vendored into the distribution. Initialize and migrate source governance
-manually into this repository before further governed development.
+Read-only methodological review requires no ticket. Do not load or require the
+environment-provided `grilling` skill unless the requester asks to qualify the
+objective; that exception requires a Methodological grill. Otherwise, an
+unavailable skill does not block review.
+
+Methodology changes, including changes arising from review, require an approved
+open ticket and explicit Methodological grill closure before editing. Follow the
+[source development workflow](./docs/metodologia.md). Governed authoring requires
+the environment-provided `grilling` skill; ticket operations require the `knot`
+skill and CLI. These skills are not vendored into the distribution. Initialize
+and migrate source governance manually into this repository before further
+governed development.
 
 The requester-provided `.aishell/Dockerfile` is retained as a sandbox environment.
 It is not part of the distribution manifest or a normative dependency inventory.

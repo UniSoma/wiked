@@ -4,11 +4,18 @@ This repository authors the Wiked methodology, distribution, schema, runtime,
 tests, and development context. It does not host an operational wiki.
 
 Read `CONTEXT-MAP.md`, `docs/CONTEXT.md`, and `docs/metodologia.md` before source
-work. The approved Knot ticket and validating requester define scope and acceptance.
+work. Classify the request before loading `grilling`:
+
+- Read-only methodological review requires no ticket. Do not load or require
+  `grilling` unless the requester asks to qualify the objective; that exception
+  requires a Methodological grill. Otherwise, an unavailable skill does not block review.
+- Creating or changing governed content, including changes arising from a review,
+  requires an approved open Knot ticket and the source-authoring workflow below.
+
+The approved ticket and validating requester define change scope and acceptance.
 Before creating or changing governed content, invoke the environment-provided
 `grilling` skill and explicitly close the Methodological grill as described in
 `docs/metodologia.md`. If a compatible skill is unavailable, stop without editing.
-Read-only reviews do not require a grill unless the requester asks to qualify the objective.
 
 ## Invariants
 

@@ -18,6 +18,26 @@ The Distributed runtime and Instance contract are the repository's only active r
 
 ## Development workflow
 
+### Route the request
+
+Read `CONTEXT-MAP.md`, `docs/CONTEXT.md`, and this document, then distinguish
+read-only methodological review from creating or changing governed content
+before loading the environment-provided `grilling` skill.
+
+Read-only review may inspect source material and report findings without an open
+Knot ticket. Do not load or require `grilling` for this route unless the requester
+asks to qualify the objective. Without that request, an unavailable skill does
+not block review. Requested qualification requires a Methodological grill using
+the skill compatibility, decision, and explicit shared-understanding confirmation
+rules below; it does not by itself require a ticket or authorize edits.
+
+If a review leads to proposed changes, enter the governed-change workflow before
+editing. Review findings do not substitute for an approved open ticket or explicit
+grill closure covering those changes. This source route does not authorize
+consumer operations, which use the installed skill and local Instance contract.
+
+### Governed changes
+
 1. Confirm an open Knot ticket whose scope and acceptance criteria authorize Methodology evolution.
 2. Load `CONTEXT-MAP.md` and `docs/CONTEXT.md`, then invoke the environment-provided `grilling` skill. The skill is a source-authoring dependency, not part of the Wiked distribution. If it is unavailable or does not keep fact-finding with the agent, decisions with the validating requester, unresolved decisions open, and implementation blocked until explicit shared-understanding confirmation, stop without editing governed content.
 3. Establish that the session is methodological, state one coherent objective and its initial file scope, and inspect the affected distribution, source guidance, tests, and Reference instance without treating consumer content as a generic requirement. Compare a proposed rule with every source or distributed guide that executes or constrains it.
