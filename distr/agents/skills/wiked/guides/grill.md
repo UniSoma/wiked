@@ -28,16 +28,15 @@ Finding _facts_ is your job, never the user's. When a frontier question needs a 
 
 The session is done when the frontier is empty: every branch of the design tree visited, nothing left silently assumed. Do not act on it until the user confirms you have reached a shared understanding.
 
-Before closure, only these records are allowed:
+Before closure, keep resolved terms and definitions in the conversation or in Knot tickets and notes. These records may preserve decisions or lateral discoveries without expanding scope; they do not authorize governed-content changes. Unresolved decisions remain open.
 
-- During an operational grill, a resolved domain term may be recorded in the instance context file.
-- Knot tickets and notes may preserve decisions or lateral discoveries without expanding scope.
+Resolving a term during the interview does not authorize writing it to the instance context file. Like any governed-content change, that write requires explicit confirmation of the final summary first. There is no in-session exception for terms or incidental edits to other governed content.
 
 ## Close
 
 When no in-scope decision remains:
 
-1. Summarize the objective, scope, decisions, exceptions, affected content, and lateral pending issues.
+1. Summarize the objective, scope, decisions (including agreed terms and definitions), exceptions, affected content, and lateral pending issues. Distinguish unresolved decisions from agreed terms; records made during the interview do not substitute for confirmation.
 2. Have the confirmed qualified operator explicitly confirm that the summary represents mutual understanding.
 3. Continue the interview after any correction, qualification, or rejection.
 4. Consolidate only after confirmation and within the confirmed scope.

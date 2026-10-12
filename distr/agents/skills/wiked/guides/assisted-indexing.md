@@ -17,7 +17,7 @@ Apply existing local authoring criteria, but do not create or revise them incide
 - Follow `grill.md` as the sole authority for interview mechanics, cadence, qualification, and closure.
 - Separate source statements, current operation, proposed change, unresolved divergence, human decisions, and agent interpretation.
 - Never decide currency, responsibility, terminology, divergence, or scope expansion silently.
-- Record resolved domain terms in the configured context file only when `grill.md` permits that narrow in-session record.
+- Keep resolved domain terms and definitions in the conversation or Knot records until explicit grill closure, as required by `grill.md`; do not write them to the configured context file during the interview.
 - Write discussion and governed content in the configured instance language.
 
 ## Consolidate
@@ -26,7 +26,7 @@ After explicit grill closure:
 
 1. Create one source page per primary source, preserving provenance without wholesale copying.
 2. Record the configured provenance fields, including unavailable dates explicitly.
-3. Update operational pages and indexes according to `modeling.md`.
+3. Record the agreed terms and definitions in the configured context file within the confirmed scope, then update operational pages and indexes according to `modeling.md`.
 4. Use the latest evidence explicitly describing current operation; retain unresolved conflicts as configured pending items.
 5. Attach contextual source-page citations to interpretations, time-sensitive claims, and divergences.
 6. If validated process changes affect a diagram, update canonical Markdown first, then load `d2.md`.
