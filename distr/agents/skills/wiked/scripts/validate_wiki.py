@@ -1080,11 +1080,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository-root", type=Path, required=True)
     parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument("--contract-only", action="store_true", help="Validate only the instance contract; do not read pages or access Knot.")
     args = parser.parse_args(argv)
     repository_root = args.repository_root.resolve()
     schema_path = Path(__file__).resolve().parent.parent / "contracts" / "wiki-structure.schema.json"
     try:
-        problems, files_checked, preflight_failure = validate(repository_root, schema_path)
+        if args.contract_only:
+            contract, problems = validate_contract(repository_root / "wiki/wiki-structure.yaml", schema_path)
+            problems = sorted(problems, key=issue_key)
+            files_checked = 0
+            preflight_failure = contract is None
+        else:
+            problems, files_checked, preflight_failure = validate(repository_root, schema_path)
     except (OSError, UnicodeError, ValueError) as exc:
         problems = [issue("runtime.failure", "error", repository_root, f"Could not traverse the repository: {exc}")]
         files_checked = 0

@@ -1,8 +1,9 @@
 # Publication and distribution contract
 
 This source-development contract was approved through the Methodological grill
-for `wik-01m2tphwrc4f` on 2026-10-10. It specifies the release and installer work;
-it does not claim those capabilities are already implemented. It is not an
+for `wik-01m2tphwrc4f` on 2026-10-10, with the interactive-entry amendment explicitly
+approved for `wik-01m4s6rgnfhr` on 2026-10-12. It governs release and installer work;
+installer verification uses synthetic releases and does not establish publication. It is not an
 installed skill dependency or authority to operate a consumer wiki.
 
 ## Audience, authority, and delivery
@@ -12,9 +13,19 @@ enable an independent user to discover Wiked, install its distribution, and then
 start agent-assisted wiki setup in their own repository.
 
 The maintainer, Volnei Santos, decides methodology versions and approves releases.
-The canonical source is the official Wiked GitHub repository; versioned downloads
-are published through its GitHub Releases. Release preparation must verify and
-document that repository's exact address rather than infer it from schema IDs.
+The canonical source is [UniSoma/wiked](https://github.com/UniSoma/wiked), confirmed
+by the maintainer through the Methodological grill for `wik-01m4s7m8f01s` on
+2026-10-12. The public repository's default branch is `main`; versioned downloads
+belong to its [GitHub Releases](https://github.com/UniSoma/wiked/releases).
+Publication remains pending: `main/scripts/install-wiked.sh` and stable release
+artifacts become available after development is finalized and published. The
+confirmed address is not evidence of installer or release availability. Release
+preparation must verify the documented download paths before announcing them;
+never infer repository authority from schema IDs.
+The maintainer explicitly approved `wik-01m4s821zj1m` to make `UniSoma/wiked` the
+installer's only release origin. Do not expose an origin argument or ask users
+to choose a repository. Synthetic tests intercept transport for the official
+URLs rather than introduce a configurable alternative origin.
 Humans operate Git and publish releases. Agents prepare and verify release material
 without installing tools on the host or replacing their running skill.
 
@@ -47,8 +58,13 @@ Installer tests must not require an already published release or a real consumer
   installed version. Selecting older releases or offering downgrade is outside
   the initial installer interface.
 - Downloads use HTTPS. Check SHA-256 before extracting the distribution or
-  changing the installation. README instructions must also explain verification
-  of the downloaded installer before execution. Checksums provide integrity, not
+  changing the installation. The README presents direct `curl ... | bash`
+  execution first, followed by verification of a versioned downloaded installer
+  before execution. Direct execution of the existing script from mutable `main`
+  is an explicitly approved convenience exception: it does not verify the script
+  itself first. Explain that downstream artifact verification cannot protect an
+  already running compromised script. This exception does not weaken archive
+  integrity, version pinning, or release immutability. Checksums provide integrity, not
   an independent publisher signature; independent signing is deferred.
 
 ## Installation interface and prerequisites
@@ -57,6 +73,24 @@ The deterministic Bash installer is invoked by a human following the README.
 Initial supported environments are Linux, macOS, and Windows through WSL; native
 Windows is outside the first delivery. Installation requires network access to
 the official release channel; an offline bundle is not part of this delivery.
+
+The existing script provides two usages, not a separate bootstrap: Bash owns
+human questions and confirmations; Python owns release selection, validation,
+planning, and transactional execution. Ask for a missing destination
+through the controlling terminal, never stdin, which may contain
+the piped script. Supplied values bypass questions, not authoritative validation.
+Display and confirm only the selected latest stable version; do not introduce
+older-version selection. Keep that selection, candidate, and plan in one
+operation through final approval. The operation-level approval follows Python's
+displayed plan, not merely the initial parameter questions.
+
+Automation supplies parameters and explicit approval options through the same
+interface. `--yes` approves the selected stable version and operation plan, not
+collisions or migration tickets. Without a controlling terminal, installation
+requires explicit approvals; stdin text is never consent. Dry runs and explicit
+recovery remain available without a terminal or installation approval. Defaults
+may be accepted through explicit noninteractive invocation. Preserve all
+ownership, compatibility, concurrency, and recovery checks in both usages.
 
 Both `uv` and `knot` must already be available before any distribution artifacts
 are installed. The installer checks prerequisites and explains missing tools; it
@@ -131,6 +165,10 @@ confirmation and use only an existing tracker in the consumer repository. Never
 initialize one or fall back to an ancestor tracker. Without a local tracker,
 provide the migration instructions instead. This is the only approved consumer
 governance write performed by the installer and does not authorize migration.
+Interactive approval is separate from the operation approval; automation may
+use a separate explicit `--approve-migration-ticket` option. `--yes` never grants
+this permission, and dry runs never create tickets. Verify tracker locality
+before any create command, including configured ticket/archive paths.
 
 After success, provide the instruction to begin `wiked-setup` using the installed
 skill and consumer contract. Do not launch an agent or create domain content.
@@ -141,6 +179,11 @@ skill and consumer contract. Do not launch an agent or create domain content.
 runtime interface, and synthetic failure/recovery coverage. It establishes the
 artifact format without requiring a live release. Runtime or test changes require
 `uv run pytest` under the source-development workflow.
+
+`wik-01m4s6rgnfhr` evolves the existing Bash interaction and README entry order
+under the amendment above. Test a piped script with a synthetic controlling
+terminal, missing and explicit arguments, declined approvals, and unattended
+execution. The distribution version and manifested inventory are unchanged.
 
 `wik-01m4khsrmqya` follows the tested installer: prepare the manifested artifact,
 MIT licensing, checksums, exact official download links, and the complete README

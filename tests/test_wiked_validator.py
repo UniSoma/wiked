@@ -129,6 +129,38 @@ def contract() -> dict[str, object]:
     }
 
 
+def test_contract_only_cli_never_reads_pages_or_tracker(tmp_path: Path) -> None:
+    script = copy_runtime(tmp_path)
+    repository = tmp_path / "consumer"
+    (repository / "wiki").mkdir(parents=True)
+    path = repository / "wiki/wiki-structure.yaml"
+    path.write_text(yaml.safe_dump(contract()))
+    (repository / "wiki/unreadable.md").write_bytes(b"\xff")
+    tools = tmp_path / "bin"
+    tools.mkdir()
+    knot = tools / "knot"
+    knot.write_text(f"#!/bin/sh\ntouch '{tmp_path / 'tracker-called'}'\nexit 99\n")
+    knot.chmod(0o755)
+
+    def invoke():
+        return subprocess.run(
+            ["uv", "run", "--script", str(script), "--repository-root", str(repository), "--contract-only", "--format", "json"],
+            env={**os.environ, "PATH": str(tools) + os.pathsep + os.environ["PATH"]},
+            capture_output=True, text=True,
+        )
+
+    result = invoke()
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["summary"]["files_checked"] == 0
+    incompatible = contract()
+    incompatible["methodology_version"] = "2.0.0"
+    path.write_text(yaml.safe_dump(incompatible))
+    assert invoke().returncode == 2
+    path.unlink()
+    assert invoke().returncode == 2
+    assert not (tmp_path / "tracker-called").exists()
+
+
 def test_namespaced_setup_command_routes_to_the_distributed_guide() -> None:
     manifest = yaml.safe_load((DISTRIBUTION / "wiked-manifest.yaml").read_text(encoding="utf-8"))
     command = (DISTRIBUTION / "commands/wiked-setup.md").read_text(encoding="utf-8")

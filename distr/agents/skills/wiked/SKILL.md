@@ -12,7 +12,7 @@ Wiked maintains progressively navigated operational Markdown while separating ev
 1. Resolve the consumer repository root from the user's workspace. Never infer it from this skill's installation path.
 2. Read `wiki/wiki-structure.yaml`, which configures language, version compatibility, paths, vocabulary labels, page types, states, navigation, an optional local authoring reference, and Knot mappings. It is not operational evidence.
 3. If the contract is absent, use `guides/setup.md` only when the user asks to initialize Wiked. Otherwise stop and report that the instance is not configured.
-4. Read the installed `distribution_version` from `.agents/wiked-manifest.yaml`. Require `contract_version: 1.0` and a `methodology_version` in the installed major that is not newer than the distribution. If either version is malformed or incompatible, stop without processing wiki content; use `guides/setup.md` only for an explicitly requested migration.
+4. Read the installed `distribution_version` from `../../wiked-manifest.yaml`, relative to this skill directory. Require `contract_version: 1.0` and a `methodology_version` in the installed major that is not newer than the distribution. If either version is malformed or incompatible, stop without processing wiki content; use `guides/setup.md` only for an explicitly requested migration.
 5. Classify the request before loading any guide.
 
 ## Route
