@@ -58,7 +58,11 @@ Do not run redundant validation commands when one route already covers the chang
 
 ## Publication boundary
 
-The source layout is ready for independent human custody. Separately governed publication work must define immutable versions, integrity checks, release channels, licensing, installation, and updates. Preparing a tree does not publish it. Agents do not publish releases, install tooling, replace their own skill, or manipulate Git.
+The approved [publication and distribution contract](./distribution.md) defines
+immutable versions, integrity checks, release channels, licensing, installation,
+and updates. Its implementation and first publication are separately tracked
+executor work. Preparing a tree does not publish it. Agents do not publish
+releases, install tooling, replace their own skill, or manipulate Git.
 
 Publication may transfer only files owned by the Distribution manifest and source-development material explicitly assigned to Wiked. Consumer-owned wiki content, contracts, ingestion material, governance, and third-party agent files remain with the consumer. Humans transfer only the selected open source tickets into an independent tracker.
 

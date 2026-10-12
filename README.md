@@ -11,6 +11,7 @@ distribution and own their wiki, contract, ingestion material, and governance.
 - [AGENTS.md](./AGENTS.md) and [context map](./CONTEXT-MAP.md): source authority.
 - [Source vocabulary](./docs/CONTEXT.md) and [development workflow](./docs/metodologia.md).
 - [Distribution manifest](./distr/agents/wiked-manifest.yaml): Wiked 1.4.0 and its 16 owned files.
+- [Publication and distribution contract](./docs/distribution.md): approved release and installer requirements.
 - [Historical research](./reports/README.md): preserved research, not an approved product specification.
 
 ## Development
@@ -47,19 +48,44 @@ governed development.
 
 The requester-provided `.aishell/Dockerfile` is retained as a sandbox environment.
 It is not part of the distribution manifest or a normative dependency inventory.
-Defining product dependency provisioning remains separate future work.
+Product prerequisite handling is defined in the publication and distribution
+contract; implementing it remains executor work.
 
 ## Distribution and publication
 
 The distribution source lives in `distr/agents/`, outside automatic agent skill
 discovery. Manifest paths are relative to that directory at source and to
-`.agents/` when installed in a consumer. Those files are the copyable
+the installation directory (by default `.agents/`) in a consumer. The approved
+installer will also support a custom destination with the same relative tree;
+relocatable skill references and agent discovery instructions remain executor
+work. Those files are the copyable
 product; source tests, `docs/`, research, and agent-authoring context are not
 consumer runtime dependencies. Unlisted consumer files must be preserved.
 
-This tree is prepared for a human's first source-repository commit. It does not
-assert that a remote repository, release, installer, or update channel exists.
-Publication, immutable artifacts, integrity, supported platforms, licensing, and
-human installation/update behavior remain separately governed work. The project
-metadata version describes the development environment; the manifest is the
-authority for the distribution version.
+The official source and release channel are GitHub and GitHub Releases. The
+[approved contract](./docs/distribution.md) defines immutable SemVer releases,
+MIT licensing, manifested archives, SHA-256 verification, and human-run
+installation. This decision does not assert that a release or installer has
+already been published. The project metadata version describes the development
+environment; the manifest is the authority for the distribution version.
+
+### Installing Wiked
+
+The approved entry path is README instructions, a deterministic installer invoked
+by the user, and agent-assisted wiki setup in the consumer repository. Installer
+implementation and verified download commands are pending; the publication
+executor must add the exact official links and commands before announcing the
+first release.
+
+Prepare `uv` and `knot` yourself. Supported targets will be Linux, macOS, and
+Windows through WSL. The installer selects the latest stable release, shows its
+version and planned changes, and requires approval before overwriting files.
+The default destination is `.agents/` from the consumer repository root; a custom
+destination preserves the same tree and requires configuring agent discovery.
+Other contents of that directory remain consumer-owned. Converters are optional
+according to the ingestion capabilities selected during setup.
+
+Updating uses the same installer and checks contract compatibility before
+replacement. It may overwrite approved local modifications to Wiked files, but
+does not migrate the wiki or its contract. See the contract for collisions,
+recovery, and the optional migration-ticket flow.

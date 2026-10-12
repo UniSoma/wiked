@@ -6,7 +6,7 @@ type: task
 priority: 3
 mode: hitl
 created: '2026-08-29T21:40:49.491848512Z'
-updated: '2026-10-10T18:40:22.489098946Z'
+updated: '2026-10-12T19:44:17.985562759Z'
 assignee: VolneiSantos
 tags:
 - metodologia
@@ -27,6 +27,8 @@ acceptance:
   done: false
 - title: Registrar decisão final e abrir trabalhos de implementação separados se aprovados
   done: false
+links:
+- wik-01m4rt9yj681
 ---
 
 ## Description

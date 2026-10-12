@@ -6,6 +6,7 @@
 - [Source vocabulary](./docs/CONTEXT.md): canonical methodology-development terms.
 - [Development workflow](./docs/metodologia.md): authoring, validation, and publication boundaries.
 - [Distribution manifest](./distr/agents/wiked-manifest.yaml): exact versioned ownership.
+- [Publication contract](./docs/distribution.md): approved release and installer requirements, pending execution.
 
 ## Product under development
 
