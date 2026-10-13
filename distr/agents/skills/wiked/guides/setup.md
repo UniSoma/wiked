@@ -19,4 +19,6 @@ Load this guide only for an explicit Wiked initialization or contract migration.
 6. Do not create fictional domain pages, placeholder operational claims, or placeholder files in the ingestion directories. Create the configured assets directory even when empty. Humans decide whether to persist ingestion material in Git.
 7. Run the distributed validator with the explicit consumer root and resolve errors before acceptance.
 
+After a human-installed Wiked update affecting glossary or navigation guidance, consider a consistency review through `maintenance.md`. An update alone authorizes neither wiki corrections nor contract migration.
+
 An existing contract is compatible only with `contract_version: 1.0` and a `methodology_version` in the installed major that is not newer than the distribution. Preserve and validate a compatible contract. Otherwise, stop without writing and require a separately, explicitly authorized migration scope and closed grill. Repository-specific migration and generic adoption automation are outside this flow. If the schema or validator is absent or incompatible, report failure and do not claim success. Never rewrite or migrate a contract automatically.

@@ -29,7 +29,10 @@ For a page type with `structured_sections`, use its named section exclusively fo
 - Create a top-level branch only for a recurring, human-confirmed need.
 - Keep wiki links relative. External links and bare URLs are informational; they do not affect structural validation.
 - Use minimal frontmatter as declared by the page type.
-- Keep canonical domain terms in the configured context file.
+- Keep canonical terms in the configured context (glossary): definitions, essential distinctions, synonyms, terms to avoid, and relevant links. Include only responsibilities needed to define a role, not its operating procedure.
+- Indexes select destinations through useful groupings and brief descriptions; preserve the root's configured title, purpose, audience, and scope. Develop operational details in canonical pages, not navigation summaries. Evidence eligibility still follows configured roles.
+- Prefer alphabetical glossary terms and index entries within useful groupings, unless a human-approved semantic sequence takes precedence. Preserve required links and topology.
+- Before reducing operational detail in context or indexes, inspect the canonical destination for coverage, including conditions, exceptions, state, and provenance; a link alone proves nothing. Preserve uncovered information and resolve gaps or divergences with the human before removal. Page creation or revision requires confirmed scope, not incidental cleanup.
 - Preserve current operation separately from proposals and pending questions.
 
 ## Provenance and Visuals

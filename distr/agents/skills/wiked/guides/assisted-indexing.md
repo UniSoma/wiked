@@ -26,7 +26,7 @@ After explicit grill closure:
 
 1. Create one source page per primary source, preserving provenance without wholesale copying.
 2. Record the configured provenance fields, including unavailable dates explicitly.
-3. Record the agreed terms and definitions in the configured context file within the confirmed scope, then update operational pages and indexes according to `modeling.md`.
+3. Consolidate operational pages, then agreed terms and definitions in the configured context and navigation in indexes, within the confirmed scope. Apply `modeling.md`'s content boundaries and destination coverage check.
 4. Use the latest evidence explicitly describing current operation; retain unresolved conflicts as configured pending items.
 5. Attach contextual source-page citations to interpretations, time-sensitive claims, and divergences.
 6. If validated process changes affect a diagram, update canonical Markdown first, then load `d2.md`.
