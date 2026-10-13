@@ -1,12 +1,13 @@
 ---
 id: wik-01m4rt9yj681
 title: Introduzir mapa opcional de rotas por intenção no Wiked
-status: in_progress
+status: closed
 type: feature
 priority: 3
 mode: hitl
 created: '2026-10-12T19:44:17.985562759Z'
-updated: '2026-10-13T17:23:59.892942550Z'
+updated: '2026-10-13T19:11:43.979894818Z'
+closed: '2026-10-13T19:11:43.979894818Z'
 tags:
 - metodologia
 - wiked
@@ -116,3 +117,7 @@ Methodological grill fechado em 2026-10-13: solicitante confirmou explicitamente
 **2026-10-13T17:23:53.698102580Z**
 
 Implementação fonte concluída para 1.5.0. Schema aceita navigation.intent_map opcional como arquivo Markdown distinto na raiz de wiki/; relações exigem metodologia >=1.5.0 sem mudar contract_version 1.0. Runtime reserva/exige mapa declarado, integra exatamente um link na raiz, valida H1/H2/listas/orientação, destinos operacionais/índices canônicos, labels H1, referências/fragmentos e unicidade por intenção. Auxiliar não recebe papel operacional mesmo com frontmatter inválido; índices preservam restrições. Guias SKILL/query/modeling/assisted-indexing/maintenance/setup e READMEs de interfaces documentam idioma local, carga seletiva, fallback, evidência apenas canônica consultada, consulta sem escrita/autoridade, curadoria e revisão diretamente afetada. Instalador avisa manutenção após mudança efetiva de versão; sem aviso em instalação inicial/reparo/no-op/dry-run, sem iniciar agentes ou migrar conteúdo. Documentação de atualização sincronizada. Evidência: execução final uv run pytest: 144 passed, 1 skipped em 132.48s; integração externa opcional ignorada por não haver consumidor selecionado. Primeira execução: 137 passed, 1 failed, 1 skipped; única falha era teste legado que tratava 1.5.0 como versão futura, corrigido para derivar versão incompatível acima da distribuição atual. Verificações textuais finais passaram: guias/interfaces referenciados existem, sem dependência docs/ na distribuição, instruções/diagnósticos genéricos afetados ASCII/inglês; identidade fonte/consumidor e rota ao contrato local conferidas. bash -n scripts/install-wiked.sh passou. Nenhum warning pendente. Testes sintéticos incluem opcionalidade, configuração/versão mínima/contract-only, formato, referências, idioma/nome configurável, repetições/transversalidade, regressões de índices, fronteiras/symlink, exclusão de papel operacional e atualização sem escrita do consumidor. Sem operação em consumidor real, Git, instalação de skill ativa ou publicação. Pronto para aceite humano final; publicação 1.5.0 permanece com o solicitante.
+
+**2026-10-13T19:11:43.979894818Z**
+
+Aceite final explícito do solicitante: mudança validada na migração de uma wiki e aprovada. Entregues mapa opcional de rotas por intenção, contrato/runtime e guias com carga seletiva e governança editorial, preservação das restrições dos índices e aviso de manutenção após mudança de versão. Distribuição fonte preparada para 1.5.0; validação fonte: 144 testes passaram, 1 integração opcional ignorada, verificações textuais e sintaxe do instalador passaram. Validação na migração foi reportada pelo solicitante, não executada pelo agente. Publicação permanece humana.
