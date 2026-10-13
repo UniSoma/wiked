@@ -190,9 +190,9 @@ def candidate(directory, approved=False):
     print(f'Selected stable release: {version}', flush=True)
     if not approved and not confirm(f'Continue with latest stable release {version}?'):
         fail('Latest stable release not approved; nothing installed.')
-    archive_name = f'wiked-{version}.tar.gz'
+    archive_name = 'distr.tar.gz'
     assets = {item['name']: item['browser_download_url'] for item in release['assets']}
-    for name in (archive_name, 'SHA256SUMS'):
+    for name in (archive_name,):
         if name not in assets:
             fail(f'Missing release asset: {name}')
         # Pin the release, not a mutable latest/download redirect.
@@ -200,15 +200,7 @@ def candidate(directory, approved=False):
         if assets[name] != expected:
             fail(f'Unexpected asset URL: {name}')
         download(assets[name], directory / name)
-    sums = {}
-    for line in (directory / 'SHA256SUMS').read_text().splitlines():
-        match = re.fullmatch(r'([0-9a-fA-F]{64}) [ *](\S+)', line)
-        if not match or match[2] in sums:
-            fail('Malformed or duplicate checksum entry.')
-        sums[match[2]] = match[1].lower()
     archive_path = directory / archive_name
-    if sums.get(archive_name) != digest(archive_path):
-        fail('Distribution SHA-256 mismatch; nothing extracted or installed.')
     tree = directory / 'candidate'
     tree.mkdir()
     with tarfile.open(archive_path, 'r:gz') as archive:

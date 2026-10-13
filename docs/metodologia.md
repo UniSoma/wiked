@@ -59,7 +59,7 @@ Do not run redundant validation commands when one route already covers the chang
 ## Publication boundary
 
 The approved [publication and distribution contract](./distribution.md) defines
-immutable versions, integrity checks, release channels, licensing, installation,
+immutable versions, package validation, release channels, licensing, installation,
 and updates. Its implementation and first publication are separately tracked
 executor work. Preparing a tree does not publish it. Agents do not publish
 releases, install tooling, replace their own skill, or manipulate Git.

@@ -2,7 +2,10 @@
 
 This source-development contract was approved through the Methodological grill
 for `wik-01m2tphwrc4f` on 2026-10-10, with the interactive-entry amendment explicitly
-approved for `wik-01m4s6rgnfhr` on 2026-10-12. It governs release and installer work;
+approved for `wik-01m4s6rgnfhr` on 2026-10-12 and the packaging simplification
+explicitly approved for `wik-01m4sbvndyah` on 2026-10-13. The latter supersedes
+versioned archive names, separate installer assets, and download checksums.
+It governs release and installer work;
 installer verification uses synthetic releases and does not establish publication. It is not an
 installed skill dependency or authority to operate a consumer wiki.
 
@@ -37,11 +40,11 @@ Delivery order is this approved contract, implementation and synthetic testing o
 the installer, then preparation and human publication of the first release.
 Installer tests must not require an already published release or a real consumer.
 
-## Artifact, version, and integrity
+## Artifact, version, and validation
 
-- Each release provides a `.tar.gz` containing exactly the files owned by
-  `distr/agents/wiked-manifest.yaml`, plus a separately downloadable installer and
-  SHA-256 checksums for the downloadable artifacts.
+- Each release provides only `distr.tar.gz`, containing exactly the files owned by
+  `distr/agents/wiked-manifest.yaml`. The installer is downloaded directly from
+  `main/scripts/install-wiked.sh`; no installer asset or download checksum is required.
 - The archive preserves the manifest-relative tree. Source tests, research, and
   development documentation are not installed runtime dependencies.
 - Wiked owns the namespaced manifest and the paths it lists, not the whole
@@ -57,15 +60,18 @@ Installer tests must not require an already published release or a real consumer
   version, and pins that selection through the entire operation. It records the
   installed version. Selecting older releases or offering downgrade is outside
   the initial installer interface.
-- Downloads use HTTPS. Check SHA-256 before extracting the distribution or
-  changing the installation. The README presents direct `curl ... | bash`
-  execution first, followed by verification of a versioned downloaded installer
-  before execution. Direct execution of the existing script from mutable `main`
-  is an explicitly approved convenience exception: it does not verify the script
-  itself first. Explain that downstream artifact verification cannot protect an
-  already running compromised script. This exception does not weaken archive
-  integrity, version pinning, or release immutability. Checksums provide integrity, not
-  an independent publisher signature; independent signing is deferred.
+- Downloads use HTTPS without download checksum verification. The README presents
+  direct `curl ... | bash` execution first, followed by an option to download and
+  inspect the main installer before execution. Users must trust the repository
+  and download channel. Inventory and version checks do not independently
+  authenticate the package or protect against a compromised running script.
+  Version pinning, release immutability, and local installation baseline hashes
+  remain required; independent signing is deferred.
+- `scripts/package-wiked.sh` validates source inventory and manifest/runtime version
+  agreement, then creates only `distr.tar.gz`. Default output is a fresh temporary
+  directory; `--output` selects a directory. Existing archives must not be
+  overwritten. The script does not run the test suite, install, publish, operate
+  Git, or increment versions. Packaging uses the source matching the intended tag.
 
 ## Installation interface and prerequisites
 
@@ -186,9 +192,17 @@ terminal, missing and explicit arguments, declined approvals, and unattended
 execution. The distribution version and manifested inventory are unchanged.
 
 `wik-01m4khsrmqya` follows the tested installer: prepare the manifested artifact,
-MIT licensing, checksums, exact official download links, and the complete README
+MIT licensing, exact official download links, and the complete README
 installation/update path. Verify the packaged artifact independently of any real
 consumer. Record human publication as evidence, not merely local preparation.
+
+`wik-01m4sbvndyah` implements the approved fixed-name archive, human-operated
+packaging script, checksum-free downloads, and corresponding tests and guidance.
+The requester explicitly confirmed the Methodological grill summary, including
+amending the publication ticket, before source changes. Local baseline hashes,
+inventory checks, compatibility and transactional recovery are preserved.
+Centralizing version authority and defining increments is deferred to
+`wik-01m4sbvz62vp`, not silently included in packaging.
 
 This contract's consolidation changes only source documentation and executor
 tickets. Implementing these interfaces, changing the distributed inventory or

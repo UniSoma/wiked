@@ -68,8 +68,9 @@ Accept the default `.agents/` location, review the selected release and file pla
 and confirm the installation.
 
 The `curl` commands download and run scripts from `main`; use them only if you
-trust their sources. Prefer to inspect and verify them first? See the
-[verified-download option](./docs/installation.md#verify-the-installer-first).
+trust their sources. Wiked does not verify download checksums. Prefer to inspect
+the script first? See the
+[download-and-inspect option](./docs/installation.md#inspect-the-installer-first).
 
 ### 3. Ask your agent to set up the wiki
 

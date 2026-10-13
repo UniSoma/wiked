@@ -6,7 +6,7 @@ type: task
 priority: 2
 mode: hitl
 created: '2026-10-10T18:39:26.693651906Z'
-updated: '2026-10-10T23:29:45.629754255Z'
+updated: '2026-10-13T00:55:22.692788900Z'
 assignee: VolneiSantos
 tags:
 - metodologia
@@ -15,15 +15,15 @@ tags:
 acceptance:
 - title: Repositório autoral independente e custódia confirmados pelo mantenedor
   done: false
-- title: Artefato preparado conforme versão, inventário, compatibilidade e integridade aprovados
-  done: false
 - title: Testes genéricos e prova de uso do artefato independentes de qualquer consumidor real
   done: false
 - title: Publicação humana identificável registrada e documentação de release coerente
   done: false
-- title: README contém origem GitHub exata, comandos verificados de download/integridade/instalação/atualização e transição ao setup, incluindo destinos alternativos e pré-requisitos
+- title: Artifact prepared with approved version, exact manifest inventory and compatibility; only distr.tar.gz is uploaded, with no download checksum requirement.
   done: false
-- title: Licença MIT e avisos aplicáveis presentes; release inclui tar.gz manifestado, instalador testado e checksums SHA-256, com versão imutável aprovada pelo mantenedor
+- title: README and installation guide document the official main installer, stable-release distribution download, updates/setup, prerequisites and custom destinations without obsolete checksum or installer-asset requirements.
+  done: false
+- title: MIT license and applicable notices are present; the release contains distr.tar.gz with an immutable version approved by the maintainer; installer source is tested and available on main.
   done: false
 deps:
 - wik-01m2tphwrc4f
@@ -32,10 +32,14 @@ deps:
 
 ## Description
 
-Preparar e verificar a primeira publicação conforme docs/distribution.md, aprovado no grill de wik-01m2tphwrc4f em 2026-10-10, após implementação/testes do instalador wik-01m2tpjtev7w. Volnei Santos decide versões e aprova releases; Git e publicação são humanos. Confirmar endereço exato do repositório GitHub oficial e GitHub Releases; não deduzir origem do schema. Preparar licença MIT com atribuição e avisos de terceiros, arquivo .tar.gz exatamente com os arquivos do manifesto, instalador separado e checksums SHA-256. Versões SemVer e artefatos publicados imutáveis; correções exigem nova versão; prévias excluídas da seleção estável. Fonte atual 1.4.0 não determina automaticamente a versão a publicar: verificar coerência manifesto/runtime, mudanças entregues e decisão do mantenedor. README deve permitir adoção independente com links oficiais exatos, verificação do instalador antes de executar, pré-requisitos uv/knot, Linux/macOS/WSL, destino padrão/customizado, descoberta pelo agente e fluxo instalação/atualização/setup. Validar artefato e instalador integrados em ambiente sintético sem consumidor real nem release prévia. Registrar evidência de publicação humana identificável, não apenas existência da árvore ou arquivo local. Assinatura independente, Windows nativo e seleção de versões antigas ficam fora desta entrega. Preservar fronteiras de propriedade e não instalar ferramentas no host nem substituir skill do agente.
+Prepare and verify the first publication under docs/distribution.md, amended by the requester-confirmed Methodological grill for wik-01m4sbvndyah on 2026-10-13. The maintainer approves versions and releases; Git and publication remain human-operated. Prepare MIT licensing and applicable notices, and only distr.tar.gz as a release asset, containing exactly the manifest inventory. Installer is obtained from main/scripts/install-wiked.sh; no separately attached installer or SHA256SUMS is required. Stable SemVer tags and immutable published artifacts remain required; manifest/runtime/tag versions must agree. Document official origin, trusted-source download, prerequisites, supported platforms, default/custom destinations, discovery and installation/update/setup. Synthetic tests verify artifact and installer without real consumers or existing releases. Record identifiable human publication evidence, not only local preparation. Version centralization/increments are future work wik-01m4sbvz62vp. Preserve ownership boundaries, local installation baseline hashes, compatibility and transaction safeguards. No tool installation or replacement of the running agent skill.
 
 ## Notes
 
 **2026-10-10T18:40:31.740875930Z**
 
 Preparação de migração autorizada em 2026-10-10: este ticket aberto pertence à metodologia e será transferido manualmente com seu ID para o tracker autoral independente. Relações com registros que permanecem no consumidor foram retiradas; o contexto necessário está autocontido. Publicação e instalação permanecem trabalhos futuros. Esta nota não registra transferência física nem encerra o grill próprio deste trabalho.
+
+**2026-10-13T00:55:22.692788900Z**
+
+2026-10-13 requester-confirmed Methodological grill for wik-01m4sbvndyah supersedes the original versioned-archive, installer-asset and release-checksum requirements. Description and conflicting acceptance criteria now require only distr.tar.gz, installer obtained from main, and no download checksum. Local baseline hashes and all inventory/compatibility/recovery safeguards remain. This update is not evidence of human release publication.

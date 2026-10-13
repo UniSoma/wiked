@@ -36,7 +36,7 @@ def installer_module():
     return namespace
 
 
-def release(directory, version='1.4.0', extra=None, omit=(), bad_checksum=False,
+def release(directory, version='1.4.0', extra=None, omit=(),
             extra_member=None, prerelease=False):
     directory.mkdir(parents=True, exist_ok=True)
     manifest = yaml.safe_load((DISTRIBUTION / 'wiked-manifest.yaml').read_text())
@@ -55,7 +55,7 @@ def release(directory, version='1.4.0', extra=None, omit=(), bad_checksum=False,
     files[runtime] = files[runtime].replace(b'METHODOLOGY_VERSION = "1.4.0"',
                                            f'METHODOLOGY_VERSION = "{version}"'.encode())
     files['wiked-manifest.yaml'] = yaml.safe_dump(manifest).encode()
-    archive_name = f'wiked-{version}.tar.gz'
+    archive_name = 'distr.tar.gz'
     archive = directory / archive_name
     with tarfile.open(archive, 'w:gz') as stream:
         for name, content in files.items():
@@ -64,13 +64,11 @@ def release(directory, version='1.4.0', extra=None, omit=(), bad_checksum=False,
             stream.addfile(member, io.BytesIO(content))
         if extra_member:
             stream.addfile(extra_member, io.BytesIO(b'x'))
-    checksum = '0' * 64 if bad_checksum else hashlib.sha256(archive.read_bytes()).hexdigest()
-    (directory / 'SHA256SUMS').write_text(f'{checksum}  {archive_name}\n')
     (directory / 'release.json').write_text(json.dumps({
         'tag_name': f'v{version}', 'draft': False, 'prerelease': prerelease,
         'assets': [{'name': name, 'browser_download_url':
                     f'https://github.com/{REPOSITORY}/releases/download/v{version}/{name}'}
-                   for name in (archive_name, 'SHA256SUMS')],
+                   for name in (archive_name,)],
     }))
     return files
 
@@ -205,6 +203,8 @@ def test_install_pin_inventory_custom_destination_and_noop(environment):
     requests = Path(env['REQUEST_LOG']).read_text().splitlines()
     assert requests.count(f'https://api.github.com/repos/{REPOSITORY}/releases/latest') == 1
     assert all(url.startswith('https://') for url in requests)
+    assert requests == [f'https://api.github.com/repos/{REPOSITORY}/releases/latest',
+                        f'https://github.com/{REPOSITORY}/releases/download/v1.4.0/distr.tar.gz']
     before = snapshot(target)
     times = {path: path.stat().st_mtime_ns for path in target.rglob('*') if path.is_file()}
     result = run(environment, '--destination', 'custom', '--yes')
@@ -300,8 +300,8 @@ def test_update_removes_only_intact_owned_obsolete_files(environment):
     assert modified not in json.loads((destination / '.wiked-install.json').read_text())['files']
 
 
-@pytest.mark.parametrize('kind', ['checksum', 'traversal', 'link', 'unlisted', 'prerelease'])
-def test_rejects_unsafe_or_unverified_candidates_before_installing(environment, kind):
+@pytest.mark.parametrize('kind', ['corrupt', 'traversal', 'link', 'unlisted', 'prerelease'])
+def test_rejects_unsafe_candidates_before_installing(environment, kind):
     root, assets, _ = environment
     member = None
     if kind in ('traversal', 'link', 'unlisted'):
@@ -310,9 +310,30 @@ def test_rejects_unsafe_or_unverified_candidates_before_installing(environment, 
         if kind == 'link':
             member.type = tarfile.SYMTYPE
             member.linkname = '/tmp/escape'
-    release(assets, bad_checksum=kind == 'checksum', extra_member=member, prerelease=kind == 'prerelease')
+    release(assets, extra_member=member, prerelease=kind == 'prerelease')
+    if kind == 'corrupt':
+        (assets / 'distr.tar.gz').write_bytes(b'not a tar archive')
     result = run(environment, '--yes')
     assert result.returncode == 2
+    assert not (root / '.agents').exists()
+
+
+def test_versioned_source_archive_is_not_a_release_distribution(environment):
+    root, assets, _ = environment
+    path = assets / 'release.json'
+    data = json.loads(path.read_text())
+    data['assets'] = []
+    path.write_text(json.dumps(data))
+    result = run(environment, '--yes')
+    assert result.returncode == 2 and 'Missing release asset: distr.tar.gz' in result.stderr
+    assert not (root / '.agents').exists()
+
+
+def test_beta_tag_is_rejected_even_when_not_marked_prerelease(environment):
+    root, assets, _ = environment
+    release(assets, version='1.4.0-beta')
+    result = run(environment, '--yes')
+    assert result.returncode == 2 and 'not a stable SemVer release' in result.stderr
     assert not (root / '.agents').exists()
 
 
@@ -510,14 +531,12 @@ def test_runtime_failure_does_not_offer_migration_ticket(environment):
     files = {name: (DISTRIBUTION / name).read_bytes()
              for group in manifest['components'].values() for name in group}
     files[runtime] = b'METHODOLOGY_VERSION = "1.4.0"\nraise ImportError("missing dependency")\n'
-    archive = assets / 'wiked-1.4.0.tar.gz'
+    archive = assets / 'distr.tar.gz'
     with tarfile.open(archive, 'w:gz') as stream:
         for name, content in files.items():
             member = tarfile.TarInfo(name)
             member.size = len(content)
             stream.addfile(member, io.BytesIO(content))
-    checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
-    (assets / 'SHA256SUMS').write_text(f'{checksum}  {archive.name}\n')
     result = run(environment, '--yes', '--approve-migration-ticket')
     assert result.returncode == 2 and 'No migration ticket offered' in result.stderr
     assert not Path(env['KNOT_LOG']).exists()
@@ -759,11 +778,13 @@ def test_terminal_confirmation_accepts_case_and_surrounding_spaces(environment):
 
 def test_publication_docs_put_direct_entry_first_and_preserve_trust_exception():
     readme = (ROOT / 'README.md').read_text()
+    guide = (ROOT / 'docs/installation.md').read_text()
     contract_text = (ROOT / 'docs/distribution.md').read_text()
-    assert readme.index('Option 1: direct, interactive') < readme.index('Option 2: verify')
     assert 'curl -fsSL https://raw.githubusercontent.com/UniSoma/wiked/main/scripts/install-wiked.sh | bash\n' in readme
     assert '--repository' not in readme
-    assert 'without verifying' in readme and 'compromised script' in readme
-    assert 'explicitly approved convenience exception' in contract_text
-    assert '/dev/tty' in readme and 'never stdin' in contract_text
-    assert '--approve-migration-ticket' in readme and '--approve-migration-ticket' in contract_text
+    assert 'trust their sources' in readme
+    assert 'without a download checksum' in guide
+    assert 'distr.tar.gz' in guide and 'distr.tar.gz' in contract_text
+    assert 'never stdin' in contract_text
+    assert '--approve-migration-ticket' in guide and '--approve-migration-ticket' in contract_text
+    assert 'SHA256SUMS' not in guide

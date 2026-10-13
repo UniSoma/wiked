@@ -81,11 +81,12 @@ Stop agents using Wiked, then run from the **root of your wiki repository**:
 curl -fsSL https://raw.githubusercontent.com/UniSoma/wiked/main/scripts/install-wiked.sh | bash
 ```
 
-This convenience option executes the script from mutable `main` **without
-verifying the script itself first**. Use it only if you trust that repository
-and channel. The distribution archive is still verified before extraction and
-installation; those checks cannot protect against a compromised script already
-running. For verification before execution, use the next section.
+This option executes the script from mutable `main` **without a download checksum**.
+Use it only if you trust that repository and channel. The distribution archive
+also has no download checksum. Its inventory and version are validated before
+installation, but those checks do not independently authenticate downloaded
+content or protect against a compromised script. To inspect before execution,
+use the next section.
 
 The installer checks prerequisites and asks for missing values through the
 controlling terminal (`/dev/tty`), never the pipe containing the script. Accept
@@ -97,41 +98,33 @@ continue with that version. There is no older-version selection. Inspect the
 displayed file plan and answer `yes` to approve it. Providing a value skips its
 question, not its validation or the plan approval.
 
-## Verify the installer first
+## Inspect the installer first
 
-Both convenience install commands execute a script from mutable `main` before
-verifying that script. For a verified Knot binary download instead, follow Knot's
-[manual-download instructions](https://github.com/UniSoma/knot#manual-download).
-To verify the Wiked installer before executing it, follow the steps below.
+Instead of executing the piped Wiked script immediately, download
+`main/scripts/install-wiked.sh` into a new local directory and inspect its contents.
+This is inspection, not checksum verification or independent authentication.
+The release does not provide a separate installer asset.
 
-Choose a versioned release from
-[GitHub Releases](https://github.com/UniSoma/wiked/releases) and download its
-`install-wiked.sh` and `SHA256SUMS` assets from that same release. Compute the
-installer's checksum in the directory containing those files:
+For example, download into a fresh temporary directory:
 
 ```sh
-# Linux or WSL
-sha256sum install-wiked.sh
-
-# macOS
-shasum -a 256 install-wiked.sh
+installer_dir=$(mktemp -d)
+curl -fsSL https://raw.githubusercontent.com/UniSoma/wiked/main/scripts/install-wiked.sh \
+  -o "$installer_dir/install-wiked.sh"
+less "$installer_dir/install-wiked.sh"
 ```
 
-Compare the entire digest with the exact `install-wiked.sh` entry in
-`SHA256SUMS` before execution. Checksums provide integrity, not an independent
-publisher signature.
-
-From your wiki repository root, preview the installation and then run it:
+After inspection, from your wiki repository root, preview the installation and
+then run the downloaded script:
 
 ```sh
-bash /path/to/verified/install-wiked.sh --dry-run
-bash /path/to/verified/install-wiked.sh
+bash "$installer_dir/install-wiked.sh" --dry-run
+bash "$installer_dir/install-wiked.sh"
 ```
 
-Replace `/path/to/verified/install-wiked.sh` with the path to your verified
-download. Each invocation pins the latest stable release, verifies the archive
-hash before extraction, and displays additions, replacements, removals, local
-edits, and unowned collisions. Answer `yes` to approve the operation.
+Each invocation pins the latest stable release, validates the archive inventory
+and version, and displays additions, replacements, removals, local edits, and
+unowned collisions. Answer `yes` to approve the operation.
 
 ## Set up your wiki
 
@@ -193,7 +186,7 @@ options. Approval never claims the parent directory or adjacent third-party file
 The same entrypoint supports explicit approval without a terminal:
 
 ```sh
-bash /path/to/verified/install-wiked.sh --yes
+bash /path/to/downloaded/install-wiked.sh --yes
 ```
 
 `--yes` approves the selected latest stable version and the displayed operation
@@ -225,7 +218,7 @@ empty directories. After an abrupt interruption, another install is blocked unti
 explicit recovery:
 
 ```sh
-bash /path/to/verified/install-wiked.sh --recover
+bash /path/to/downloaded/install-wiked.sh --recover
 # Include the same --destination value if it was customized.
 ```
 
@@ -245,10 +238,9 @@ and exact ownership. Manifest paths are relative to that source directory and to
 the installation directory in your repository. Source tests, `docs/`, research,
 and agent-authoring context are not consumer runtime dependencies.
 
-The release interface uses a stable SemVer tag `vX.Y.Z` (or `X.Y.Z`),
-`wiked-X.Y.Z.tar.gz`, a separately downloadable `install-wiked.sh`, and
-`SHA256SUMS`. Checksum entries use ordinary SHA-256 utility output
-(`<64 hex digits>  <filename>`). Asset URLs are immutable versioned
+The release interface uses a stable SemVer tag `vX.Y.Z` (or `X.Y.Z`) and a single
+asset, `distr.tar.gz`. The installer comes directly from `main/scripts/install-wiked.sh`,
+not a release asset. No download checksum is required. Asset URLs are immutable versioned
 `https://github.com/UniSoma/wiked/releases/download/<tag>/<filename>` URLs,
 not mutable latest-download aliases.
 
@@ -258,6 +250,30 @@ enclosing directory. The installer checks the manifest's namespace, version,
 entrypoint, preservation policy, and runtime version. The manifest is the
 distribution-version authority; the Python project's version describes the
 source development environment.
+
+### Prepare the release package
+
+From the Wiked source tree corresponding to the intended release tag, run:
+
+```sh
+uv run pytest
+bash scripts/package-wiked.sh
+```
+
+The packaging command validates the manifest inventory and runtime version, then
+creates only `distr.tar.gz` in a new temporary directory and prints its path. It
+does not run tests, install Wiked, change versions, operate Git, or publish a release.
+It can be called from another directory using an absolute script path.
+For a chosen output directory, use:
+
+```sh
+bash scripts/package-wiked.sh --output /path/to/release-output
+```
+
+Existing output archives are never overwritten. Upload only `distr.tar.gz` as an
+asset of the matching stable GitHub release; GitHub's automatic source archives
+are not installation packages. Keep published artifacts immutable and use a new
+version for corrections. Version management remains separate from packaging.
 
 See the [publication and distribution contract](./distribution.md) for the
 source-development requirements behind this interface.
