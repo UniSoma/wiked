@@ -1,12 +1,13 @@
 ---
 id: wik-01m4khsrmqya
 title: Preparar primeira publicação verificável do Wiked
-status: in_progress
+status: closed
 type: task
 priority: 2
 mode: hitl
 created: '2026-10-10T18:39:26.693651906Z'
-updated: '2026-10-13T02:41:38.605345675Z'
+updated: '2026-10-13T02:48:37.437879907Z'
+closed: '2026-10-13T02:48:37.437879907Z'
 assignee: VolneiSantos
 tags:
 - metodologia
@@ -18,13 +19,13 @@ acceptance:
 - title: Testes genéricos e prova de uso do artefato independentes de qualquer consumidor real
   done: true
 - title: Publicação humana identificável registrada e documentação de release coerente
-  done: false
+  done: true
 - title: Artifact prepared with approved version, exact manifest inventory and compatibility; only distr.tar.gz is uploaded, with no download checksum requirement.
-  done: false
+  done: true
 - title: README and installation guide document the official main installer, stable-release distribution download, updates/setup, prerequisites and custom destinations without obsolete checksum or installer-asset requirements.
   done: true
 - title: MIT license and applicable notices are present; the release contains distr.tar.gz with an immutable version approved by the maintainer; installer source is tested and available on main.
-  done: false
+  done: true
 deps:
 - wik-01m2tphwrc4f
 - wik-01m2tpjtev7w
@@ -55,3 +56,11 @@ Methodological grill explicitly closed by requester on 2026-10-13. Requester con
 **2026-10-13T02:41:38.605345675Z**
 
 Prepared approved 1.4.1 correction: root LICENSE and identical manifested skills/wiked/LICENSE contain MIT Copyright (c) 2026 UniSoma; manifest and runtime agree on 1.4.1. Inventory has 17 regular files. Review found declared external dependencies/tools, not bundled third-party code; historical research and consumer material are not relicensed. README and distribution/installation guides document licensing, observed v1.4.0 publication, maintainer immutability commitment and human 1.4.1 handoff. Synthetic artifact test packages, installs, then runs installed runtime from unrelated cwd against synthetic wiki/tracker: six files checked, no errors/warnings. Installer fixture now derives source version before substituting synthetic release identity; runtime-failure fixture uses coherent synthetic manifest. Initial suite exposed the old mixed-version fixture; corrected final command uv run pytest --basetemp=/tmp/opencode/wiked-publication-1.4.1-tests: 96 passed, 1 skipped (optional external integration not selected). bash scripts/package-wiked.sh --output /tmp/opencode/wiked-publication-1.4.1 produced only /tmp/opencode/wiked-publication-1.4.1/distr.tar.gz; tar inventory inspected. Existing source-root distr.tar.gz is still the old 1.4.0 archive, unchanged (local preservation hash 83f747180dbfbed52bd4618a1a9d358fcc68c55d36aa0a193da8e3424ceb7492); do not upload it for 1.4.1. No new release published, Git operated, tool installed, real consumer edited or active skill replaced. AC 1, 2, 5 checked; AC 3, 4, 6 remain pending verified human publication of v1.4.1 with only the corrected distr.tar.gz and published source/license/main installer.
+
+**2026-10-13T02:48:24.473429155Z**
+
+Human publication verified after requester reported done: official latest stable release https://github.com/UniSoma/wiked/releases/tag/v1.4.1, tag v1.4.1, publisher/uploader volneids, published_at 2026-10-13T02:45:45Z, draft=false, prerelease=false, only asset distr.tar.gz (28211 bytes). Downloaded archive has exactly 17 unique regular manifested files; every member is byte-identical to tested local distribution and official v1.4.1 tag source. Root/tag/main MIT license matches distributed skills/wiked/LICENSE; manifest/runtime agree on 1.4.1; official main installer is available and byte-identical to tested installer. Prepared temporary archive was no longer available, so verification compared all package members rather than compressed archive bytes. Platform immutable=false is the approved exception: maintainer commitment only. Updated docs/distribution.md and docs/installation.md to record actual publication rather than pending preparation; targeted textual checks confirmed timestamp/release links and removed obsolete pending wording. Previous 96 passed, 1 skipped suite remains applicable; follow-up edits are documentation-only. All publication criteria now satisfied; no Git or publication operations performed by agent.
+
+**2026-10-13T02:48:37.437879907Z**
+
+First verifiable Wiked publication completed: maintainer-published v1.4.1 verified at https://github.com/UniSoma/wiked/releases/tag/v1.4.1 with only distr.tar.gz, exact 17-file manifested inventory, MIT Copyright (c) 2026 UniSoma and coherent tag/manifest/runtime versions. Every archive member matches tested local distribution and published tag; main installer/license are available. Synthetic package-install-installed-runtime proof and source suite passed (96 passed, 1 optional integration skipped). Publication evidence recorded and source documentation reconciled. All acceptance criteria satisfied; Git and publication performed by human, immutability by approved maintainer commitment.

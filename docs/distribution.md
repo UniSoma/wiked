@@ -26,7 +26,11 @@ The official main installer and archive were observed available; the maintainer
 confirmed authorized publication and independent author custody in the
 Methodological grill for `wik-01m4khsrmqya`. That archive omitted the MIT license.
 The approved correction is 1.4.1, without replacing the published 1.4.0 artifact.
-Preparation of 1.4.1 is not evidence of its publication. Release
+[v1.4.1](https://github.com/UniSoma/wiked/releases/tag/v1.4.1) was published by
+`volneids` on 2026-10-13 at 02:45:45 UTC with only `distr.tar.gz` (28,211 bytes).
+The downloaded archive contains exactly 17 manifested regular files, each matching
+the tested source distribution and published tag, including the MIT license.
+The main installer and root license were also verified available. Release
 preparation must verify the documented download paths before announcing them;
 never infer repository authority from schema IDs.
 The maintainer explicitly approved `wik-01m4s821zj1m` to make `UniSoma/wiked` the
@@ -63,7 +67,7 @@ Installer tests must not require an already published release or a real consumer
 - Immutability is the maintainer's commitment not to replace published artifacts;
   GitHub platform enforcement is not required for this delivery.
 - The maintainer approved source distribution 1.4.1 to deliver the missing license.
-  Its matching release tag is `v1.4.1`; human publication remains pending.
+  Its matching release tag is `v1.4.1`; human publication is verified above.
   The manifest and runtime version must agree. The development
   environment's project version is not the distribution version.
 - An invocation resolves the latest stable official release once, displays its
