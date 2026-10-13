@@ -2,11 +2,13 @@
 
 Load this guide before creating or changing governed operational content in a consumer instance. Methodology evolution belongs to Wiked's source repository and authoring authority. A read-only query or review needs no grill unless the user asks to qualify its objective.
 
+Permanent diagram sources and visualizations are governed content; `d2.md` classifies their operations. Requested temporary exports use only the bounded exception in `export.md`. If an export encounters a semantic choice, apply this guide before continuing the affected work; closure does not authorize permanent changes outside the confirmed scope.
+
 ## Prepare
 
 1. Confirm the session is operational and have the participating human state explicitly that they are qualified to govern the current objective. Never infer qualification from identity, organizational role, ticket assignment, or instance configuration; renew it for a new session or substantive objective.
 2. State one coherent objective and its initial file scope.
-3. For page creation or revision, assisted indexing, or maintenance, complete [Contextual Preparation](authoring-context.md) before content analysis or authorship proposals. For initialization or migration, apply `setup.md`'s bounded exceptions. For other objectives, load the applicable instance context and affected content. Load any other applicable rules and read-only checks for the objective.
+3. For page creation or revision, permanent diagram authorship, assisted indexing, or maintenance, complete [Contextual Preparation](authoring-context.md) before content analysis or authorship proposals. For initialization or migration, apply `setup.md`'s bounded exceptions. For other objectives, load the applicable instance context and affected content. Load any other applicable rules and read-only checks for the objective.
 
 ## Interview
 

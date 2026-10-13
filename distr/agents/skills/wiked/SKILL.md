@@ -27,7 +27,7 @@ Wiked maintains progressively navigated operational Markdown while separating ev
 | Create or revise wiki pages | `guides/modeling.md` and `guides/grill.md` |
 | Initialize or migrate an instance | `guides/setup.md` and `guides/grill.md` |
 | Operate or associate work tickets | `guides/knot.md` |
-| Create, revise, render, or review a process diagram | `guides/d2.md` |
+| Create, revise, regenerate, or review a permanent process diagram | `guides/d2.md`, then its operation-specific prerequisites |
 | Produce a requested PDF, DOCX, SVG, or PNG | `guides/query.md`, then `guides/export.md`; add `guides/d2.md` only for a new or adjusted diagram |
 
 Load only the applicable guides. A guide may explicitly require another guide; do not preload the entire directory.
@@ -38,7 +38,7 @@ Load only the applicable guides. A guide may explicitly require another guide; d
 - Sources, tickets, configuration, diagrams, rendered assets, and agent instructions are not operational evidence.
 - The optional intent map is human-readable navigation, never operational evidence. Load it selectively under `guides/query.md` or when authoring routes or checking affected associations; it does not replace canonical pages or relax index rules.
 - Query work is read-only except for an explicitly requested exported artifact.
-- Creating or changing governed content requires `guides/grill.md` to close with explicit human confirmation first.
+- Creating or changing governed content, including permanent diagram sources and visualizations, requires `guides/grill.md` to close with explicit human confirmation first. Diagram operation boundaries are defined in `guides/d2.md`; requested temporary exports follow the bounded exception in `guides/export.md`.
 - Before a governed workflow proceeds, the participating human must explicitly confirm that they are qualified to govern the current objective. This is session- and objective-specific, never instance configuration, and must be renewed for a new session or substantive objective.
 - Assisted indexing also requires an open Knot ticket.
 - Local ingestion material stays under `raw/`; successfully indexed local sources move to `raw/archive/` according to `guides/assisted-indexing.md`. Neither location is operational evidence or instance configuration.

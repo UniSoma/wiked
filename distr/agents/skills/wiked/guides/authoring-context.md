@@ -1,6 +1,6 @@
 # Authoring Context
 
-Load this guide for contextual preparation in page creation or revision, assisted indexing, and maintenance, including read-only review. It is the common authority for this preparation; it does not require loading the modeling guide merely to prepare context.
+Load this guide for contextual preparation in page creation or revision, permanent diagram authorship, assisted indexing, and maintenance, including read-only maintenance review. It is the common authority for this preparation; it does not require loading the modeling guide merely to prepare context. Query exports retain `query.md`'s selective preparation; loading D2 for a temporary export does not itself require this guide.
 
 ## Prepare
 

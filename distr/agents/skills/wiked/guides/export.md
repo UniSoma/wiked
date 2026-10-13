@@ -11,6 +11,12 @@ Load this guide only for an explicitly requested query export. Output is neither
 - Interpret Word as DOCX; clarify before producing legacy DOC.
 - Default a standalone diagram to SVG unless PNG is requested or required.
 
+## Bounded Grill Exception
+
+An explicitly requested export needs no grill when it only copies, converts, creates, or visually adjusts a temporary representation of canonical Markdown and leaves the wiki unchanged. This exception permits no new operational facts or domain decisions. Do not use D2 or SVG to fill gaps in Markdown; an existing source may be copied only as a technical representation, checked against that Markdown.
+
+If responsibility, sequence, conditions, or other meaning is ambiguous, stop the affected part, report the gap, and load `grill.md` for human qualification and decision. Do not infer a resolution. That grill governs the export objective only; permanent corrections require their own explicitly included scope and the permanent-authorship route in `d2.md`.
+
 ## Dependencies
 
 Check executables with `command -v`; report, but never install, missing tools:
@@ -37,7 +43,7 @@ pandoc "document.md" --resource-path="<temp>:<repository>:<wiki>:<source-dirs>" 
   -o "<absolute-output>.docx"
 ```
 
-Copy an existing diagram's accepted SVG. For a new or adjusted diagram, follow `d2.md` using only a temporary D2 copy; render SVG or convert the temporary SVG to PNG with `rsvg-convert`.
+Copy an existing diagram's accepted SVG. For a new or adjusted diagram, follow `d2.md` using only a temporary D2 source: copy an existing source or create one from canonical Markdown when no source exists. Render SVG or convert the temporary SVG to PNG with `rsvg-convert`. Do not update permanent component sets or embed the export in wiki Markdown.
 
 ## Validate and Clean Up
 
