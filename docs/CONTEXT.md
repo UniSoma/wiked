@@ -38,7 +38,9 @@ Canonical vocabulary for maintaining and evolving Wiked at its source repository
 
 **Portable integration**: verification that the distribution works from an explicit Consumer repository root independently of the distribution's source location and without depending on source-only `docs/`.
 
-**Targeted textual check**: a non-Python verification used for instruction-only changes, covering links, ownership boundaries, language, prohibited dependencies, and required routing statements.
+**Targeted textual check**: a non-Python verification used for instruction-only changes, covering links, ownership boundaries, language, prohibited dependencies, and routing coherence. Literal checks verify technical contracts, not fixed prose or agent compliance; semantic coherence requires methodological review.
+
+**Behavioral evaluation**: a scenario-based assessment of an agent operating with the installed distribution and a synthetic Instance contract. It examines responses, observable actions, and final state against explicit criteria. Results depend on the model, harness, configuration, and methodology version; they are not deterministic proof of instruction quality or Operational evidence.
 
 ## Governance
 

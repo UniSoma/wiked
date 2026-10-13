@@ -54,6 +54,24 @@ consumer operations, which use the installed skill and local Instance contract.
 - The Distributed runtime can be invoked directly for an authorized external proof with `uv run --script distr/agents/skills/wiked/scripts/validate_wiki.py --repository-root /absolute/path/to/consumer`. The source root is not a consumer.
 - Consumer wiki changes follow the validation selected by the installed skill and the Instance contract. Do not substitute a source-development command for the consumer route.
 
+Textual and structural checks do not prove that an agent follows methodological
+instructions. Reserve literal documentation assertions for technical contracts,
+such as paths, identifiers, commands, and formats. Do not freeze prose through
+substring, regex, or snapshot tests: equivalent wording may fail while a
+contradictory instruction may pass. Review semantic coherence and governance
+boundaries methodologically rather than inferring them from phrase presence.
+
+When removing prose assertions, record the rationale and critical behaviors that
+remain unevaluated in the ticket. A replacement Behavioral evaluation need not
+already exist; specify its scenarios in a linked implementation ticket with
+context, user request, expected behavior, observable violations, evidence, and
+evaluation method. Do not claim that specification supplies behavioral coverage.
+Future evaluations must observe actions and outcomes as well as responses, use
+explicit token/cost and execution limits, and distinguish exploratory single
+runs from repeated measurements of consistency. Their implementation requires
+its own approved scope and Methodological grill; it is not mandatory validation
+for every instruction change.
+
 Do not run redundant validation commands when one route already covers the changed file types. Errors block acceptance; warnings require explicit disposition but never authorize an automated semantic decision.
 
 ## Publication boundary

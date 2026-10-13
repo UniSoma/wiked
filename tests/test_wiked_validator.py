@@ -167,27 +167,18 @@ def test_namespaced_setup_command_routes_to_the_distributed_guide() -> None:
 
     assert "commands/wiked-setup.md" in manifest["components"]["commands"]
     assert "guides/setup.md" in command
-    assert "distributed schema and validator" in command
 
 
 def test_human_qualification_and_ingestion_stay_outside_the_contract() -> None:
-    skill = (WIKED / "SKILL.md").read_text(encoding="utf-8")
-    setup = (WIKED / "guides/setup.md").read_text(encoding="utf-8")
-    indexing = (WIKED / "guides/assisted-indexing.md").read_text(encoding="utf-8")
-    grill = (WIKED / "guides/grill.md").read_text(encoding="utf-8")
-    contract_readme = (WIKED / "contracts/README.md").read_text(encoding="utf-8")
-    runtime_readme = (WIKED / "scripts/README.md").read_text(encoding="utf-8")
     schema = json.loads((WIKED / "contracts/wiki-structure.schema.json").read_text(encoding="utf-8"))
 
-    assert "session- and objective-specific" in skill
-    assert "qualified to govern the current objective" in grill
-    assert "raw/` and `raw/archive/" in setup
-    assert "raw/archive/YYYY-MM-DD_<ticket-id>/" in indexing
-    assert "stop rather than overwrite" in indexing
-    assert "persisted in Git" in contract_readme
-    assert "does not inspect or require `raw/` or `raw/archive/`" in runtime_readme
     assert "human_authority" not in schema["properties"]
     assert "ingestion" not in schema["properties"]
+
+
+def test_indexing_documents_the_archive_path_template() -> None:
+    indexing = (WIKED / "guides/assisted-indexing.md").read_text(encoding="utf-8")
+    assert "raw/archive/YYYY-MM-DD_<ticket-id>/" in indexing
 
 
 def write_instance(root: Path) -> Path:
@@ -534,30 +525,6 @@ def test_map_frontmatter_never_enters_operational_record_validation(tmp_path: Pa
     assert result.returncode == 1, result.stdout + result.stderr
     map_diagnostics = [item for item in json.loads(result.stdout)["diagnostics"] if item["path"] == "routes.md"]
     assert {item["code"] for item in map_diagnostics} == {"intent-map.frontmatter"}
-
-
-def test_intent_route_guides_preserve_read_only_query_and_editorial_governance() -> None:
-    query = (WIKED / "guides/query.md").read_text()
-    indexing = (WIKED / "guides/assisted-indexing.md").read_text()
-    maintenance = (WIKED / "guides/maintenance.md").read_text()
-    setup = (WIKED / "guides/setup.md").read_text()
-    modeling = (WIKED / "guides/modeling.md").read_text()
-    assert "task or need without a known page or destination" in query
-    assert "indexes cannot locate the subject or leave uncertainty" in query
-    assert "A known destination keeps the existing path" in query
-    assert "missing intent, or insufficient route returns to this existing path" in query
-    assert "canonical operational content actually read" in query
-    assert "does not authorize starting indexing, writing the map, creating tickets, or recording governance" in query
-    assert "without write access or editorial authority" in query
-    assert "open indexing ticket, editorial authority" in indexing
-    assert "human curation" in indexing
-    assert "Do not create one route per question or new page" in indexing
-    assert "directly affected routes" in indexing
-    assert "Do not require a full-map review" in maintenance
-    assert "every human-installed change of Wiked version" in maintenance
-    assert "Do not create an empty or fictional map" in setup
-    assert "configured instance language" in modeling
-    assert "not an operational sequence, responsibilities, or new rules" in modeling
 
 
 def test_portable_validator_runs_outside_source_layout(tmp_path: Path) -> None:

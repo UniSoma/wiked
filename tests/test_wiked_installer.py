@@ -941,15 +941,12 @@ def test_terminal_confirmation_accepts_case_and_surrounding_spaces(environment):
     assert result.returncode == 0, result.stdout
 
 
-def test_publication_docs_put_direct_entry_first_and_preserve_trust_exception():
+def test_publication_docs_reference_supported_installation_interfaces():
     readme = (ROOT / 'README.md').read_text()
     guide = (ROOT / 'docs/installation.md').read_text()
     contract_text = (ROOT / 'docs/distribution.md').read_text()
-    assert 'curl -fsSL https://raw.githubusercontent.com/UniSoma/wiked/main/scripts/install-wiked.sh | bash\n' in readme
+    assert 'curl -fsSL https://raw.githubusercontent.com/UniSoma/wiked/main/scripts/install-wiked.sh | bash' in readme
     assert '--repository' not in readme
-    assert 'trust their sources' in readme
-    assert 'without a download checksum' in guide
     assert 'distr.tar.gz' in guide and 'distr.tar.gz' in contract_text
-    assert 'never stdin' in contract_text
     assert '--approve-migration-ticket' in guide and '--approve-migration-ticket' in contract_text
     assert 'SHA256SUMS' not in guide

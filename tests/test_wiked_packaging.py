@@ -179,7 +179,7 @@ def test_invalid_changelog_blocks_packaging(packaging, kind):
     assert not output.exists()
 
 
-def test_changelog_coverage_and_lazy_maintenance_routing():
+def test_changelog_declarations_and_documented_dependencies():
     root = ROOT / 'distr/agents'
     metadata = runpy.run_path(str(root / 'skills/wiked/scripts/distribution.py'))
     declarations = metadata['release_declarations'](root)
@@ -187,16 +187,9 @@ def test_changelog_coverage_and_lazy_maintenance_routing():
     assert declarations['1.5.0'] == 'review'
     assert declarations[SOURCE_VERSION] in {'review', 'none'}
     maintenance = (root / 'skills/wiked/guides/maintenance.md').read_text()
-    assert '[the methodology-impact changelog](../CHANGELOG.md)' in maintenance
-    assert 'skipped during installation' in maintenance
-    assert 'correction\ntickets' in maintenance
-    assert 'Do not acknowledge on the human' in maintenance
+    assert '../CHANGELOG.md' in maintenance
     for guide in ('SKILL.md', 'guides/query.md', 'guides/assisted-indexing.md'):
         assert 'CHANGELOG.md' not in (root / 'skills/wiked' / guide).read_text()
-    readme = (ROOT / 'README.md').read_text()
-    assert '> Use the installed Wiked skill to review this wiki after the update and help me\n> track any necessary corrections.' in readme
-    assert 'pending version interval' not in readme
-    assert 'do not run it on my behalf' not in readme
 
 
 def test_packaged_artifact_installs_without_checksum_or_installer_assets(packaging, environment):

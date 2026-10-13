@@ -35,6 +35,10 @@ Before creating or changing governed content, invoke the environment-provided
   agent's installed skill. Those operations belong to humans.
 - Run all Python commands through `uv run`. Runtime or test changes require
   `uv run pytest`; instruction-only changes require targeted textual checks.
+- Do not add tests that freeze methodological prose through substring, regex,
+  or snapshot assertions. Literal documentation checks are for technical
+  contracts (paths, identifiers, commands, and formats), not proof that an agent
+  follows a rule. Apply the validation boundaries in `docs/metodologia.md`.
 - `distr/agents/skills/wiked/` is the canonical source distribution here, not a local
   wiki installation. Its consumer workflows are not source-authoring instructions.
   Keep distribution sources outside automatic skill-discovery directories;
