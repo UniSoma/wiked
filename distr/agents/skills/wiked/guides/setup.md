@@ -12,12 +12,17 @@ Load this guide only for an explicit Wiked initialization or contract migration.
 ## Governed Flow
 
 1. Load `knot.md`; create or confirm an open setup ticket with objective and acceptance criteria.
-2. Load `grill.md` and resolve language, purpose, audience, scope, canonical terms and definitions, top-level branches, page types, states, provenance, Knot mappings, and whether approved local review criteria require an authoring reference. Prepare the agreed purpose, audience, scope, and terms and definitions for contract `initial_content` in the conversation or Knot records; do not write the contract or context file before explicit grill closure.
-3. For an existing contract, validate compatibility and obtain explicit authorization for a defined migration. Never migrate automatically.
+2. Load `grill.md`. For an existing contract, validate compatibility and obtain explicit authorization for a defined migration before proposing migration changes. Apply [Contextual Preparation](authoring-context.md) to the existing state within that scope. Never migrate automatically.
+3. Load `modeling.md` before structural or representational decisions, then resolve language, purpose, audience, scope, canonical terms and definitions, top-level branches, page types, states, provenance, Knot mappings, and whether approved local review criteria require an authoring reference. Prepare the agreed purpose, audience, scope, and terms and definitions for contract `initial_content` in the conversation or Knot records; do not write the contract or context file before explicit grill closure.
 4. Close the grill with an explicit summary and confirmation.
 5. After confirmation and within the confirmed scope, write the agreed values under contract `initial_content` and materialize only the configured root index, resolved context file, optional approved authoring reference, mandatory source index, agreed top-level indexes, schema-valid local contract, and fixed `raw/` and `raw/archive/` directories. The root index contains the configured title, purpose, audience, and scope and links exactly once to every configured reference and top-level index; the context contains the agreed terms and definitions. Do not create an empty authoring reference or list fictional pages.
 6. Do not create fictional domain pages, placeholder operational claims, or placeholder files in the ingestion directories. Create the configured assets directory even when empty. Humans decide whether to persist ingestion material in Git.
 7. Run the distributed validator with the explicit consumer root and resolve errors before acceptance.
+
+### Contextual Preparation Exceptions
+
+- For explicitly requested first initialization, the contract and context to be created are not prerequisites for the initial grill. Qualify initial terms in the conversation or Knot records and materialize the approved context only after explicit closure. This exception does not turn an incomplete existing instance into a new initialization.
+- For an explicitly authorized migration, read the existing context and pertinent content as the prior state to preserve or change through explicit decisions. An incompatible contract does not authorize normal wiki authorship; this inspection is limited to the migration scope. If the configured context is absent, report the gap and require explicit recovery scope rather than reconstructing vocabulary automatically. Keep proposed terms in the conversation or Knot records until grill closure.
 
 After every human-installed change of Wiked version, require a maintenance agent review through `maintenance.md` to assess content against the new methodology. An update alone authorizes neither wiki corrections nor contract migration.
 

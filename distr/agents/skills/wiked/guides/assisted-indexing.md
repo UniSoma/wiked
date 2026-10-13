@@ -5,8 +5,8 @@ Load this guide for always human-guided incorporation of primary sources or cura
 ## Entry
 
 1. Load `knot.md` and confirm an open ticket records the sources or existing canonical destinations, objective, expected pages or routes, and acceptance criteria.
-2. Load `modeling.md` and `grill.md`, then satisfy the grill's preparation requirements for the indexing objective.
-3. Read the configured local authoring reference when present, then navigate from the root index through the relevant top-level index to affected pages.
+2. Load `grill.md`, then satisfy its preparation requirements for the indexing objective.
+3. Complete [Contextual Preparation](authoring-context.md) for the indexing objective.
 4. Only then inspect the in-scope source and compare it with consolidated content.
 
 Before these conditions hold, do not access a source or change the wiki. Ticket context is governance, not operational evidence.
@@ -22,6 +22,7 @@ Apply existing local authoring criteria, but do not create or revise them incide
 
 ## Decision Session
 
+- Load `modeling.md` when analyzing or proposing page, glossary, index, or intent-route changes, not solely for contextual preparation.
 - Follow `grill.md` as the sole authority for interview mechanics, cadence, qualification, and closure.
 - Separate source statements, current operation, proposed change, unresolved divergence, human decisions, and agent interpretation.
 - Never decide currency, responsibility, terminology, divergence, or scope expansion silently.

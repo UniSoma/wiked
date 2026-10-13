@@ -6,7 +6,7 @@ Load this guide before creating or changing governed operational content in a co
 
 1. Confirm the session is operational and have the participating human state explicitly that they are qualified to govern the current objective. Never infer qualification from identity, organizational role, ticket assignment, or instance configuration; renew it for a new session or substantive objective.
 2. State one coherent objective and its initial file scope.
-3. Load the applicable instance context, rules, affected content, and read-only checks.
+3. For page creation or revision, assisted indexing, or maintenance, complete [Contextual Preparation](authoring-context.md) before content analysis or authorship proposals. For initialization or migration, apply `setup.md`'s bounded exceptions. For other objectives, load the applicable instance context and affected content. Load any other applicable rules and read-only checks for the objective.
 
 ## Interview
 

@@ -9,6 +9,7 @@ components:
   instructions:
     - skills/wiked/SKILL.md
     - skills/wiked/guides/query.md
+    - skills/wiked/guides/authoring-context.md
     - skills/wiked/guides/assisted-indexing.md
     - skills/wiked/guides/maintenance.md
     - skills/wiked/guides/grill.md

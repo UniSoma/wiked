@@ -22,6 +22,12 @@ Before creating or changing governed content, invoke the environment-provided
 - Generic instructions, runtime messages, schemas, and tests are in English and
   contain no consumer-specific knowledge. Preserve historical research in its
   original language; it is not normative guidance or operational evidence.
+- Progressive disclosure is a design principle of the Wiked skill. Every
+  methodology evolution must preserve lazy, objective-specific loading of its
+  instructions and dependencies. Keep shared rules canonical and independently
+  loadable when callers do not need the rest of a guide; do not make a workflow
+  load unrelated guidance merely to reach one shared rule. Required prerequisites
+  and governance gates remain mandatory.
 - Use the `knot` skill and CLI for every ticket operation. Never read or edit
   `.tickets/` directly. Humans initialize the independent tracker and transfer
   its selected open tickets; never fall back to an ancestor's consumer tracker.

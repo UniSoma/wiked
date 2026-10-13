@@ -5,7 +5,7 @@ Load this guide for consistency or structural review and correction.
 ## Review
 
 - A read-only review needs no grill.
-- Read the contract, root index, relevant top-level indexes, affected pages, and configured local authoring reference when present.
+- Read the contract and complete [Contextual Preparation](authoring-context.md) before analyzing content or proposing corrections, including during read-only review.
 - Load `modeling.md` for page, glossary, navigation, provenance, asset, or diagram structure; apply its content boundaries and coverage check to affected context and indexes.
 - Check broken internal references, orphaned assets, incomplete diagram sets, inconsistent terms, incomplete provenance, contradictions, stale statements, and visual-only information. External links and bare URLs are informational outside typed canonical-reference fields and intent-map destination entries.
 - Run the distributed validator. Errors are blocking; warnings require reporting and human disposition.

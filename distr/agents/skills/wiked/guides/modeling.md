@@ -2,6 +2,8 @@
 
 Load this guide when creating pages, reviewing structure, or running a consistency check.
 
+For page creation or revision and maintenance, complete [Contextual Preparation](authoring-context.md) before content analysis or authorship proposals. Initialization and migration instead apply the bounded exceptions in `setup.md`.
+
 ## Contract First
 
 Treat `wiki/wiki-structure.yaml` as the sole machine-readable authority for deterministic instance structure. Do not duplicate its concrete values here. Read:
@@ -14,8 +16,6 @@ Treat `wiki/wiki-structure.yaml` as the sole machine-readable authority for dete
 - assets and diagram relationships;
 - Knot mappings and diagnostic severities;
 - instance language and version requirements.
-
-When `navigation.authoring_file` is declared, read it before creating or revising content. Its instance-local review criteria, guidance, and examples may reference the contract or canonical terms but cannot redefine deterministic structure or domain meaning.
 
 Markdown bodies remain canonical. Configuration validates form, not operational truth.
 
