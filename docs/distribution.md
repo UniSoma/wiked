@@ -110,7 +110,7 @@ collisions or migration tickets. Without a controlling terminal, installation
 requires explicit approvals; stdin text is never consent. Dry runs and explicit
 recovery remain available without a terminal or installation approval. Defaults
 may be accepted through explicit noninteractive invocation. Preserve all
-ownership, compatibility, concurrency, and recovery checks in both usages.
+ownership, compatibility, and recovery checks in both usages.
 
 Both `uv` and `knot` must already be available before any distribution artifacts
 are installed. The installer checks prerequisites and explains missing tools; it
@@ -155,8 +155,10 @@ ownership and the old file's integrity. Do not automatically delete modified
 obsolete files. Files outside Wiked ownership remain untouched. Contract,
 operational wiki, ingestion material, and governance remain consumer-owned.
 
-Download and validate the candidate before changing installed files. Prevent
-concurrent operations. Keep temporary backups of affected files and restore the
+Download and validate the candidate before changing installed files. The user must
+run installation, update, and recovery one operation at a time; concurrent
+operations are unsupported and are not prevented by the installer.
+Keep temporary backups of affected files and restore the
 previous state on handled failures. Record pending operations so that an abrupt
 interruption requires recovery before another installation proceeds. Backups may
 be removed after successful completion; permanent backups are not required.

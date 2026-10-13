@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Human-operated, self-contained installer. Never run during agent use.
+# Human-operated, self-contained installer. Run one operation at a time, never during agent use.
 set -euo pipefail
 for tool in uv knot curl; do
     if ! command -v "$tool" >/dev/null 2>&1; then
@@ -53,10 +53,9 @@ if $prompt_parameters; then
     fi
 fi
 # The Python core delegates individual confirmations back to the Bash function,
-# while retaining the pinned release, candidate, lock, and plan in one process.
+# while retaining the pinned release, candidate, and plan in one process.
 exec uv run --no-project --no-python-downloads --python '>=3.11' --with 'PyYAML>=6,<7' python - "${arguments[@]}" <<'PY'
 import argparse
-import fcntl
 import hashlib
 import json
 import os
@@ -393,7 +392,7 @@ def install(destination, transaction, tree, version, hashes, changes, observed):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Human Wiked installer/updater. Stop agents before running.')
+    parser = argparse.ArgumentParser(description='Human Wiked installer/updater. Stop agents and run one operation at a time; concurrency is unsupported.')
     parser.add_argument('--destination', default='.agents', help='Manifest-relative installation root; relative to consumer cwd.')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--yes', action='store_true', help='Approve the displayed operation, not collisions or migration tickets.')
@@ -413,74 +412,64 @@ def main():
     if not destination.parent.is_dir():
         fail('Destination parent must already exist.')
     transaction = destination.with_name('.' + destination.name + '.wiked-transaction')
-    lock_path = destination.with_name('.' + destination.name + '.wiked-lock')
     safe_path(transaction, '')
-    safe_path(lock_path, '')
-    fd = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
-    try:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            fail('Another Wiked operation is active.')
-        if transaction.exists():
-            if not args.recover:
-                fail('Interrupted operation detected. Run --recover before installing again.')
-            recover(destination, transaction)
-            print('Recovery complete; run the installer again to plan an update.')
+    if transaction.exists():
+        if not args.recover:
+            fail('Interrupted operation detected. Run --recover before installing again.')
+        recover(destination, transaction)
+        print('Recovery complete; run the installer again to plan an update.')
+        return
+    if args.recover:
+        print('No pending operation to recover.')
+        return
+    previous = baseline(destination)
+    with tempfile.TemporaryDirectory(prefix='wiked-') as temporary:
+        version, tree, hashes = candidate(Path(temporary), args.yes or args.dry_run)
+        if previous and tuple(map(int, previous['version'].split('.'))) > tuple(map(int, version.split('.'))):
+            fail('The latest stable release is older than the installation; downgrade is not supported.')
+        compatibility(root, tree, version, previous, args.dry_run, args.approve_migration_ticket)
+        old = previous['files'] if previous else {}
+        observed = {name: digest(safe_path(destination, name)) for name in sorted(set(hashes) | set(old))}
+        observed[METADATA] = digest(safe_path(destination, METADATA))
+        changes = []
+        collisions = []
+        print(f'Destination: {destination}')
+        for name, checksum in hashes.items():
+            current = observed[name]
+            if current is not None and name not in old:
+                collisions.append(name)
+                print(f'Collision (unowned): {name}')
+            if current != checksum:
+                changes.append(name)
+                action = 'Add' if current is None else 'Replace'
+                modified = ' (locally modified)' if name in old and current != old[name] else ''
+                print(f'{action}: {name}{modified}')
+        for name in sorted(set(old) - set(hashes)):
+            if observed[name] is None:
+                continue
+            if observed[name] == old[name]:
+                changes.append(name)
+                print(f'Remove obsolete: {name}')
+            else:
+                print(f'Preserve modified obsolete file: {name}')
+        if previous and previous['version'] == version and old == hashes and not changes:
+            print('Already installed and intact; no changes.')
             return
-        if args.recover:
-            print('No pending operation to recover.')
+        if previous and previous['version'] == version:
+            print('Reinstall requested version to repair changed or missing files.')
+        if args.dry_run:
+            print('Dry run: no installed files or tickets changed.')
             return
-        previous = baseline(destination)
-        with tempfile.TemporaryDirectory(prefix='wiked-') as temporary:
-            version, tree, hashes = candidate(Path(temporary), args.yes or args.dry_run)
-            if previous and tuple(map(int, previous['version'].split('.'))) > tuple(map(int, version.split('.'))):
-                fail('The latest stable release is older than the installation; downgrade is not supported.')
-            compatibility(root, tree, version, previous, args.dry_run, args.approve_migration_ticket)
-            old = previous['files'] if previous else {}
-            observed = {name: digest(safe_path(destination, name)) for name in sorted(set(hashes) | set(old))}
-            observed[METADATA] = digest(safe_path(destination, METADATA))
-            changes = []
-            collisions = []
-            print(f'Destination: {destination}')
-            for name, checksum in hashes.items():
-                current = observed[name]
-                if current is not None and name not in old:
-                    collisions.append(name)
-                    print(f'Collision (unowned): {name}')
-                if current != checksum:
-                    changes.append(name)
-                    action = 'Add' if current is None else 'Replace'
-                    modified = ' (locally modified)' if name in old and current != old[name] else ''
-                    print(f'{action}: {name}{modified}')
-            for name in sorted(set(old) - set(hashes)):
-                if observed[name] is None:
-                    continue
-                if observed[name] == old[name]:
-                    changes.append(name)
-                    print(f'Remove obsolete: {name}')
-                else:
-                    print(f'Preserve modified obsolete file: {name}')
-            if previous and previous['version'] == version and old == hashes and not changes:
-                print('Already installed and intact; no changes.')
-                return
-            if previous and previous['version'] == version:
-                print('Reinstall requested version to repair changed or missing files.')
-            if args.dry_run:
-                print('Dry run: no installed files or tickets changed.')
-                return
-            approved = {owned_path(name) for name in args.approve_collision}
-            for name in collisions:
-                if name not in approved and (args.yes or not confirm(f'Take ownership of collision {name}?')):
-                    fail(f'Explicit collision approval required: --approve-collision {name}')
-            if not args.yes and not confirm('Approve this installation plan? Stop agents before approving.'):
-                fail('Operation not approved; nothing installed.')
-            install(destination, transaction, tree, version, hashes, changes, observed)
-            print(f'Installed Wiked {version}. Skill: {destination / "skills/wiked"}')
-            print(f'Adapter: {destination / "commands/wiked-setup.md"}')
-            print('Configure agent discovery for custom destinations. Start wiked-setup with the installed skill and consumer contract; no agent has been launched.')
-    finally:
-        os.close(fd)
+        approved = {owned_path(name) for name in args.approve_collision}
+        for name in collisions:
+            if name not in approved and (args.yes or not confirm(f'Take ownership of collision {name}?')):
+                fail(f'Explicit collision approval required: --approve-collision {name}')
+        if not args.yes and not confirm('Approve this installation plan? Stop agents before approving.'):
+            fail('Operation not approved; nothing installed.')
+        install(destination, transaction, tree, version, hashes, changes, observed)
+        print(f'Installed Wiked {version}. Skill: {destination / "skills/wiked"}')
+        print(f'Adapter: {destination / "commands/wiked-setup.md"}')
+        print('Configure agent discovery for custom destinations. Start wiked-setup with the installed skill and consumer contract; no agent has been launched.')
 
 
 def interrupted(signum, frame):

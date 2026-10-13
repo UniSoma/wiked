@@ -208,8 +208,9 @@ effect in a dry run. Collision approval remains separate as described above.
 
 ## Interrupted installation and recovery
 
-A sibling `.<destination-name>.wiked-lock` provides concurrency exclusion. It
-remains as a reusable lock file and must not be unlinked during operations.
+The user must run installation, update, and recovery one operation at a time.
+Concurrent operations are unsupported and are not prevented by the installer.
+Run `--recover` only after the previous operation has stopped.
 Temporary backups and a durable journal live in the sibling
 `.<destination-name>.wiked-transaction/`.
 
@@ -226,8 +227,7 @@ Recovery requires no release download and restores the previous installation,
 or cleans an already committed transaction. Corrupted backups block recovery
 and remain available for human investigation; do not delete the transaction to
 bypass this protection. Backups are temporary, not permanent version history.
-Dry runs leave installed files and tickets untouched; the reusable sibling lock
-may be created to exclude concurrency.
+Dry runs leave installed files and tickets untouched.
 
 ## Distribution and release format
 

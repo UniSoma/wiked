@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import fcntl
 import hashlib
 import io
 import json
@@ -422,13 +421,30 @@ def test_rejects_symlink_targets_and_warns_about_invalid_baseline(environment):
     assert obsolete.read_text() == 'unproven ownership'
 
 
-def test_concurrent_operation_is_blocked(environment):
+@pytest.mark.parametrize('destination', ['.agents', 'custom-agents'])
+def test_serial_operations_do_not_create_lock_files(environment, destination):
     root, _, _ = environment
-    with (root / '..agents.wiked-lock').open('w') as stream:
-        fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        result = run(environment, '--yes')
-    assert result.returncode == 2 and 'Another Wiked operation' in result.stderr
-    assert not (root / '.agents').exists()
+    lock = root / ('.' + destination + '.wiked-lock')
+    for args in [('--dry-run',), ('--recover',), ('--yes',), ('--yes',)]:
+        result = run(environment, '--destination', destination, *args)
+        assert result.returncode == 0, result.stderr
+        assert not lock.exists()
+    assert (root / destination / '.wiked-install.json').is_file()
+
+
+def test_serial_operations_leave_existing_lock_file_untouched(environment):
+    root, _, _ = environment
+    lock = root / '..agents.wiked-lock'
+    lock.write_bytes(b'legacy lock')
+    lock.chmod(0o600)
+    before = lock.stat()
+    for args in [('--dry-run',), ('--recover',), ('--yes',), ('--yes',)]:
+        result = run(environment, *args)
+        assert result.returncode == 0, result.stderr
+        assert lock.read_bytes() == b'legacy lock'
+        after = lock.stat()
+        assert (after.st_ino, after.st_mode, after.st_mtime_ns) == (
+            before.st_ino, before.st_mode, before.st_mtime_ns)
 
 
 def transaction_fixture(tmp_path):
