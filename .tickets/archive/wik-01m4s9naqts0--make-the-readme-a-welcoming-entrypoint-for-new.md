@@ -1,12 +1,13 @@
 ---
 id: wik-01m4s9naqts0
 title: Make the README a welcoming entrypoint for new Wiked users
-status: open
+status: closed
 type: task
 priority: 2
 mode: hitl
 created: '2026-10-13T00:12:39.546650727Z'
-updated: '2026-10-13T00:26:48.632356691Z'
+updated: '2026-10-13T02:51:15.809601489Z'
+closed: '2026-10-13T02:51:15.809601489Z'
 acceptance:
 - title: README explains agent-managed wiki value, human oversight, and brief illustrative use cases in accessible English.
   done: true
@@ -43,3 +44,7 @@ Approved onboarding amendment applied in README.md and docs/installation.md. REA
 **2026-10-13T00:26:48.632356691Z**
 
 Requester-directed copy refinement within the confirmed newcomer README objective and existing file scope: expanded the Markdown ownership paragraph to explain the open, human-readable format, freedom from a particular tool, browsing in a favorite Markdown app such as Obsidian, and reading files as plain text. This describes reading, not manual governed wiki edits or a new integration guarantee. Only README.md changed. Targeted Node checks passed for required wording, ASCII, balanced fences, local links and anchors. No runtime/test changes; no pytest required.
+
+**2026-10-13T02:51:15.809601489Z**
+
+Requester explicitly approved the final README. Delivered newcomer-first English introduction, LLM Wiki-inspired agent-managed/human-governed framing, use cases, open human-readable Markdown with Obsidian/plain-text reading, optional Knot installation and local initialization followed by Wiked installation and agent-assisted setup. Preserved advanced installation guidance in docs/installation.md. Targeted textual checks passed; no runtime changes or publication performed.
