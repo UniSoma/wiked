@@ -194,6 +194,13 @@ before any create command, including configured ticket/archive paths.
 
 After success, provide the instruction to begin `wiked-setup` using the installed
 skill and consumer contract. Do not launch an agent or create domain content.
+After every effective version change from a recorded installation, additionally
+require a maintenance agent review using the installed skill and local contract
+to assess content against the new methodology. Contract-only preflight is not
+content validation. The notice does not authorize corrections, contract migration,
+or automatic adoption of optional capabilities; those need their own governance.
+First installation, same-version repair, intact no-op, and dry run do not trigger
+this version-change notice.
 
 ## Execution and verification
 

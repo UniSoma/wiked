@@ -84,7 +84,8 @@
         "root_index": {"$ref": "#/$defs/markdownFile"},
         "trunk_index": {"$ref": "#/$defs/markdownFile"},
         "context_file": {"$ref": "#/$defs/markdownFile"},
-        "authoring_file": {"$ref": "#/$defs/markdownFile"}
+        "authoring_file": {"$ref": "#/$defs/markdownFile"},
+        "intent_map": {"$ref": "#/$defs/markdownFile"}
       }
     },
     "frontmatter": {

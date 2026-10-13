@@ -300,6 +300,36 @@ def test_update_removes_only_intact_owned_obsolete_files(environment):
     assert modified not in json.loads((destination / '.wiked-install.json').read_text())['files']
 
 
+def test_version_change_requires_maintenance_review_without_migrating_content(environment):
+    root, assets, env = environment
+    first = run(environment, '--yes')
+    assert first.returncode == 0, first.stderr
+    assert 'Version changed:' not in first.stdout
+    wiki = root / 'wiki'
+    wiki.mkdir()
+    (wiki / 'wiki-structure.yaml').write_text(yaml.safe_dump(contract()))
+    (wiki / 'page.md').write_bytes(b'\xff')
+    before = snapshot(wiki)
+    release(assets, version='1.5.0')
+    planned = run(environment, '--dry-run')
+    assert planned.returncode == 0, planned.stderr
+    assert 'Version changed:' not in planned.stdout
+    updated = run(environment, '--yes')
+    assert updated.returncode == 0, updated.stderr
+    assert 'Version changed: run a maintenance agent' in updated.stdout
+    assert 'Corrections and contract migration require separate authorization and a closed grill' in updated.stdout
+    assert 'optional capabilities are not adopted automatically' in updated.stdout
+    assert 'no agent has been launched' in updated.stdout
+    assert snapshot(wiki) == before
+    assert not Path(env['KNOT_LOG']).exists()
+    noop = run(environment, '--yes')
+    assert noop.returncode == 0 and 'Version changed:' not in noop.stdout
+    (root / '.agents/skills/wiked/SKILL.md').write_text('local edit')
+    repair = run(environment, '--yes')
+    assert repair.returncode == 0 and 'Version changed:' not in repair.stdout
+    assert snapshot(wiki) == before
+
+
 @pytest.mark.parametrize('kind', ['corrupt', 'traversal', 'link', 'unlisted', 'prerelease'])
 def test_rejects_unsafe_candidates_before_installing(environment, kind):
     root, assets, _ = environment

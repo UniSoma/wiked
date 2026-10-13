@@ -286,6 +286,248 @@ def run_portable(tmp_path: Path, repository: Path, output_format: str = "json", 
     )
 
 
+def write_intent_map(repository: Path, content: str | None = None) -> Path:
+    wiki = repository / "wiki"
+    config_path = wiki / "wiki-structure.yaml"
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    config["methodology_version"] = "1.5.0"
+    config["navigation"]["intent_map"] = "routes.md"
+    config_path.write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
+    index = wiki / "index.md"
+    index.write_text(index.read_text(encoding="utf-8") + "\n## Transversal references\n\n- [Intent routes](routes.md)\n", encoding="utf-8")
+    path = wiki / "routes.md"
+    path.write_text(content if content is not None else (
+        "# Intent routes\n\nSelected consultation points, not exhaustive coverage.\n\n"
+        "## Understand the practice\n\n"
+        "- [Operations](handbook/operations.md#operations) - Read the canonical description.\n"
+        "- [Sources](sources/index.md) - Locate provenance records.\n\n"
+        "## Locate the practice\n\n"
+        "- [Operations](handbook/operations.md) - Consult the same canonical practice.\n"
+        "- [Handbook](handbook/index.md) - Locate related knowledge.\n"
+    ), encoding="utf-8")
+    return path
+
+
+def test_intent_map_is_optional_and_accepts_shared_cross_trunk_destinations(tmp_path: Path) -> None:
+    repository = write_instance(tmp_path)
+    write_intent_map(repository)
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["summary"] == {"files_checked": 7, "errors": 0, "warnings": 0}
+
+
+@pytest.mark.parametrize("name", ["index.md", "CONTEXT.md", "authoring.md", "nested/routes.md", "../routes.md", "routes.yaml"])
+def test_intent_map_rejects_collisions_and_invalid_configuration(tmp_path: Path, name: str) -> None:
+    repository = write_instance(tmp_path)
+    write_intent_map(repository)
+    config_path = repository / "wiki/wiki-structure.yaml"
+    config = yaml.safe_load(config_path.read_text())
+    config["navigation"]["authoring_file"] = "authoring.md"
+    config["navigation"]["intent_map"] = name
+    config_path.write_text(yaml.safe_dump(config))
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert json.loads(result.stdout)["summary"]["files_checked"] == 0
+
+
+def test_intent_map_contract_only_checks_minimum_version_not_content(tmp_path: Path) -> None:
+    repository = write_instance(tmp_path)
+    path = write_intent_map(repository)
+    path.write_bytes(b"\xff")
+    script = copy_runtime(tmp_path)
+    command = ["uv", "run", "--script", str(script), "--repository-root", str(repository), "--contract-only", "--format", "json"]
+    result = subprocess.run(command, capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["summary"]["files_checked"] == 0
+    path.unlink()
+    result = subprocess.run(command, capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr
+    config_path = repository / "wiki/wiki-structure.yaml"
+    config = yaml.safe_load(config_path.read_text())
+    config["methodology_version"] = "1.4.1"
+    config_path.write_text(yaml.safe_dump(config))
+    result = subprocess.run(command, capture_output=True, text=True)
+    assert result.returncode == 2
+    assert "1.5.0 or newer" in result.stdout
+
+
+@pytest.mark.parametrize("change,code", [("missing", "topology.required-file"), ("unlinked", "navigation.root-count"), ("duplicate", "navigation.root-count")])
+def test_declared_map_must_exist_and_be_linked_once(tmp_path: Path, change: str, code: str) -> None:
+    repository = write_instance(tmp_path)
+    path = write_intent_map(repository)
+    index = repository / "wiki/index.md"
+    if change == "missing":
+        path.unlink()
+    elif change == "unlinked":
+        index.write_text(index.read_text().replace("- [Intent routes](routes.md)", ""))
+    else:
+        index.write_text(index.read_text() + "\n## Another section\n\n- [Routes](routes.md#intent-routes)\n")
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 1
+    assert code in {item["code"] for item in json.loads(result.stdout)["diagnostics"]}
+
+
+@pytest.mark.parametrize("content,code", [
+    ("# Routes\n", "intent-map.intent"),
+    ("# Routes\n\n## Intent\n", "intent-map.destinations"),
+    ("# Routes\n\n## Intent\n\n- [Operations](handbook/operations.md)\n", "intent-map.entry"),
+    ("# Routes\n\n## Intent\n\n- [Operations](handbook/operations.md) - \n", "intent-map.entry"),
+    ("# Routes\n\n##\n\n- [Operations](handbook/operations.md) - Consult here.\n", "intent-map.intent"),
+    ("## Intent\n\n- [Operations](handbook/operations.md) - Consult here.\n", "intent-map.title"),
+    ("# Routes\n\n```markdown\n## Fake intent\n- [Operations](handbook/operations.md) - Consult here.\n```\n", "intent-map.intent"),
+    ("# Routes\n\n> ## Fake intent\n> - [Operations](handbook/operations.md) - Consult here.\n", "intent-map.intent"),
+    ("# Routes\n\n## Intent\n\n- Group\n  - [Operations](handbook/operations.md) - Consult here.\n", "intent-map.entry"),
+    ("# Routes\n\n## Intent\n\n### Subheading\n\n- [Operations](handbook/operations.md) - Consult here.\n", "intent-map.structure"),
+    ("# Routes\n\n## Intent\n\n1. [Operations](handbook/operations.md) - Consult here.\n", "intent-map.structure"),
+    ("# Routes\n\n## Intent\n\n- [Operations](handbook/operations.md) - Consult [elsewhere](sources/index.md).\n", "intent-map.entry"),
+    ("---\ntype: article\nstate: current\n---\n# Routes\n\n## Intent\n\n- [Operations](handbook/operations.md) - Consult here.\n", "intent-map.frontmatter"),
+])
+def test_intent_map_requires_real_intents_destinations_and_guidance(tmp_path: Path, content: str, code: str) -> None:
+    repository = write_instance(tmp_path)
+    write_intent_map(repository, content)
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 1, result.stdout + result.stderr
+    diagnostics = json.loads(result.stdout)["diagnostics"]
+    assert code in {item["code"] for item in diagnostics}
+    assert not any(item["code"].startswith(("provenance.", "diagrams.", "pendency.", "proposal.")) for item in diagnostics)
+
+
+@pytest.mark.parametrize("target,label,code", [
+    ("sources/manual.md", "Manual", "intent-map.destination"),
+    ("CONTEXT.md", "Context", "intent-map.destination"),
+    ("routes.md", "Intent routes", "intent-map.destination"),
+    ("wiki-structure.yaml", "Contract", "intent-map.destination"),
+    ("handbook/missing.md", "Missing", "reference.missing"),
+    ("../raw/source.md", "Raw", "reference.boundary"),
+    ("../.tickets/task.md", "Task", "reference.boundary"),
+    ("../.agents/instructions.md", "Instructions", "reference.boundary"),
+    ("https://example.test/page.md", "External", "intent-map.destination"),
+    ("handbook/operations.md?query=1", "Operations", "intent-map.destination"),
+    ("handbook/operations.md", "Alias", "intent-map.label"),
+    ("handbook/operations.md#missing", "Operations", "reference.fragment"),
+])
+def test_intent_map_references_only_canonical_operational_pages_or_indexes(tmp_path: Path, target: str, label: str, code: str) -> None:
+    repository = write_instance(tmp_path)
+    write_intent_map(repository, f"# Intent routes\n\n## Intent\n\n- [{label}]({target}) - Consult here.\n")
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert code in {item["code"] for item in json.loads(result.stdout)["diagnostics"]}
+
+
+def test_map_does_not_relax_index_duplicates_or_cross_trunk_shortcuts(tmp_path: Path) -> None:
+    repository = write_instance(tmp_path)
+    path = write_intent_map(repository)
+    path.write_text(path.read_text() + "\n- [Handbook](handbook/index.md#handbook) - A repeated destination.\n")
+    index = repository / "wiki/handbook/index.md"
+    index.write_text(index.read_text() + "\n## Another grouping\n\n- [Operations](operations.md#operations)\n- [Sources](../sources/index.md)\n")
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 1
+    codes = {item["code"] for item in json.loads(result.stdout)["diagnostics"]}
+    assert {"intent-map.duplicate", "navigation.trunk-count", "navigation.trunk-target"} <= codes
+
+
+def test_intent_map_accepts_instance_language_and_configured_filename(tmp_path: Path) -> None:
+    repository = write_instance(tmp_path)
+    path = write_intent_map(repository, "# Rotas por inten\u00e7\u00e3o\n\n## Consultar uma pr\u00e1tica\n\n- [Operations](handbook/operations.md) - Consulte a descri\u00e7\u00e3o can\u00f4nica.\n")
+    renamed = path.with_name("rotas.md")
+    path.rename(renamed)
+    config_path = repository / "wiki/wiki-structure.yaml"
+    config = yaml.safe_load(config_path.read_text())
+    config["language"] = "pt-BR"
+    config["navigation"]["intent_map"] = renamed.name
+    config_path.write_text(yaml.safe_dump(config))
+    index = repository / "wiki/index.md"
+    index.write_text(index.read_text().replace("routes.md", "rotas.md"))
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("kind", ["absolute", "symlink", "authoring", "duplicate-fragments"])
+def test_intent_map_cannot_bypass_destination_boundaries(tmp_path: Path, kind: str) -> None:
+    repository = write_instance(tmp_path)
+    wiki = repository / "wiki"
+    label = "Operations"
+    target = "handbook/operations.md"
+    if kind == "absolute":
+        target = str(wiki / target)
+    elif kind == "symlink":
+        outside = tmp_path / "outside.md"
+        outside.write_text("# Operations\n")
+        (wiki / "handbook/linked.md").symlink_to(outside)
+        target = "handbook/linked.md"
+    elif kind == "authoring":
+        config_path = wiki / "wiki-structure.yaml"
+        config = yaml.safe_load(config_path.read_text())
+        config["navigation"]["authoring_file"] = "authoring.md"
+        config_path.write_text(yaml.safe_dump(config))
+        (wiki / "authoring.md").write_text("# Authoring\n")
+        index = wiki / "index.md"
+        index.write_text(index.read_text() + "\n- [Authoring](authoring.md)\n")
+        label, target = "Authoring", "authoring.md"
+    content = f"# Intent routes\n\n## Intent\n\n- [{label}]({target}) - Consult here.\n"
+    if kind == "duplicate-fragments":
+        content += "- [Operations](handbook/operations.md#sources) - Consult provenance here.\n"
+    write_intent_map(repository, content)
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 1, result.stdout + result.stderr
+    codes = {item["code"] for item in json.loads(result.stdout)["diagnostics"]}
+    assert ("intent-map.duplicate" if kind == "duplicate-fragments" else "intent-map.destination") in codes
+
+
+def test_intent_map_diagnostics_reuse_navigation_severity(tmp_path: Path) -> None:
+    repository = write_instance(tmp_path)
+    write_intent_map(repository, "# Intent routes\n\n## Intent\n")
+    config_path = repository / "wiki/wiki-structure.yaml"
+    config = yaml.safe_load(config_path.read_text())
+    config["rules"]["navigation"]["severity"] = "warning"
+    config_path.write_text(yaml.safe_dump(config))
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 0, result.stdout + result.stderr
+    diagnostics = json.loads(result.stdout)["diagnostics"]
+    assert diagnostics and all(item["severity"] == "warning" for item in diagnostics)
+
+
+def test_map_frontmatter_never_enters_operational_record_validation(tmp_path: Path) -> None:
+    repository = write_instance(tmp_path)
+    write_intent_map(repository, "---\ntype: article\nstate: suggested\nchange_ticket: job-9999\n---\n# Intent routes\n")
+    config_path = repository / "wiki/wiki-structure.yaml"
+    config = yaml.safe_load(config_path.read_text())
+    config["structured_sections"] = [{
+        "section": "Records", "page_types": ["article"], "min_records": 1, "max_records": None,
+        "fields": [{"name": "Description", "value_types": ["text"], "min_items": 1, "max_items": 1}],
+    }]
+    config["rules"]["structured_sections"] = {"severity": "error"}
+    config_path.write_text(yaml.safe_dump(config))
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 1, result.stdout + result.stderr
+    map_diagnostics = [item for item in json.loads(result.stdout)["diagnostics"] if item["path"] == "routes.md"]
+    assert {item["code"] for item in map_diagnostics} == {"intent-map.frontmatter"}
+
+
+def test_intent_route_guides_preserve_read_only_query_and_editorial_governance() -> None:
+    query = (WIKED / "guides/query.md").read_text()
+    indexing = (WIKED / "guides/assisted-indexing.md").read_text()
+    maintenance = (WIKED / "guides/maintenance.md").read_text()
+    setup = (WIKED / "guides/setup.md").read_text()
+    modeling = (WIKED / "guides/modeling.md").read_text()
+    assert "task or need without a known page or destination" in query
+    assert "indexes cannot locate the subject or leave uncertainty" in query
+    assert "A known destination keeps the existing path" in query
+    assert "missing intent, or insufficient route returns to this existing path" in query
+    assert "canonical operational content actually read" in query
+    assert "does not authorize starting indexing, writing the map, creating tickets, or recording governance" in query
+    assert "without write access or editorial authority" in query
+    assert "open indexing ticket, editorial authority" in indexing
+    assert "human curation" in indexing
+    assert "Do not create one route per question or new page" in indexing
+    assert "directly affected routes" in indexing
+    assert "Do not require a full-map review" in maintenance
+    assert "every human-installed change of Wiked version" in maintenance
+    assert "Do not create an empty or fictional map" in setup
+    assert "configured instance language" in modeling
+    assert "not an operational sequence, responsibilities, or new rules" in modeling
+
+
 def test_portable_validator_runs_outside_source_layout(tmp_path: Path) -> None:
     result = run_portable(tmp_path, write_instance(tmp_path), "text")
 
@@ -688,7 +930,9 @@ def test_methodology_version_accepts_only_supported_semver(tmp_path: Path) -> No
     repository = write_instance(tmp_path)
     contract_path = repository / "wiki/wiki-structure.yaml"
     data = yaml.safe_load(contract_path.read_text(encoding="utf-8"))
-    data["methodology_version"] = "1.5.0"
+    manifest = yaml.safe_load((DISTRIBUTION / "wiked-manifest.yaml").read_text(encoding="utf-8"))
+    major, minor, patch = map(int, manifest["distribution_version"].split("."))
+    data["methodology_version"] = f"{major}.{minor}.{patch + 1}"
     contract_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
     before = contract_path.read_bytes()
 

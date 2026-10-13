@@ -10,9 +10,10 @@ Wiked maintains progressively navigated operational Markdown while separating ev
 ## Start
 
 1. Resolve the consumer repository root from the user's workspace. Never infer it from this skill's installation path.
-2. Read `wiki/wiki-structure.yaml`, which configures language, version compatibility, paths, vocabulary labels, page types, states, navigation, an optional local authoring reference, and Knot mappings. It is not operational evidence.
+2. Read `wiki/wiki-structure.yaml`, which configures language, version compatibility, paths, vocabulary labels, page types, states, navigation, an optional intent map and local authoring reference, and Knot mappings. It is not operational evidence.
 3. If the contract is absent, use `guides/setup.md` only when the user asks to initialize Wiked. Otherwise stop and report that the instance is not configured.
 4. Read the installed `distribution_version` from `../../wiked-manifest.yaml`, relative to this skill directory. Require `contract_version: 1.0` and a `methodology_version` in the installed major that is not newer than the distribution. If either version is malformed or incompatible, stop without processing wiki content; use `guides/setup.md` only for an explicitly requested migration.
+   A declared `navigation.intent_map` additionally requires `methodology_version` 1.5.0 or newer. Do not adopt it or migrate the contract automatically.
 5. Classify the request before loading any guide.
 
 ## Route
@@ -21,6 +22,7 @@ Wiked maintains progressively navigated operational Markdown while separating ev
 | --- | --- |
 | Answer from consolidated knowledge | `guides/query.md` |
 | Incorporate a source | `guides/assisted-indexing.md`, then its required guides |
+| Create or revise intent routes | `guides/assisted-indexing.md`, then its required guides |
 | Review or correct consistency or structure | `guides/maintenance.md`, plus `guides/modeling.md` for page structure |
 | Create or revise wiki pages | `guides/modeling.md` and `guides/grill.md` |
 | Initialize or migrate an instance | `guides/setup.md` and `guides/grill.md` |
@@ -34,6 +36,7 @@ Load only the applicable guides. A guide may explicitly require another guide; d
 
 - Only Markdown with a configured operational-content role is operational evidence. The configured context and local authoring reference govern vocabulary and authorship, respectively, but are not evidence of how the consumer operates.
 - Sources, tickets, configuration, diagrams, rendered assets, and agent instructions are not operational evidence.
+- The optional intent map is human-readable navigation, never operational evidence. Load it selectively under `guides/query.md` or when authoring routes or checking affected associations; it does not replace canonical pages or relax index rules.
 - Query work is read-only except for an explicitly requested exported artifact.
 - Creating or changing governed content requires `guides/grill.md` to close with explicit human confirmation first.
 - Before a governed workflow proceeds, the participating human must explicitly confirm that they are qualified to govern the current objective. This is session- and objective-specific, never instance configuration, and must be renewed for a new session or substantive objective.

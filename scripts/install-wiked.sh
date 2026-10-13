@@ -470,6 +470,8 @@ def main():
         print(f'Installed Wiked {version}. Skill: {destination / "skills/wiked"}')
         print(f'Adapter: {destination / "commands/wiked-setup.md"}')
         print('Configure agent discovery for custom destinations. Start wiked-setup with the installed skill and consumer contract; no agent has been launched.')
+        if previous and previous['version'] != version:
+            print('Version changed: run a maintenance agent with the installed Wiked skill and local contract to review content against the new methodology. Corrections and contract migration require separate authorization and a closed grill; optional capabilities are not adopted automatically.')
 
 
 def interrupted(signum, frame):

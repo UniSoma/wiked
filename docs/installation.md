@@ -158,6 +158,15 @@ wiki configuration without reading wiki pages or querying Knot. An incompatible
 configuration blocks the update; the installer never migrates or changes your
 configuration or wiki.
 
+After every successful change of installed version, run a maintenance agent using
+the installed Wiked skill and your local contract to review content against the
+new methodology. The installer displays this required next step but never starts
+an agent. Its contract-only preflight does not establish content conformity.
+Corrections or contract migration require separately authorized scope and a closed
+grill; an update does not authorize them. First installation retains the setup
+instruction; same-version repair and intact no-op do not trigger this review.
+In 1.5.0, the intent map remains optional: maintenance does not imply adopting it.
+
 A priority-1, human-in-the-loop migration ticket is offered only if both
 `.knot.edn` and `.tickets/` already exist locally, not through symlinks. Ticket
 creation requires separate approval; `--yes` never approves it. Without a local

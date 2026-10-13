@@ -29,7 +29,7 @@ from jsonschema.exceptions import SchemaError
 from markdown_it import MarkdownIt
 
 
-METHODOLOGY_VERSION = "1.4.1"
+METHODOLOGY_VERSION = "1.5.0"
 
 
 @dataclass(frozen=True)
@@ -110,6 +110,12 @@ def validate_contract(contract_path: Path, schema_path: Path) -> tuple[dict[str,
     if topology["assets_directory"] in trunks:
         relations.append(issue("contract.relation", "error", contract_label, "The assets directory cannot also be a trunk."))
     navigation = contract["navigation"]
+    intent_map = navigation.get("intent_map")
+    if intent_map is not None:
+        if required_version < (1, 5, 0):
+            relations.append(issue("contract.relation", "error", contract_label, "An intent map requires methodology_version 1.5.0 or newer."))
+        if intent_map in {navigation["root_index"], navigation["trunk_index"], navigation["context_file"], navigation.get("authoring_file")}:
+            relations.append(issue("contract.relation", "error", contract_label, "The intent map must be distinct from configured index, context, and authoring files."))
     authoring_file = navigation.get("authoring_file")
     if authoring_file is not None and authoring_file in {
         navigation["root_index"], navigation["trunk_index"], navigation["context_file"]
@@ -284,6 +290,9 @@ def iso_date(value: Any) -> bool:
 
 def validate_page(path: Path, wiki_root: Path, contract: dict[str, Any]) -> list[Diagnostic]:
     rel = relative(path, wiki_root)
+    if rel == contract["navigation"].get("intent_map"):
+        # This auxiliary is validated separately and can never acquire a page role.
+        return []
     frontmatter, body, offset, parse_issue = split_page(path, contract["frontmatter"]["marker"])
     if parse_issue:
         return [Diagnostic(parse_issue.code, severity(contract, "frontmatter"), rel, parse_issue.line, parse_issue.message)]
@@ -401,6 +410,8 @@ def validate_topology(wiki_root: Path, contract: dict[str, Any]) -> list[Diagnos
     required_files = [navigation["root_index"], navigation["context_file"]]
     if "authoring_file" in navigation:
         required_files.append(navigation["authoring_file"])
+    if "intent_map" in navigation:
+        required_files.append(navigation["intent_map"])
     for required_file in required_files:
         if not (wiki_root / required_file).is_file():
             problems.append(issue("topology.required-file", severity(contract, "topology"), required_file, f"Required wiki file is missing: {required_file}."))
@@ -412,6 +423,8 @@ def validate_topology(wiki_root: Path, contract: dict[str, Any]) -> list[Diagnos
         reserved_files = {navigation["root_index"], navigation["context_file"], "wiki-structure.yaml"}
         if "authoring_file" in navigation:
             reserved_files.add(navigation["authoring_file"])
+        if "intent_map" in navigation:
+            reserved_files.add(navigation["intent_map"])
         if item.is_file() and item.name not in reserved_files:
             problems.append(issue("topology.root-file", severity(contract, "topology"), item.name, "File is not allowed at the wiki root."))
         if item.name not in reserved_files and not name_pattern.fullmatch(item.stem if item.is_file() else item.name):
@@ -459,9 +472,11 @@ def validate_navigation(wiki_root: Path, contract: dict[str, Any]) -> list[Diagn
         allowed = {wiki_root / navigation["context_file"]} | {trunk / navigation["trunk_index"] for trunk in trunks}
         if "authoring_file" in navigation:
             allowed.add(wiki_root / navigation["authoring_file"])
+        if "intent_map" in navigation:
+            allowed.add(wiki_root / navigation["intent_map"])
         for target, line in targets:
             if target not in allowed:
-                problems.append(issue("navigation.root-target", severity(contract, "navigation"), navigation["root_index"], "Root index may link only to the context file or trunk indexes.", line))
+                problems.append(issue("navigation.root-target", severity(contract, "navigation"), navigation["root_index"], "Root index may link only to configured root references and trunk indexes.", line))
         for target in sorted(allowed, key=lambda value: relative(value, wiki_root)):
             count = sum(item == target for item, _ in targets)
             if count != 1:
@@ -485,6 +500,112 @@ def validate_navigation(wiki_root: Path, contract: dict[str, Any]) -> list[Diagn
                 count = sum(item == page for item, _ in targets)
                 if count != 1:
                     problems.append(issue("navigation.trunk-count", severity(contract, "navigation"), relative(index, wiki_root), f"Directory index must link exactly once to {relative(page, wiki_root)}; found {count}."))
+    return problems
+
+
+def validate_intent_map(wiki_root: Path, contract: dict[str, Any]) -> list[Diagnostic]:
+    """Validate navigation form and canonical destinations, never editorial meaning."""
+    name = contract["navigation"].get("intent_map")
+    if name is None or not (wiki_root / name).is_file():
+        return []  # Topology reports a declared but missing map.
+    path = wiki_root / name
+    text = path.read_text(encoding="utf-8")
+    rule = severity(contract, "navigation")
+    problems: list[Diagnostic] = []
+
+    def report(code: str, message: str, line: int | None = None) -> None:
+        problems.append(issue(f"intent-map.{code}", rule, name, message, line))
+
+    if text.splitlines() and text.splitlines()[0].strip() == contract["frontmatter"]["marker"]:
+        report("frontmatter", "The intent map must not contain frontmatter or an operational page role.", 1)
+        return problems
+    tokens = MarkdownIt().parse(text)
+    h1_lines, _, _ = heading_data(text, 0)
+    if len(h1_lines) != 1:
+        report("title", "The intent map must contain exactly one H1 title.")
+    route_line: int | None = None
+    destinations: set[Path] = set()
+    entries = 0
+    routes = 0
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        line = token.map[0] + 1 if token.map else None
+        if token.type == "heading_open" and token.level == 0 and token.tag in {"h1", "h2"}:
+            title = tokens[index + 1].content.strip()
+            if token.tag == "h1":
+                if routes or index != 0 or not title:
+                    report("title", "Use a nonempty H1 title before the introduction and routes.", line)
+            else:
+                if route_line is not None and entries == 0:
+                    report("destinations", "Each intent must have at least one destination with guidance.", route_line)
+                if not title:
+                    report("intent", "Each H2 must express a nonempty intent.", line)
+                routes += 1
+                route_line, entries, destinations = line, 0, set()
+            index += 3
+            continue
+        if token.type == "paragraph_open" and token.level == 0 and not routes:
+            index += 3  # Optional human-readable coverage introduction.
+            continue
+        if token.type == "bullet_list_open" and token.level == 0 and route_line is not None:
+            index += 1
+            while index < len(tokens) and tokens[index].type != "bullet_list_close":
+                item = tokens[index]
+                item_line = item.map[0] + 1 if item.map else line
+                end = index + 1
+                while end < len(tokens) and not (tokens[end].type == "list_item_close" and tokens[end].level == item.level):
+                    end += 1
+                record = tokens[index:end + 1]
+                if [part.type for part in record] != ["list_item_open", "paragraph_open", "inline", "paragraph_close", "list_item_close"]:
+                    report("entry", "Use a direct bullet item: [Canonical title](relative.md) - Guidance.", item_line)
+                else:
+                    inline = record[2]
+                    match = re.fullmatch(r"\[([^\]\n]+)\]\(([^\s)]+)\) - (\S[\s\S]*)", inline.content.strip())
+                    children = inline.children or []
+                    if not match or sum(child.type == "link_open" for child in children) != 1 or any(child.type == "image" for child in children):
+                        report("entry", "Each destination needs one canonical link followed by ' - ' and nonempty guidance.", item_line)
+                    else:
+                        entries += 1
+                        label, target, _ = match.groups()
+                        parsed = urlsplit(target)
+                        destination = local_target(path, wiki_root, target)
+                        if parsed.scheme or parsed.netloc or parsed.query or not parsed.path or Path(unquote(parsed.path)).is_absolute() or destination in {None, Path()} or destination.suffix != ".md" or not destination.is_file():
+                            report("destination", "Destination must be an existing relative canonical Markdown page or index inside the wiki.", item_line)
+                        else:
+                            rel = destination.relative_to(wiki_root.resolve())
+                            navigation = contract["navigation"]
+                            in_trunk = len(rel.parts) > 1 and rel.parts[0] in contract["topology"]["trunks"]
+                            is_index = rel.as_posix() == navigation["root_index"] or (in_trunk and destination.name == navigation["trunk_index"])
+                            frontmatter, body, _, failure = split_page(destination, contract["frontmatter"]["marker"])
+                            roles = page_roles(frontmatter or {}, contract)
+                            is_content = (
+                                in_trunk
+                                and rel.parts[0] != contract["topology"]["sources_trunk"]
+                                and contract["provenance"]["source_role"] not in roles
+                                and bool(roles & set(contract["provenance"]["content_roles"]))
+                            )
+                            if failure or not (is_index or is_content):
+                                report("destination", "Destination is not a canonical operational page or index; auxiliary, source, configuration, and governance material are excluded.", item_line)
+                            elif h1_title(body) != label:
+                                report("label", "Destination label must exactly match its canonical H1 title.", item_line)
+                            if destination in destinations:
+                                report("duplicate", "A destination may repeat between intents, but not within one intent (including different fragments).", item_line)
+                            destinations.add(destination)
+                index = end + 1
+            index += 1
+            continue
+        report("structure", "Use an H1, optional introduction, and H2 intents containing direct destination bullet items.", line)
+        # Skip a whole unsupported block; nested headings are not real routes.
+        if token.nesting == 1:
+            index += 1
+            while index < len(tokens) and not (tokens[index].nesting == -1 and tokens[index].level == token.level):
+                index += 1
+        index += 1
+    if not routes:
+        report("intent", "The intent map must contain at least one H2 intent.")
+    elif entries == 0:
+        report("destinations", "Each intent must have at least one destination with guidance.", route_line)
     return problems
 
 
@@ -543,6 +664,8 @@ def validate_assets_and_diagrams(wiki_root: Path, contract: dict[str, Any]) -> l
             if item.is_file() and item.suffix in diagram_extensions - {".md"}:
                 components.setdefault(item.with_suffix(""), set()).add(item.suffix)
     for markdown in sorted(wiki_root.rglob("*.md"), key=lambda candidate: relative(candidate, wiki_root)):
+        if relative(markdown, wiki_root) == contract["navigation"].get("intent_map"):
+            continue
         frontmatter, _, _, parse_issue = split_page(markdown, contract["frontmatter"]["marker"])
         if not parse_issue and frontmatter and page_roles(frontmatter, contract) & diagram_roles:
             components.setdefault(markdown.with_suffix(""), set()).add(".md")
@@ -623,7 +746,7 @@ def structured_pages(
     pages = {}
     exceptions = set(contract["frontmatter"]["exceptions"])
     for path in sorted(wiki_root.rglob("*.md"), key=lambda item: relative(item, wiki_root)):
-        if path.name in exceptions:
+        if path.name in exceptions or relative(path, wiki_root) == contract["navigation"].get("intent_map"):
             continue
         frontmatter, body, offset, parse_issue = split_page(path, contract["frontmatter"]["marker"])
         if parse_issue or not frontmatter or frontmatter.get("type") not in contract["page_types"]:
@@ -808,6 +931,8 @@ def validate_structured_sections(wiki_root: Path, contract: dict[str, Any]) -> l
     rule_severity = severity(contract, "structured_sections")
     problems: list[Diagnostic] = []
     for path in sorted(wiki_root.rglob("*.md"), key=lambda item: relative(item, wiki_root)):
+        if relative(path, wiki_root) == contract["navigation"].get("intent_map"):
+            continue
         frontmatter, body, offset, parse_issue = split_page(path, contract["frontmatter"]["marker"])
         if parse_issue or not frontmatter or frontmatter.get("type") not in contract["page_types"]:
             continue
@@ -1053,6 +1178,7 @@ def validate(repository_root: Path, schema_path: Path) -> tuple[list[Diagnostic]
         problems.extend(validate_page(path, wiki_root, contract))
         problems.extend(validate_references(path, wiki_root, contract))
     problems.extend(validate_navigation(wiki_root, contract))
+    problems.extend(validate_intent_map(wiki_root, contract))
     problems.extend(validate_assets_and_diagrams(wiki_root, contract))
     problems.extend(validate_provenance(wiki_root, contract))
     problems.extend(validate_contextual_citations(wiki_root, contract))

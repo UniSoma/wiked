@@ -1,12 +1,12 @@
 ---
 id: wik-01m4rt9yj681
 title: Introduzir mapa opcional de rotas por intenção no Wiked
-status: open
+status: in_progress
 type: feature
 priority: 3
 mode: hitl
 created: '2026-10-12T19:44:17.985562759Z'
-updated: '2026-10-12T19:44:17.985562759Z'
+updated: '2026-10-13T17:23:59.892942550Z'
 tags:
 - metodologia
 - wiked
@@ -14,21 +14,21 @@ tags:
 - modelagem
 acceptance:
 - title: Decisões e fechamento do Methodological grill preservados; detalhes técnicos e compatibilidade documentados, com reabertura explícita para qualquer nova escolha substantiva
-  done: false
+  done: true
 - title: Contrato e runtime suportam mapa Markdown opcional, apartado, não operacional e integrado ao índice principal, preservando instâncias sem mapa e migrações explicitamente autorizadas
-  done: false
+  done: true
 - title: Formato comum exige intenção, destinos canônicos e orientação por destino; mapa permite links repetidos/transversais sem relaxar as invariantes dos índices
-  done: false
+  done: true
 - title: Guia de consulta explicita os dois gatilhos de carregamento seletivo, fallback e fundamentação exclusiva em conteúdo canônico efetivamente consultado
-  done: false
+  done: true
 - title: Criação/alteração de rotas segue indexação com curadoria e autoridade editorial; oportunidades em consulta são apenas sinalizadas, sem presumir autoridade, escrita ou autorização para iniciar alterações
-  done: false
+  done: true
 - title: Indexação e manutenção documentam gatilhos de proposta, carregamento na autoria e revisão das rotas diretamente afetadas, sem revisão integral ou expansão silenciosa de escopo
-  done: false
+  done: true
 - title: Testes sintéticos cobrem opcionalidade, formato/referências, destinos repetidos/transversais no mapa e preservação das restrições dos índices; cenários de consulta sem escrita e sem autoridade são verificados textualmente
-  done: false
+  done: true
 - title: uv run pytest e verificações textuais aplicáveis têm evidência registrada; instruções/runtime permanecem genéricos em inglês, sem consumidor obrigatório ou dependência de docs/ na instalação
-  done: false
+  done: true
 links:
 - wik-01m17qfp6n6c
 ---
@@ -106,3 +106,13 @@ Preservar o comportamento de instâncias que não adotam o mapa. Não materializ
 
 ### Validação e aceite
 Executar uv run pytest para alterações de runtime/testes. Realizar verificações textuais direcionadas de coerência entre guias, links, identidade autor/consumidor, carga seletiva, idioma e limites de propriedade; registrar evidências e disposição de warnings no ticket. Testes automáticos não substituem revisão humana da semântica. Integração externa é opcional e requer consumidor explicitamente selecionado e autorizado. Publicação e integração Git permanecem humanas.
+
+## Notes
+
+**2026-10-13T17:12:26.805818690Z**
+
+Methodological grill fechado em 2026-10-13: solicitante confirmou explicitamente a síntese e autorizou implementação. Preservadas decisões originais. Aprovados navigation.intent_map como nome Markdown configurável na raiz de wiki/ e um link no índice; idioma da instância; H1, introdução opcional, H2 por intenção, lista com destino e orientação obrigatória, sem frontmatter ou mapa vazio; páginas operacionais e índices, títulos H1, links relativos com fragmentos existentes, repetição entre rotas mas não na mesma. Distribuição 1.5.0, contrato 1.0, adoção exige metodologia >=1.5.0, sem migração automática. Escopo adicional aprovado: aviso do instalador após mudança efetiva de versão orientando agente de manutenção, documentação e testes; revisão requerida não autoriza correções. Escopo fonte: schema/runtime/guias/interfaces/manifesto/testes. Sem consumidor real, Git, instalação ou publicação; novas decisões substantivas reabrem grill.
+
+**2026-10-13T17:23:53.698102580Z**
+
+Implementação fonte concluída para 1.5.0. Schema aceita navigation.intent_map opcional como arquivo Markdown distinto na raiz de wiki/; relações exigem metodologia >=1.5.0 sem mudar contract_version 1.0. Runtime reserva/exige mapa declarado, integra exatamente um link na raiz, valida H1/H2/listas/orientação, destinos operacionais/índices canônicos, labels H1, referências/fragmentos e unicidade por intenção. Auxiliar não recebe papel operacional mesmo com frontmatter inválido; índices preservam restrições. Guias SKILL/query/modeling/assisted-indexing/maintenance/setup e READMEs de interfaces documentam idioma local, carga seletiva, fallback, evidência apenas canônica consultada, consulta sem escrita/autoridade, curadoria e revisão diretamente afetada. Instalador avisa manutenção após mudança efetiva de versão; sem aviso em instalação inicial/reparo/no-op/dry-run, sem iniciar agentes ou migrar conteúdo. Documentação de atualização sincronizada. Evidência: execução final uv run pytest: 144 passed, 1 skipped em 132.48s; integração externa opcional ignorada por não haver consumidor selecionado. Primeira execução: 137 passed, 1 failed, 1 skipped; única falha era teste legado que tratava 1.5.0 como versão futura, corrigido para derivar versão incompatível acima da distribuição atual. Verificações textuais finais passaram: guias/interfaces referenciados existem, sem dependência docs/ na distribuição, instruções/diagnósticos genéricos afetados ASCII/inglês; identidade fonte/consumidor e rota ao contrato local conferidas. bash -n scripts/install-wiked.sh passou. Nenhum warning pendente. Testes sintéticos incluem opcionalidade, configuração/versão mínima/contract-only, formato, referências, idioma/nome configurável, repetições/transversalidade, regressões de índices, fronteiras/symlink, exclusão de papel operacional e atualização sem escrita do consumidor. Sem operação em consumidor real, Git, instalação de skill ativa ou publicação. Pronto para aceite humano final; publicação 1.5.0 permanece com o solicitante.

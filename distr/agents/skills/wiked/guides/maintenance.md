@@ -7,9 +7,13 @@ Load this guide for consistency or structural review and correction.
 - A read-only review needs no grill.
 - Read the contract, root index, relevant top-level indexes, affected pages, and configured local authoring reference when present.
 - Load `modeling.md` for page, glossary, navigation, provenance, asset, or diagram structure; apply its content boundaries and coverage check to affected context and indexes.
-- Check broken internal references, orphaned assets, incomplete diagram sets, inconsistent terms, incomplete provenance, contradictions, stale statements, and visual-only information. External links and bare URLs are informational.
+- Check broken internal references, orphaned assets, incomplete diagram sets, inconsistent terms, incomplete provenance, contradictions, stale statements, and visual-only information. External links and bare URLs are informational outside typed canonical-reference fields and intent-map destination entries.
 - Run the distributed validator. Errors are blocking; warnings require reporting and human disposition.
 - The validator cannot decide operational meaning, ownership, order, conditions, naming, source reliability, or divergence.
+
+After every human-installed change of Wiked version, run a maintenance agent with the installed skill and local contract to review content against the new methodology. Technical installation success does not prove content conformity. The review is required; corrections still need their own authorized scope and closed grill. A same-version repair or intact no-op does not trigger this version-change review. The optional intent map is not mandatory adoption after an update.
+
+Load the declared intent map when proposing routes or checking associations directly affected by reviewed pages. Renames/removals require reference checks; content changes require checking continued support for guidance. Do not require a full-map review after every page change. An explicit human request, concrete query location difficulty, or a relevant uncovered need or affected route discovered here may justify a proposal, not automatic creation. Route creation/revision is assisted indexing through `assisted-indexing.md` with editorial authority, human curation, and confirmed scope; do not broaden maintenance silently.
 
 ## Correct
 

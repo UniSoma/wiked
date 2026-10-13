@@ -1,16 +1,24 @@
 # Assisted Indexing
 
-Load this guide only for the always human-guided incorporation of primary sources.
+Load this guide for always human-guided incorporation of primary sources or curation of intent routes grounded in existing canonical pages.
 
 ## Entry
 
-1. Load `knot.md` and confirm an open ticket records the sources, objective, expected pages, and acceptance criteria.
+1. Load `knot.md` and confirm an open ticket records the sources or existing canonical destinations, objective, expected pages or routes, and acceptance criteria.
 2. Load `modeling.md` and `grill.md`, then satisfy the grill's preparation requirements for the indexing objective.
 3. Read the configured local authoring reference when present, then navigate from the root index through the relevant top-level index to affected pages.
 4. Only then inspect the in-scope source and compare it with consolidated content.
 
 Before these conditions hold, do not access a source or change the wiki. Ticket context is governance, not operational evidence.
 Apply existing local authoring criteria, but do not create or revise them incidentally; route candidate changes through governed maintenance.
+
+## Intent Route Curation
+
+- Propose routes only for an explicit human request, concrete location difficulty observed in a query, or a relevant uncovered need or affected route found during indexing or maintenance. Do not create one route per question or new page.
+- Load the declared map when proposing routes or checking affected associations. Read the canonical destinations and load `modeling.md` for the common format; do not load the entire map indiscriminately for unrelated authoring.
+- Creating or changing routes requires an open indexing ticket, editorial authority qualified for this objective under `grill.md`, and human curation of the intent, destinations, and support for each guidance. Do not presume a querying reader is that authority. A query opportunity alone authorizes no indexing, map write, or governance record.
+- Route-only indexing uses the existing canonical pages as its basis; do not fabricate a primary source page or ingestion material. Close the grill before editing the map or adopting it through a separately approved contract migration.
+- When in-scope pages change, check only directly affected routes: verify references for renames/removals and whether guidance remains supported after content changes. Do not require a full-map review for every change or silently expand scope. New or revised associations require human curation; defer unrelated opportunities.
 
 ## Decision Session
 
@@ -24,9 +32,9 @@ Apply existing local authoring criteria, but do not create or revise them incide
 
 After explicit grill closure:
 
-1. Create one source page per primary source, preserving provenance without wholesale copying.
-2. Record the configured provenance fields, including unavailable dates explicitly.
-3. Consolidate operational pages, then agreed terms and definitions in the configured context and navigation in indexes, within the confirmed scope. Apply `modeling.md`'s content boundaries and destination coverage check.
+1. Create one source page per primary source, preserving provenance without wholesale copying. For route-only curation, skip source creation and ingestion archiving.
+2. For source incorporation, record the configured provenance fields, including unavailable dates explicitly.
+3. Consolidate operational pages, then agreed terms and definitions in the configured context and navigation in indexes, within the confirmed scope. Apply `modeling.md`'s content boundaries and destination coverage check. Update approved intent routes and review directly affected associations without relaxing index invariants.
 4. Use the latest evidence explicitly describing current operation; retain unresolved conflicts as configured pending items.
 5. Attach contextual source-page citations to interpretations, time-sensitive claims, and divergences.
 6. If validated process changes affect a diagram, update canonical Markdown first, then load `d2.md`.

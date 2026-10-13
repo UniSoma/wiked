@@ -1,5 +1,5 @@
 namespace: wiked
-distribution_version: 1.4.1
+distribution_version: 1.5.0
 owner: Wiked
 entrypoint: skills/wiked/SKILL.md
 components:

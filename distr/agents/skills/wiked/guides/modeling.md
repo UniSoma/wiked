@@ -27,13 +27,35 @@ For a page type with `structured_sections`, use its named section exclusively fo
 
 - Start navigation at the root index and preserve progressive top-level indexes.
 - Create a top-level branch only for a recurring, human-confirmed need.
-- Keep wiki links relative. External links and bare URLs are informational; they do not affect structural validation.
+- Keep wiki links relative. External links and bare URLs are informational outside typed canonical-reference fields and intent-map destination entries; they cannot substitute for those required canonical links.
 - Use minimal frontmatter as declared by the page type.
 - Keep canonical terms in the configured context (glossary): definitions, essential distinctions, synonyms, terms to avoid, and relevant links. Include only responsibilities needed to define a role, not its operating procedure.
 - Indexes select destinations through useful groupings and brief descriptions; preserve the root's configured title, purpose, audience, and scope. Develop operational details in canonical pages, not navigation summaries. Evidence eligibility still follows configured roles.
 - Prefer alphabetical glossary terms and index entries within useful groupings, unless a human-approved semantic sequence takes precedence. Preserve required links and topology.
 - Before reducing operational detail in context or indexes, inspect the canonical destination for coverage, including conditions, exceptions, state, and provenance; a link alone proves nothing. Preserve uncovered information and resolve gaps or divergences with the human before removal. Page creation or revision requires confirmed scope, not incidental cleanup.
 - Preserve current operation separately from proposals and pending questions.
+
+## Intent Map
+
+`navigation.intent_map` optionally names one Markdown file at the wiki root, such as `routes.md`; its path, intents, and associations belong to the instance. Link it exactly once from the root index in a useful human-readable grouping, such as the instance's transversal references when present. Do not impose a universal section title. Preserve every existing index destination and uniqueness rule: only the map permits destinations shared between intents or crossing trunks.
+
+Use one H1 title, optional introductory paragraphs describing coverage limitations, and H2 headings expressing intents. Each intent has one or more direct bullet entries in the common form below. Write the title, intents, link labels, and guidance in the configured instance language; this English example is illustrative, not required instance content.
+
+```markdown
+# Intent routes
+
+Selected consultation points, not exhaustive coverage.
+
+## Understand a recurring practice
+
+- [Operations](handbook/operations.md) - Consult the canonical description of this practice.
+```
+
+Each entry contains one relative canonical Markdown link followed by ` - ` and nonempty guidance for that destination. The label exactly matches its H1; an existing fragment may narrow consultation. Use operational pages or canonical indexes, not source pages, ingestion, governance, configuration, instructions, context, or the authoring reference. Destinations may repeat between intents, but not within one intent, even through different fragments. Do not use frontmatter, nested lists, or subordinate headings in the map; it cannot acquire an operational page role.
+
+Keep the map small and human-curated for recurring, important, or difficult-to-locate needs. Guidance explains where to consult, not an operational sequence, responsibilities, or new rules. Do not reproduce procedures, promise completeness, or compensate for coverage limitations with invented knowledge. Humans validate meaning, usefulness, and support in the canonical destinations; automation checks only form and references. Do not reuse the local authoring reference as a domain map.
+
+Load the map when proposing routes or checking associations directly affected by in-scope page changes. Creating or revising routes follows `assisted-indexing.md`, with editorial authority and explicit human curation. A new page or question does not automatically justify a new route.
 
 ## Provenance and Visuals
 
