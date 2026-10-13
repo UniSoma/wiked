@@ -36,8 +36,8 @@ def test_cutover_leaves_one_self_contained_manifested_distribution() -> None:
     assert not (ROOT / "docs/contratos/estrutura-da-wiki.yaml").exists()
 
     runtime = (WIKED / "scripts/validate_wiki.py").read_text(encoding="utf-8")
-    version = re.search(r'^METHODOLOGY_VERSION = "([^"]+)"$', runtime, re.MULTILINE)
-    assert version and version.group(1) == str(manifest["distribution_version"])
+    assert "METHODOLOGY_VERSION" not in runtime
+    assert "from distribution import distribution_version" in runtime
 
     text_artifacts = [DISTRIBUTION / path for path in owned if Path(path).suffix in {".md", ".py", ".json", ".yaml"}]
     assert not [path for path in text_artifacts if "docs/" in path.read_text(encoding="utf-8")]
@@ -239,10 +239,42 @@ def write_minimal_setup_instance(root: Path) -> Path:
 
 
 def copy_runtime(root: Path) -> Path:
-    distribution = root / "portable" / "wiked"
+    distribution = root / "portable" / "skills" / "wiked"
     shutil.copytree(WIKED / "scripts", distribution / "scripts")
     shutil.copytree(WIKED / "contracts", distribution / "contracts")
+    shutil.copyfile(DISTRIBUTION / "wiked-manifest.yaml", root / "portable" / "wiked-manifest.yaml")
     return distribution / "scripts" / "validate_wiki.py"
+
+
+def test_runtime_uses_only_its_distribution_manifest_for_version(tmp_path: Path) -> None:
+    script = copy_runtime(tmp_path)
+    repository = tmp_path / "consumer"
+    (repository / "wiki").mkdir(parents=True)
+    value = contract()
+    value["methodology_version"] = "1.9.0"
+    (repository / "wiki/wiki-structure.yaml").write_text(yaml.safe_dump(value))
+    # A consumer-local manifest is not the runtime's authority.
+    (repository / "wiked-manifest.yaml").write_text("namespace: wiked\ndistribution_version: 9.0.0\n")
+    manifest = tmp_path / "portable/wiked-manifest.yaml"
+
+    def invoke():
+        return subprocess.run(
+            ["uv", "run", "--script", str(script), "--repository-root", str(repository),
+             "--contract-only", "--format", "json"], cwd=repository,
+            capture_output=True, text=True,
+        )
+
+    assert invoke().returncode == 2
+    manifest.write_text("namespace: wiked\ndistribution_version: 1.9.0\n")
+    assert invoke().returncode == 0
+    for content in ("namespace: wiked\ndistribution_version: invalid\n", "[]\n"):
+        manifest.write_text(content)
+        result = invoke()
+        assert result.returncode == 2
+        assert "runtime.version" in result.stdout
+    manifest.unlink()
+    result = invoke()
+    assert result.returncode == 2 and "runtime.version" in result.stdout
 
 
 def knot_environment(tmp_path: Path, repository: Path, responses: dict[str, object] | None = None) -> dict[str, str]:

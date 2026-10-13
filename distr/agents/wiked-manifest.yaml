@@ -1,11 +1,12 @@
 namespace: wiked
-distribution_version: 1.5.0
+distribution_version: 1.5.1
 owner: Wiked
 entrypoint: skills/wiked/SKILL.md
 components:
   metadata:
     - wiked-manifest.yaml
     - skills/wiked/LICENSE
+    - skills/wiked/CHANGELOG.md
   instructions:
     - skills/wiked/SKILL.md
     - skills/wiked/guides/query.md
@@ -26,4 +27,5 @@ components:
   runtime:
     - skills/wiked/scripts/README.md
     - skills/wiked/scripts/validate_wiki.py
+    - skills/wiked/scripts/distribution.py
 preserve_unlisted_files: true

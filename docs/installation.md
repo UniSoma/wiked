@@ -166,6 +166,10 @@ Corrections or contract migration require separately authorized scope and a clos
 grill; an update does not authorize them. First installation retains the setup
 instruction; same-version repair and intact no-op do not trigger this review.
 In 1.5.0, the intent map remains optional: maintenance does not imply adopting it.
+The [README maintenance prompt](../README.md#update-and-review-an-existing-wiki)
+starts this review without authorizing edits. The installed changelog covers the
+1.4.1 baseline onward and distinguishes methodological impacts from internal
+changes; no-impact releases still receive the ordinary maintenance review.
 
 A priority-1, human-in-the-loop migration ticket is offered only if both
 `.knot.edn` and `.tickets/` already exist locally, not through symlinks. Ticket
@@ -178,8 +182,14 @@ directory, and archive resolve within your repository; external redirects are
 rejected. Knot must support this JSON paths interface and the
 `create --priority --mode --description` options (verified with Knot 0.14.0).
 
-`.wiked-install.json` records the installed version, owned inventory, and baseline
-hashes. Modified Wiked files may be replaced after approval; intact owned obsolete
+`.wiked-install.json` records the installed version, owned inventory, baseline
+hashes, and `maintenance_since`: the oldest version still awaiting review,
+exclusive, through the installed version, inclusive. A first install sets it to
+null; a version change starts or extends the range. Legacy metadata without this
+field uses the recorded version as the new range's start, but cannot prove that
+earlier reviews happened. Same-version repair and no-op preserve pending review.
+Invalid pending-range metadata blocks updates rather than silently clearing it.
+Modified Wiked files may be replaced after approval; intact owned obsolete
 files may be removed. Modified obsolete files and all unlisted files are preserved.
 Your wiki, configuration, ingestion material, governance, and unrelated agent
 files remain yours.
@@ -189,6 +199,31 @@ assumed ownership. Invalid metadata likewise proves no ownership and cannot
 authorize obsolete-file deletion. Taking over an unowned file requires a separate
 interactive confirmation or repeatable `--approve-collision <manifest-relative-path>`
 options. Approval never claims the parent directory or adjacent third-party files.
+
+### Acknowledge a maintenance review
+
+After the agent completes the review, decide the disposition of findings and
+record follow-ups, including consumer-local Knot correction tickets where
+appropriate. Corrections may remain pending; acknowledgment means the analysis
+and human disposition are complete, not that the wiki is conformant. An analysis
+failure leaves the review pending.
+
+Stop agents and run the downloaded installer with the exact reviewed installed
+version (replace `X.Y.Z` below):
+
+```sh
+bash /path/to/downloaded/install-wiked.sh --acknowledge-maintenance-review X.Y.Z
+# Include --destination /path/to/installation if customized.
+```
+
+This separate human-confirmed operation downloads nothing and changes only
+installation metadata through the same recovery journal, not wiki, contract,
+skill, or tickets. `--yes` explicitly confirms this acknowledgment without a
+terminal; `--dry-run` leaves it pending. A stale version, manifest/metadata
+disagreement, unreliable baseline, or interrupted transaction blocks it. No-op
+and repair may remind you of an existing pending range, but never acknowledge it.
+Report records and correction tickets remain consumer governance, not operational
+evidence or installer-owned content.
 
 ## Automation and custom destinations
 
@@ -256,7 +291,8 @@ not mutable latest-download aliases.
 The archive contains only unique regular files, exactly the manifest's inventory,
 with names relative to its root: no directory entries, `./` prefix, links, or
 enclosing directory. The installer checks the manifest's namespace, version,
-entrypoint, preservation policy, and runtime version. The manifest is the
+entrypoint, preservation policy, and release declarations. The runtime reads its
+version from the manifest through the bundled distribution module. The manifest is the
 distribution-version authority; the Python project's version describes the
 source development environment.
 
@@ -275,7 +311,8 @@ uv run pytest
 bash scripts/package-wiked.sh
 ```
 
-The packaging command validates the manifest inventory and runtime version, then
+The packaging command reads the version from the sole manifest authority and
+validates the inventory and changelog declarations, then
 creates only `distr.tar.gz` in a new temporary directory and prints its path. It
 does not run tests, install Wiked, change versions, operate Git, or publish a release.
 It can be called from another directory using an absolute script path.
@@ -289,6 +326,11 @@ Existing output archives are never overwritten. Upload only `distr.tar.gz` as an
 asset of the matching stable GitHub release; GitHub's automatic source archives
 are not installation packages. Keep published artifacts immutable and use a new
 version for corrections. Version management remains separate from packaging.
+The command prints the matching publication tag without requiring a version
+argument. It cannot inspect or create a Git tag; humans publish only the matching
+tag and immutable artifact.
+For the increment and changelog policy, see the distribution contract's
+[version authority](./distribution.md#version-authority-and-increments).
 
 [The 1.4.1 correction](https://github.com/UniSoma/wiked/releases/tag/v1.4.1) was
 published by `volneids` on 2026-10-13 at 02:45:45 UTC. Its only attached asset is

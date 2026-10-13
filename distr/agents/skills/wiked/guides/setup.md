@@ -6,7 +6,7 @@ Load this guide only for an explicit Wiked initialization or contract migration.
 
 - Work from the intended consumer repository root.
 - Require `uv` and `knot`; check optional `d2`, `pandoc`, `weasyprint`, and `rsvg-convert` only for requested capabilities.
-- Require the distributed schema at `contracts/wiki-structure.schema.json` and validator at `scripts/validate_wiki.py`.
+- Require the installed manifest, distributed schema at `contracts/wiki-structure.schema.json`, and runtime modules under `scripts/` in their manifested relative layout.
 - Do not install tools, initialize or alter Git, replace this skill, or copy from repository-specific documentation.
 
 ## Governed Flow

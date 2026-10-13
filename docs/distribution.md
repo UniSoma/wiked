@@ -68,7 +68,7 @@ Installer tests must not require an already published release or a real consumer
   GitHub platform enforcement is not required for this delivery.
 - The maintainer approved source distribution 1.4.1 to deliver the missing license.
   Its matching release tag is `v1.4.1`; human publication is verified above.
-  The manifest and runtime version must agree. The development
+  The runtime reads its version from the authoritative manifest. The development
   environment's project version is not the distribution version.
 - An invocation resolves the latest stable official release once, displays its
   version, and pins that selection through the entire operation. It records the
@@ -81,11 +81,57 @@ Installer tests must not require an already published release or a real consumer
   authenticate the package or protect against a compromised running script.
   Version pinning, release immutability, and local installation baseline hashes
   remain required; independent signing is deferred.
-- `scripts/package-wiked.sh` validates source inventory and manifest/runtime version
-  agreement, then creates only `distr.tar.gz`. Default output is a fresh temporary
+- `scripts/package-wiked.sh` reads the version from the manifest and validates
+  source inventory and release declarations, then creates only
+  `distr.tar.gz`. Default output is a fresh temporary
   directory; `--output` selects a directory. Existing archives must not be
   overwritten. The script does not run the test suite, install, publish, operate
   Git, or increment versions. Packaging uses the source matching the intended tag.
+
+## Version authority and increments
+
+`distr/agents/wiked-manifest.yaml` is the sole current distribution-version
+authority. The installed runtime reads the same relative manifest through
+`scripts/distribution.py`; no runtime or packaging version literal is maintained.
+Contract format versions, feature-introduction minimums, historical changelog
+entries, and the development project's version have distinct meanings and do not
+increment mechanically with the distribution.
+
+The maintainer approves every increment, applying SemVer to the methodological
+contract, not merely to code or documentation file types:
+
+- Major: incompatible behavior or a mandatory change requiring existing wikis
+  to migrate.
+- Minor: compatible methodological evolution or optional capability; review may
+  be needed, but migration is not imposed.
+- Patch: fixes, clarifications, and infrastructure refinements that preserve the
+  methodological obligations of existing wikis. A change to those obligations is
+  not a patch just because its implementation edits instructions.
+
+For release preparation, the human chooses the version, edits only the manifest's
+current version, and adds its declaration to the distributed
+`skills/wiked/CHANGELOG.md`. That changelog records only impacts that may demand
+review of existing wiki texts, not every internal optimization. Each release has
+one `## X.Y.Z - review` or `## X.Y.Z - none` declaration, newest first, with a
+nonempty explanation. Impactful entries include `### Review` and `### Action`
+sections describing affected content, required actions, and optional adoption.
+Write an impact index, not a second manual: keep each impact to a few lines stating
+what to review, when it applies, and where to find the canonical rules. Link to
+installed guides instead of repeating methodology, governance, or procedures.
+Use one sentence for `none` and `baseline` entries; omit internal-change narratives.
+The oldest `baseline` entry starts coverage at 1.4.1; prior history is out of
+scope. The changelog must extend through the current manifest version. Structural
+checks cannot certify the maintainer's semantic classification or historical
+completeness.
+
+Run `uv run pytest`, then `bash scripts/package-wiked.sh`. Packaging reads the
+version only from the manifest and prints the matching publication tag; it does
+not require the human to repeat the version as an argument. The installer rejects
+tag/manifest disagreement and invalid release declarations. Neither script
+selects an increment, operates Git, or publishes.
+Humans create the matching release tag and publish the immutable archive. The
+1.5.1 preparation preserves existing wiki obligations, records 1.5.0's optional
+intent-map impact from the 1.4.1 baseline, and is not evidence of publication.
 
 ## Installation interface and prerequisites
 
@@ -202,6 +248,29 @@ or automatic adoption of optional capabilities; those need their own governance.
 First installation, same-version repair, intact no-op, and dry run do not trigger
 this version-change notice.
 
+Preserve `maintenance_since` in installation metadata across successive updates:
+oldest unreviewed version exclusive, installed version inclusive. Initial
+installation records null. Legacy metadata uses the previous recorded version
+when starting a new range; it cannot prove earlier review completion. Invalid
+pending ranges block the operation. Same-version repair and no-op retain and may
+display an existing pending range. The installed maintenance guide lazily loads
+the distributed changelog for that interval, including skipped releases; `none`
+does not waive ordinary review. Missing history requires explicit uncertainty
+and human disposition, not an inferred absence of impact.
+
+The agent reports impacts, findings, validation, and uncertainties. Human
+disposition assigns explicit follow-ups, including consumer-local correction
+tickets when appropriate. Review may finish before corrections do, but not when
+analysis itself was prevented. The human separately runs
+`--acknowledge-maintenance-review X.Y.Z` for the exact installed version, with
+agents stopped. This operation confirms only review/disposition, never wiki
+conformity or correction authority. It downloads nothing, changes only metadata
+using transactional recovery, preserves version/inventory/hashes, and neither
+modifies the skill/wiki nor creates tickets. Stale versions, manifest mismatch,
+unreliable baseline, and pending transactions block acknowledgment. Dry runs do
+not acknowledge; `--yes` explicitly approves this separate operation. The agent
+must not perform it on the human's behalf.
+
 ## Execution and verification
 
 `wik-01m2tpjtev7w` implements the installer, relocatable references, contract-only
@@ -232,8 +301,13 @@ packaging script, checksum-free downloads, and corresponding tests and guidance.
 The requester explicitly confirmed the Methodological grill summary, including
 amending the publication ticket, before source changes. Local baseline hashes,
 inventory checks, compatibility and transactional recovery are preserved.
-Centralizing version authority and defining increments is deferred to
-`wik-01m4sbvz62vp`, not silently included in packaging.
+Centralizing version authority and defining increments was deferred to
+`wik-01m4sbvz62vp`, not silently included in packaging. Its Methodological grill
+was explicitly closed on 2026-10-13 for the authority/increment policy above,
+1.5.1 preparation, impact changelog from the 1.4.1 baseline, persistent pending
+review and human acknowledgment, README maintenance prompt, and synthetic tests.
+No consumer installation, Git operation, or publication is authorized by that
+source delivery.
 
 This contract's consolidation changes only source documentation and executor
 tickets. Implementing these interfaces, changing the distributed inventory or

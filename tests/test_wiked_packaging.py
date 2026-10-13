@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import runpy
 import shutil
 import subprocess
 import sys
@@ -11,11 +12,12 @@ import tarfile
 import pytest
 import yaml
 
-from test_wiked_installer import environment, run
+from test_wiked_installer import environment, run, snapshot
 from test_wiked_validator import knot_environment, write_instance
 
 
 ROOT = Path(__file__).parents[1]
+SOURCE_VERSION = yaml.safe_load((ROOT / 'distr/agents/wiked-manifest.yaml').read_text())['distribution_version']
 
 
 @pytest.fixture
@@ -137,6 +139,66 @@ def test_default_output_is_fresh_and_contains_only_archive(packaging):
     assert [path.name for path in directories[0].iterdir()] == ['distr.tar.gz']
 
 
+def test_package_reads_version_only_from_manifest_and_reports_publication_tag(packaging):
+    source, _, _ = packaging
+    distribution = source / 'distr/agents'
+    manifest_path = distribution / 'wiked-manifest.yaml'
+    manifest = yaml.safe_load(manifest_path.read_text())
+    manifest['distribution_version'] = '1.5.2'
+    manifest_path.write_text(yaml.safe_dump(manifest))
+    changelog = distribution / 'skills/wiked/CHANGELOG.md'
+    text = changelog.read_text()
+    changelog.write_text(text.replace(f'## {SOURCE_VERSION} - ',
+                                     f'## 1.5.2 - none\n\nNo methodological impact.\n\n## {SOURCE_VERSION} - ', 1))
+    result = package(packaging)
+    assert result.returncode == 0, result.stderr
+    assert 'Packaged Wiked 1.5.2:' in result.stdout
+    assert 'GitHub release tag v1.5.2' in result.stdout
+    assert 'No release was published' in result.stdout
+
+
+@pytest.mark.parametrize('kind', ['unknown', 'missing-current', 'duplicate', 'missing-baseline', 'missing-action'])
+def test_invalid_changelog_blocks_packaging(packaging, kind):
+    source, output, _ = packaging
+    path = source / 'distr/agents/skills/wiked/CHANGELOG.md'
+    text = path.read_text()
+    heading = f'## {SOURCE_VERSION} - none'
+    if kind == 'unknown':
+        text = text.replace(heading, f'## {SOURCE_VERSION} - unknown')
+    elif kind == 'missing-current':
+        text = text.replace(heading, '## 9.0.0 - none')
+    elif kind == 'duplicate':
+        text = text.replace(heading, f'{heading}\n\nDuplicate.\n\n{heading}')
+    elif kind == 'missing-baseline':
+        text = text.replace('1.4.1 - baseline', '1.4.1 - none')
+    else:
+        text = text.replace('### Action', '### Missing')
+    path.write_text(text)
+    result = package(packaging)
+    assert result.returncode == 2
+    assert not output.exists()
+
+
+def test_changelog_coverage_and_lazy_maintenance_routing():
+    root = ROOT / 'distr/agents'
+    metadata = runpy.run_path(str(root / 'skills/wiked/scripts/distribution.py'))
+    declarations = metadata['release_declarations'](root)
+    assert declarations['1.4.1'] == 'baseline'
+    assert declarations['1.5.0'] == 'review'
+    assert declarations[SOURCE_VERSION] in {'review', 'none'}
+    maintenance = (root / 'skills/wiked/guides/maintenance.md').read_text()
+    assert '[the methodology-impact changelog](../CHANGELOG.md)' in maintenance
+    assert 'skipped during installation' in maintenance
+    assert 'correction\ntickets' in maintenance
+    assert 'Do not acknowledge on the human' in maintenance
+    for guide in ('SKILL.md', 'guides/query.md', 'guides/assisted-indexing.md'):
+        assert 'CHANGELOG.md' not in (root / 'skills/wiked' / guide).read_text()
+    readme = (ROOT / 'README.md').read_text()
+    assert '> Use the installed Wiked skill to review this wiki after the update and help me\n> track any necessary corrections.' in readme
+    assert 'pending version interval' not in readme
+    assert 'do not run it on my behalf' not in readme
+
+
 def test_packaged_artifact_installs_without_checksum_or_installer_assets(packaging, environment):
     _, output, _ = packaging
     assert package(packaging).returncode == 0
@@ -162,6 +224,7 @@ def test_packaged_artifact_installs_without_checksum_or_installer_assets(packagi
     unrelated.mkdir()
     runtime_tools = consumer.parent / 'runtime-tools'
     runtime_tools.mkdir()
+    installed_before_validation = snapshot(consumer / '.agents')
     result = subprocess.run(
         ['uv', 'run', '--script', str(consumer / '.agents/skills/wiked/scripts/validate_wiki.py'),
          '--repository-root', str(consumer), '--format', 'json'],
@@ -173,3 +236,4 @@ def test_packaged_artifact_installs_without_checksum_or_installer_assets(packagi
     assert summary['errors'] == 0
     assert summary['warnings'] == 0
     assert summary['files_checked'] == 6
+    assert snapshot(consumer / '.agents') == installed_before_validation

@@ -39,7 +39,6 @@ def release(directory, version='1.4.0', extra=None, omit=(),
             extra_member=None, prerelease=False):
     directory.mkdir(parents=True, exist_ok=True)
     manifest = yaml.safe_load((DISTRIBUTION / 'wiked-manifest.yaml').read_text())
-    source_version = manifest['distribution_version']
     manifest['distribution_version'] = version
     files = {name: (DISTRIBUTION / name).read_bytes()
              for group in manifest['components'].values() for name in group}
@@ -50,10 +49,13 @@ def release(directory, version='1.4.0', extra=None, omit=(),
                 group.remove(name)
     if extra:
         files.update(extra)
-        manifest['components']['instructions'].extend(extra)
-    runtime = 'skills/wiked/scripts/validate_wiki.py'
-    files[runtime] = files[runtime].replace(f'METHODOLOGY_VERSION = "{source_version}"'.encode(),
-                                           f'METHODOLOGY_VERSION = "{version}"'.encode())
+        inventory = {name for group in manifest['components'].values() for name in group}
+        manifest['components']['instructions'].extend(name for name in extra if name not in inventory)
+    changelog = 'skills/wiked/CHANGELOG.md'
+    if changelog in files and not (extra and changelog in extra):
+        files[changelog] = (f'# Synthetic release history\n\n## {version} - none\n\n'
+                            'No methodological impact.\n\n## 1.0.0 - baseline\n\n'
+                            'Synthetic baseline.\n').encode()
     files['wiked-manifest.yaml'] = yaml.safe_dump(manifest).encode()
     archive_name = 'distr.tar.gz'
     archive = directory / archive_name
@@ -330,6 +332,124 @@ def test_version_change_requires_maintenance_review_without_migrating_content(en
     assert snapshot(wiki) == before
 
 
+def test_pending_range_survives_skipped_releases_repairs_and_human_acknowledgment(environment):
+    root, assets, env = environment
+    release(assets, version='1.4.1')
+    assert run(environment, '--destination', 'custom', '--yes').returncode == 0
+    metadata = root / 'custom/.wiked-install.json'
+    assert json.loads(metadata.read_text())['maintenance_since'] is None
+    release(assets, version='1.5.0')
+    assert run(environment, '--destination', 'custom', '--yes').returncode == 0
+    release(assets, version='1.5.2')
+    result = run(environment, '--destination', 'custom', '--yes')
+    assert result.returncode == 0, result.stderr
+    assert 'Maintenance review pending: 1.4.1 -> 1.5.2' in result.stdout
+    assert json.loads(metadata.read_text())['maintenance_since'] == '1.4.1'
+    before = snapshot(root / 'custom')
+    noop = run(environment, '--destination', 'custom', '--yes')
+    assert 'Maintenance review pending: 1.4.1 -> 1.5.2' in noop.stdout
+    assert snapshot(root / 'custom') == before
+    (root / 'custom/skills/wiked/SKILL.md').write_text('damaged')
+    repair = run(environment, '--destination', 'custom', '--yes')
+    assert repair.returncode == 0
+    assert json.loads(metadata.read_text())['maintenance_since'] == '1.4.1'
+    requests = Path(env['REQUEST_LOG']).read_bytes()
+    before = snapshot(root / 'custom')
+    for args in (('--acknowledge-maintenance-review', '1.5.0', '--yes'),
+                 ('--acknowledge-maintenance-review', '1.5.2'),
+                 ('--acknowledge-maintenance-review', '1.5.2', '--dry-run')):
+        result = run(environment, '--destination', 'custom', *args)
+        assert result.returncode == (0 if '--dry-run' in args else 2), result.stderr
+        assert snapshot(root / 'custom') == before
+        assert Path(env['REQUEST_LOG']).read_bytes() == requests
+    result = run(environment, '--destination', 'custom', '--acknowledge-maintenance-review', '1.5.2', '--yes')
+    assert result.returncode == 0, result.stderr
+    assert 'not establish content conformity' in result.stdout
+    state = json.loads(metadata.read_text())
+    assert state['maintenance_since'] is None
+    assert state['files'] == json.loads(before['.wiked-install.json'][0])['files']
+    assert {name: data for name, data in snapshot(root / 'custom').items() if name != '.wiked-install.json'} == {
+        name: data for name, data in before.items() if name != '.wiked-install.json'}
+    assert Path(env['REQUEST_LOG']).read_bytes() == requests
+    assert not Path(env['KNOT_LOG']).exists()
+    release(assets, version='1.6.0')
+    assert run(environment, '--destination', 'custom', '--yes').returncode == 0
+    assert json.loads(metadata.read_text())['maintenance_since'] == '1.5.2'
+
+
+def test_legacy_metadata_becomes_a_review_baseline_and_corrupt_pending_range_blocks_update(environment):
+    root, assets, _ = environment
+    assert run(environment, '--yes').returncode == 0
+    metadata = root / '.agents/.wiked-install.json'
+    state = json.loads(metadata.read_text())
+    state.pop('maintenance_since')
+    metadata.write_text(json.dumps(state))
+    release(assets, version='1.5.0')
+    assert run(environment, '--yes').returncode == 0
+    state = json.loads(metadata.read_text())
+    assert state['maintenance_since'] == '1.4.0'
+    for since in ('invalid', '9.0.0', 42):
+        state['maintenance_since'] = since
+        metadata.write_text(json.dumps(state))
+        before = snapshot(root / '.agents')
+        result = run(environment, '--yes')
+        assert result.returncode == 2 and 'Invalid maintenance review metadata' in result.stderr
+        assert snapshot(root / '.agents') == before
+
+
+def test_acknowledgment_requires_matching_manifest_and_no_pending_transaction(environment):
+    root, assets, _ = environment
+    assert run(environment, '--yes').returncode == 0
+    release(assets, version='1.5.0')
+    assert run(environment, '--yes').returncode == 0
+    manifest = root / '.agents/wiked-manifest.yaml'
+    original = manifest.read_text()
+    manifest.write_text(original.replace('1.5.0', '1.6.0'))
+    before = snapshot(root / '.agents')
+    result = run(environment, '--acknowledge-maintenance-review', '1.5.0', '--yes')
+    assert result.returncode == 2 and 'manifest and metadata disagree' in result.stderr
+    assert snapshot(root / '.agents') == before
+    manifest.write_text(original)
+    (root / '..agents.wiked-transaction').mkdir()
+    result = run(environment, '--acknowledge-maintenance-review', '1.5.0', '--yes')
+    assert result.returncode == 2 and 'Run --recover' in result.stderr
+
+
+def test_human_terminal_acknowledgment_is_separate_from_installation(environment):
+    root, assets, env = environment
+    assert run(environment, '--yes').returncode == 0
+    release(assets, version='1.5.0')
+    assert run(environment, '--yes').returncode == 0
+    before = snapshot(root / '.agents')
+    requests = Path(env['REQUEST_LOG']).read_bytes()
+    result = run_interactive(environment, '--acknowledge-maintenance-review', '1.5.0', answers=[
+        ('Acknowledge review through 1.5.0, with human disposition and follow-ups for findings?', 'no'),
+    ])
+    assert result.returncode == 2 and snapshot(root / '.agents') == before
+    result = run_interactive(environment, '--acknowledge-maintenance-review', '1.5.0', answers=[
+        ('Acknowledge review through 1.5.0, with human disposition and follow-ups for findings?', 'yes'),
+    ])
+    assert result.returncode == 0, result.stdout
+    assert json.loads((root / '.agents/.wiked-install.json').read_text())['maintenance_since'] is None
+    assert Path(env['REQUEST_LOG']).read_bytes() == requests
+
+
+def test_release_tag_and_changelog_disagreement_block_installation(environment):
+    root, assets, _ = environment
+    release(assets, extra={'skills/wiked/CHANGELOG.md': b'# Missing release declarations\n'})
+    assert run(environment, '--yes').returncode == 2
+    assert not (root / '.agents').exists()
+    release(assets)
+    metadata = assets / 'release.json'
+    data = json.loads(metadata.read_text())
+    data['tag_name'] = 'v1.5.0'
+    data['assets'][0]['browser_download_url'] = data['assets'][0]['browser_download_url'].replace('v1.4.0', 'v1.5.0')
+    metadata.write_text(json.dumps(data))
+    result = run(environment, '--yes')
+    assert result.returncode == 2 and 'manifest does not match' in result.stderr
+    assert not (root / '.agents').exists()
+
+
 @pytest.mark.parametrize('kind', ['corrupt', 'traversal', 'link', 'unlisted', 'prerelease'])
 def test_rejects_unsafe_candidates_before_installing(environment, kind):
     root, assets, _ = environment
@@ -575,7 +695,7 @@ def test_runtime_failure_does_not_offer_migration_ticket(environment):
     # A synthetic runtime retains the release identity but cannot perform its check.
     files = release(assets)
     runtime = 'skills/wiked/scripts/validate_wiki.py'
-    files[runtime] = b'METHODOLOGY_VERSION = "1.4.0"\nraise ImportError("missing dependency")\n'
+    files[runtime] = b'raise ImportError("missing dependency")\n'
     archive = assets / 'distr.tar.gz'
     with tarfile.open(archive, 'w:gz') as stream:
         for name, content in files.items():

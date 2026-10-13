@@ -28,8 +28,9 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
 from markdown_it import MarkdownIt
 
-
-METHODOLOGY_VERSION = "1.5.0"
+# Validation must not create bytecode inside the installed, hashed distribution.
+sys.dont_write_bytecode = True
+from distribution import distribution_version
 
 
 @dataclass(frozen=True)
@@ -91,10 +92,14 @@ def validate_contract(contract_path: Path, schema_path: Path) -> tuple[dict[str,
 
     assert isinstance(contract, dict)
     relations: list[Diagnostic] = []
+    try:
+        methodology_version = distribution_version()
+    except (OSError, UnicodeError, ValueError, TypeError, yaml.YAMLError) as exc:
+        return None, [issue("runtime.version", "error", "wiked-manifest.yaml", f"Could not load distribution version: {exc}")]
     required_version = tuple(int(part) for part in contract["methodology_version"].split("."))
-    installed_version = tuple(int(part) for part in METHODOLOGY_VERSION.split("."))
+    installed_version = tuple(int(part) for part in methodology_version.split("."))
     if required_version[0] != installed_version[0] or required_version > installed_version:
-        relations.append(issue("contract.relation", "error", contract_label, f"Methodology version {contract['methodology_version']!r} is incompatible with installed version {METHODOLOGY_VERSION!r}."))
+        relations.append(issue("contract.relation", "error", contract_label, f"Methodology version {contract['methodology_version']!r} is incompatible with installed version {methodology_version!r}."))
     try:
         re.compile(contract["naming"]["pattern"])
     except re.error as exc:

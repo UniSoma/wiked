@@ -11,6 +11,7 @@ import argparse
 import os
 from pathlib import Path, PurePosixPath
 import re
+import runpy
 import sys
 import tarfile
 import tempfile
@@ -20,6 +21,8 @@ import yaml
 MANIFEST = 'wiked-manifest.yaml'
 RUNTIME = 'skills/wiked/scripts/validate_wiki.py'
 SCHEMA = 'skills/wiked/contracts/wiki-structure.schema.json'
+IDENTITY = 'skills/wiked/scripts/distribution.py'
+CHANGELOG = 'skills/wiked/CHANGELOG.md'
 SEMVER = r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
 
 
@@ -62,10 +65,9 @@ def main():
     paths = [(name, regular_file(source, name)) for name in inventory]
     if len(inventory) != len(set(inventory)):
         fail('Duplicate manifest entries.')
-    if not {MANIFEST, RUNTIME, SCHEMA, manifest['entrypoint']} <= set(inventory):
+    if not {MANIFEST, RUNTIME, SCHEMA, IDENTITY, CHANGELOG, manifest['entrypoint']} <= set(inventory):
         fail('Required distribution interfaces missing.')
-    if f'METHODOLOGY_VERSION = "{version}"' not in (source / RUNTIME).read_text():
-        fail('Runtime and manifest versions disagree.')
+    runpy.run_path(str(source / IDENTITY))['release_declarations'](source)
     output = args.output or Path(tempfile.mkdtemp(prefix='wiked-release-'))
     for item in (output, *output.parents):
         if item.is_symlink():
@@ -86,7 +88,7 @@ def main():
             archive.unlink()
             raise
     print(f'Packaged Wiked {version}: {archive.resolve()}')
-    print('Upload only distr.tar.gz to the matching stable GitHub release. No release was published.')
+    print(f'Upload only distr.tar.gz to GitHub release tag v{version}. No release was published.')
 
 
 try:

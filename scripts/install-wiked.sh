@@ -61,6 +61,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import runpy
 import shutil
 import signal
 import subprocess
@@ -76,6 +77,8 @@ OFFICIAL_REPOSITORY = 'UniSoma/wiked'
 MANIFEST = 'wiked-manifest.yaml'
 RUNTIME = 'skills/wiked/scripts/validate_wiki.py'
 SCHEMA = 'skills/wiked/contracts/wiki-structure.schema.json'
+IDENTITY = 'skills/wiked/scripts/distribution.py'
+CHANGELOG = 'skills/wiked/CHANGELOG.md'
 SEMVER = r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
 
 
@@ -159,6 +162,7 @@ def download(url, path):
 
 def baseline(destination):
     path = safe_path(destination, METADATA)
+    digest(path)
     if not path.exists():
         print('Warning: no reliable baseline; local modifications may be overwritten.')
         return None
@@ -176,6 +180,23 @@ def baseline(destination):
     except (KeyError, TypeError, ValueError):
         print('Warning: no reliable baseline; local modifications may be overwritten. Invalid metadata proves no ownership.')
         return None
+
+
+def pending_review(previous, version):
+    if previous is None:
+        return None
+    since = previous.get('maintenance_since')
+    if since is not None and (not isinstance(since, str) or not re.fullmatch(SEMVER, since)
+                             or tuple(map(int, since.split('.'))) > tuple(map(int, previous['version'].split('.')))):
+        fail('Invalid maintenance review metadata; repair it explicitly before proceeding.')
+    if previous['version'] != version:
+        return since or previous['version']
+    return since
+
+
+def review_notice(since, version):
+    if since is not None:
+        print(f'Maintenance review pending: {since} -> {version}. Consult the installed methodology-impact changelog for this range. Human acknowledgment is required after report disposition; review completion is not content conformity.')
 
 
 def candidate(directory, approved=False):
@@ -217,7 +238,7 @@ def candidate(directory, approved=False):
         inventory = [owned_path(name) for group in manifest['components'].values() for name in group]
         if len(inventory) != len(set(inventory)) or set(names) != set(inventory):
             fail('Archive inventory does not match its manifest exactly.')
-        if not {MANIFEST, RUNTIME, SCHEMA, manifest['entrypoint']} <= set(names):
+        if not {MANIFEST, RUNTIME, SCHEMA, IDENTITY, CHANGELOG, manifest['entrypoint']} <= set(names):
             fail('Required distribution interfaces missing.')
         for member in members:
             target = tree / member.name
@@ -225,9 +246,7 @@ def candidate(directory, approved=False):
             with archive.extractfile(member) as source, target.open('wb') as output:
                 shutil.copyfileobj(source, output)
             target.chmod(0o644)
-    runtime_text = (tree / RUNTIME).read_text()
-    if f'METHODOLOGY_VERSION = "{version}"' not in runtime_text:
-        fail('Runtime and manifest versions disagree.')
+    runpy.run_path(str(tree / IDENTITY))['release_declarations'](tree)
     return version, tree, {name: digest(tree / name) for name in sorted(inventory)}
 
 
@@ -339,7 +358,7 @@ def recover(destination, transaction):
     sync_directory(transaction.parent)
 
 
-def install(destination, transaction, tree, version, hashes, changes, observed):
+def install(destination, transaction, tree, version, hashes, changes, observed, maintenance_since=None):
     transaction.mkdir(mode=0o700)
     (transaction / 'backup').mkdir()
     records = []
@@ -382,7 +401,8 @@ def install(destination, transaction, tree, version, hashes, changes, observed):
             else:
                 target.unlink()
             sync_directory(target.parent)
-        atomic_json(destination / METADATA, {'format': 1, 'version': version, 'files': hashes}, transaction / 'metadata.new')
+        atomic_json(destination / METADATA, {'format': 1, 'version': version, 'files': hashes,
+                                           'maintenance_since': maintenance_since}, transaction / 'metadata.new')
         data['status'] = 'committed'
         atomic_json(transaction / 'journal.json', data)
     except BaseException:
@@ -399,7 +419,10 @@ def main():
     parser.add_argument('--approve-collision', action='append', default=[], metavar='PATH', help='Explicitly approve taking over this manifest-relative path.')
     parser.add_argument('--approve-migration-ticket', action='store_true', help='Separately approve a P1 HITL migration ticket, only on incompatibility with a proven local tracker.')
     parser.add_argument('--recover', action='store_true', help='Restore an interrupted transaction, without downloading or installing.')
+    parser.add_argument('--acknowledge-maintenance-review', metavar='VERSION', help='Human confirmation of review and finding disposition for the installed version; metadata only, no download.')
     args = parser.parse_args()
+    if args.acknowledge_maintenance_review and (args.recover or args.approve_collision or args.approve_migration_ticket):
+        fail('Review acknowledgment cannot be combined with recovery or installation approvals.')
     root = Path.cwd().resolve()
     destination = Path(os.path.abspath(args.destination))
     safe_path(destination, '')
@@ -423,10 +446,31 @@ def main():
         print('No pending operation to recover.')
         return
     previous = baseline(destination)
+    since = pending_review(previous, previous['version']) if previous else None
+    if args.acknowledge_maintenance_review:
+        if previous is None or args.acknowledge_maintenance_review != previous['version']:
+            fail('Reviewed version must match a reliable installed version; nothing acknowledged.')
+        manifest = yaml.safe_load(safe_path(destination, MANIFEST).read_text())
+        if not isinstance(manifest, dict) or str(manifest.get('distribution_version')) != previous['version']:
+            fail('Installed manifest and metadata disagree; nothing acknowledged.')
+        review_notice(since, previous['version'])
+        if since is None:
+            print('No pending maintenance review; nothing changed.')
+            return
+        if args.dry_run:
+            print('Dry run: no review acknowledged.')
+            return
+        if not args.yes and not confirm(f'Acknowledge review through {previous["version"]}, with human disposition and follow-ups for findings?'):
+            fail('Review acknowledgment not approved; nothing changed.')
+        observed = {METADATA: digest(safe_path(destination, METADATA))}
+        install(destination, transaction, destination, previous['version'], previous['files'], [], observed)
+        print(f'Maintenance review acknowledged through {previous["version"]}; this does not establish content conformity or authorize corrections.')
+        return
     with tempfile.TemporaryDirectory(prefix='wiked-') as temporary:
         version, tree, hashes = candidate(Path(temporary), args.yes or args.dry_run)
         if previous and tuple(map(int, previous['version'].split('.'))) > tuple(map(int, version.split('.'))):
             fail('The latest stable release is older than the installation; downgrade is not supported.')
+        since = pending_review(previous, version)
         compatibility(root, tree, version, previous, args.dry_run, args.approve_migration_ticket)
         old = previous['files'] if previous else {}
         observed = {name: digest(safe_path(destination, name)) for name in sorted(set(hashes) | set(old))}
@@ -454,6 +498,7 @@ def main():
                 print(f'Preserve modified obsolete file: {name}')
         if previous and previous['version'] == version and old == hashes and not changes:
             print('Already installed and intact; no changes.')
+            review_notice(since, version)
             return
         if previous and previous['version'] == version:
             print('Reinstall requested version to repair changed or missing files.')
@@ -466,12 +511,13 @@ def main():
                 fail(f'Explicit collision approval required: --approve-collision {name}')
         if not args.yes and not confirm('Approve this installation plan? Stop agents before approving.'):
             fail('Operation not approved; nothing installed.')
-        install(destination, transaction, tree, version, hashes, changes, observed)
+        install(destination, transaction, tree, version, hashes, changes, observed, since)
         print(f'Installed Wiked {version}. Skill: {destination / "skills/wiked"}')
         print(f'Adapter: {destination / "commands/wiked-setup.md"}')
         print('Configure agent discovery for custom destinations. Start wiked-setup with the installed skill and consumer contract; no agent has been launched.')
         if previous and previous['version'] != version:
             print('Version changed: run a maintenance agent with the installed Wiked skill and local contract to review content against the new methodology. Corrections and contract migration require separate authorization and a closed grill; optional capabilities are not adopted automatically.')
+        review_notice(since, version)
 
 
 def interrupted(signum, frame):

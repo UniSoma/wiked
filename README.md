@@ -91,6 +91,17 @@ Wiki changes go through the agent's governed workflow, rather than direct manual
 edits. You approve meaning and scope; agents handle the related page updates and
 deterministic checks. Validation checks structure, not the truth of your content.
 
+## Update and review an existing wiki
+
+Stop agents using Wiked and run the same installation command. After a change
+of installed version, start your agent again and ask:
+
+> Use the installed Wiked skill to review this wiki after the update and help me
+> track any necessary corrections.
+
+For more details, see the
+[review acknowledgment instructions](./docs/installation.md#acknowledge-a-maintenance-review).
+
 ## License
 
 Wiked's own code and instructions are distributed under the [MIT License](./LICENSE),
