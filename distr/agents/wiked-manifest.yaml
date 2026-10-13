@@ -1,10 +1,11 @@
 namespace: wiked
-distribution_version: 1.4.0
+distribution_version: 1.4.1
 owner: Wiked
 entrypoint: skills/wiked/SKILL.md
 components:
   metadata:
     - wiked-manifest.yaml
+    - skills/wiked/LICENSE
   instructions:
     - skills/wiked/SKILL.md
     - skills/wiked/guides/query.md

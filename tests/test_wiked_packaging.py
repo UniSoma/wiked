@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 import shutil
@@ -11,6 +12,7 @@ import pytest
 import yaml
 
 from test_wiked_installer import environment, run
+from test_wiked_validator import knot_environment, write_instance
 
 
 ROOT = Path(__file__).parents[1]
@@ -58,6 +60,9 @@ def test_package_exact_inventory_from_another_working_directory(packaging):
         members = archive.getmembers()
         assert {member.name for member in members} == inventory
         assert len(members) == len(inventory)
+        license_text = (ROOT / 'LICENSE').read_bytes()
+        assert b'Copyright (c) 2026 UniSoma' in license_text
+        assert archive.extractfile('skills/wiked/LICENSE').read() == license_text
         for member in members:
             assert member.isfile() and not member.name.startswith('./')
             assert archive.extractfile(member).read() == (distribution / member.name).read_bytes()
@@ -136,7 +141,35 @@ def test_packaged_artifact_installs_without_checksum_or_installer_assets(packagi
     _, output, _ = packaging
     assert package(packaging).returncode == 0
     consumer, assets, _ = environment
+    manifest = yaml.safe_load((packaging[0] / 'distr/agents/wiked-manifest.yaml').read_text())
+    release_path = assets / 'release.json'
+    release_metadata = json.loads(release_path.read_text())
+    version = manifest['distribution_version']
+    release_metadata['tag_name'] = f'v{version}'
+    release_metadata['assets'][0]['browser_download_url'] = (
+        f'https://github.com/UniSoma/wiked/releases/download/v{version}/distr.tar.gz')
+    release_path.write_text(json.dumps(release_metadata))
     shutil.copyfile(output / 'distr.tar.gz', assets / 'distr.tar.gz')
     result = run(environment, '--yes')
     assert result.returncode == 0, result.stderr
     assert (consumer / '.agents/skills/wiked/SKILL.md').is_file()
+    assert (consumer / '.agents/skills/wiked/LICENSE').read_bytes() == (ROOT / 'LICENSE').read_bytes()
+
+    # Operate only the installed artifact, from an unrelated cwd, with a synthetic
+    # instance and tracker. No source-only docs or real consumer are required.
+    assert write_instance(consumer.parent) == consumer
+    unrelated = consumer.parent / 'unrelated-cwd'
+    unrelated.mkdir()
+    runtime_tools = consumer.parent / 'runtime-tools'
+    runtime_tools.mkdir()
+    result = subprocess.run(
+        ['uv', 'run', '--script', str(consumer / '.agents/skills/wiked/scripts/validate_wiki.py'),
+         '--repository-root', str(consumer), '--format', 'json'],
+        cwd=unrelated, env=knot_environment(runtime_tools, consumer),
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    summary = json.loads(result.stdout)['summary']
+    assert summary['errors'] == 0
+    assert summary['warnings'] == 0
+    assert summary['files_checked'] == 6

@@ -29,7 +29,7 @@ from jsonschema.exceptions import SchemaError
 from markdown_it import MarkdownIt
 
 
-METHODOLOGY_VERSION = "1.4.0"
+METHODOLOGY_VERSION = "1.4.1"
 
 
 @dataclass(frozen=True)

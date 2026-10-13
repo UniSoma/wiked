@@ -40,6 +40,7 @@ def release(directory, version='1.4.0', extra=None, omit=(),
             extra_member=None, prerelease=False):
     directory.mkdir(parents=True, exist_ok=True)
     manifest = yaml.safe_load((DISTRIBUTION / 'wiked-manifest.yaml').read_text())
+    source_version = manifest['distribution_version']
     manifest['distribution_version'] = version
     files = {name: (DISTRIBUTION / name).read_bytes()
              for group in manifest['components'].values() for name in group}
@@ -52,7 +53,7 @@ def release(directory, version='1.4.0', extra=None, omit=(),
         files.update(extra)
         manifest['components']['instructions'].extend(extra)
     runtime = 'skills/wiked/scripts/validate_wiki.py'
-    files[runtime] = files[runtime].replace(b'METHODOLOGY_VERSION = "1.4.0"',
+    files[runtime] = files[runtime].replace(f'METHODOLOGY_VERSION = "{source_version}"'.encode(),
                                            f'METHODOLOGY_VERSION = "{version}"'.encode())
     files['wiked-manifest.yaml'] = yaml.safe_dump(manifest).encode()
     archive_name = 'distr.tar.gz'
@@ -526,10 +527,8 @@ def test_runtime_failure_does_not_offer_migration_ticket(environment):
     (root / '.knot.edn').write_text('{}')
     (root / '.tickets').mkdir()
     # A synthetic runtime retains the release identity but cannot perform its check.
-    manifest = yaml.safe_load((DISTRIBUTION / 'wiked-manifest.yaml').read_text())
+    files = release(assets)
     runtime = 'skills/wiked/scripts/validate_wiki.py'
-    files = {name: (DISTRIBUTION / name).read_bytes()
-             for group in manifest['components'].values() for name in group}
     files[runtime] = b'METHODOLOGY_VERSION = "1.4.0"\nraise ImportError("missing dependency")\n'
     archive = assets / 'distr.tar.gz'
     with tarfile.open(archive, 'w:gz') as stream:

@@ -20,9 +20,13 @@ The canonical source is [UniSoma/wiked](https://github.com/UniSoma/wiked), confi
 by the maintainer through the Methodological grill for `wik-01m4s7m8f01s` on
 2026-10-12. The public repository's default branch is `main`; versioned downloads
 belong to its [GitHub Releases](https://github.com/UniSoma/wiked/releases).
-Publication remains pending: `main/scripts/install-wiked.sh` and stable release
-artifacts become available after development is finalized and published. The
-confirmed address is not evidence of installer or release availability. Release
+The first human publication, [v1.4.0](https://github.com/UniSoma/wiked/releases/tag/v1.4.0),
+was published by `volneids` on 2026-10-13 at 01:02:42 UTC with only `distr.tar.gz`.
+The official main installer and archive were observed available; the maintainer
+confirmed authorized publication and independent author custody in the
+Methodological grill for `wik-01m4khsrmqya`. That archive omitted the MIT license.
+The approved correction is 1.4.1, without replacing the published 1.4.0 artifact.
+Preparation of 1.4.1 is not evidence of its publication. Release
 preparation must verify the documented download paths before announcing them;
 never infer repository authority from schema IDs.
 The maintainer explicitly approved `wik-01m4s821zj1m` to make `UniSoma/wiked` the
@@ -32,9 +36,13 @@ URLs rather than introduce a configurable alternative origin.
 Humans operate Git and publish releases. Agents prepare and verify release material
 without installing tools on the host or replacing their running skill.
 
-The author-owned distribution is to be licensed under MIT, retaining applicable
-third-party notices and licenses. The publication executor supplies the license
-text and attribution; this contract alone is not a license file.
+Wiked's own code and instructions use the [MIT License](../LICENSE),
+Copyright (c) 2026 UniSoma. The identical distributed license is explicitly owned
+as `skills/wiked/LICENSE`. External runtime dependencies and optional tools are
+resolved separately, not vendored in the archive, and retain their own licenses.
+The inventory review found no bundled third-party code requiring a separate notice.
+This grant does not assert rights over historical source material, third-party
+works, or consumer content; historical research remains unmodified.
 
 Delivery order is this approved contract, implementation and synthetic testing of
 the installer, then preparation and human publication of the first release.
@@ -52,9 +60,11 @@ Installer tests must not require an already published release or a real consumer
 - Distribution versions use SemVer. Published versions and their artifacts are
   immutable; corrections require a new version. Prereleases may use `-rc.1` and
   are excluded from automatic stable-release selection.
-- The current source distribution is 1.4.0. It may be the first published version
-  only if the delivered changes fit that version; the maintainer approves the
-  final version. The manifest and runtime version must agree. The development
+- Immutability is the maintainer's commitment not to replace published artifacts;
+  GitHub platform enforcement is not required for this delivery.
+- The maintainer approved source distribution 1.4.1 to deliver the missing license.
+  Its matching release tag is `v1.4.1`; human publication remains pending.
+  The manifest and runtime version must agree. The development
   environment's project version is not the distribution version.
 - An invocation resolves the latest stable official release once, displays its
   version, and pins that selection through the entire operation. It records the
@@ -195,6 +205,14 @@ execution. The distribution version and manifested inventory are unchanged.
 MIT licensing, exact official download links, and the complete README
 installation/update path. Verify the packaged artifact independently of any real
 consumer. Record human publication as evidence, not merely local preparation.
+
+The requester explicitly closed this ticket's Methodological grill on 2026-10-13:
+prepare 1.4.1 with MIT licensing, preserve 1.4.0, align manifest/runtime versions,
+and verify package -> install -> installed-runtime use with synthetic evidence.
+Run `uv run pytest`, prepare only the exact manifested `distr.tar.gz`, and record
+the human-published corrected release before closing the ticket. Git and
+publication remain human-operated; installer redesign and version centralization
+are excluded.
 
 `wik-01m4sbvndyah` implements the approved fixed-name archive, human-operated
 packaging script, checksum-free downloads, and corresponding tests and guidance.

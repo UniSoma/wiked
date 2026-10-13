@@ -251,6 +251,12 @@ entrypoint, preservation policy, and runtime version. The manifest is the
 distribution-version authority; the Python project's version describes the
 source development environment.
 
+Starting with the prepared 1.4.1 distribution, the archive includes
+`skills/wiked/LICENSE`: MIT, Copyright (c) 2026 UniSoma. External dependencies and
+tools are not bundled and retain their own licenses. Consumer content is not
+licensed by Wiked. The previously published 1.4.0 omitted the license file;
+the maintainer will publish the correction as a new version, not replace that asset.
+
 ### Prepare the release package
 
 From the Wiked source tree corresponding to the intended release tag, run:
@@ -274,6 +280,14 @@ Existing output archives are never overwritten. Upload only `distr.tar.gz` as an
 asset of the matching stable GitHub release; GitHub's automatic source archives
 are not installation packages. Keep published artifacts immutable and use a new
 version for corrections. Version management remains separate from packaging.
+
+For the approved 1.4.1 correction, the human maintainer publishes source and the
+installer on `main`, creates the matching `v1.4.1` stable release from that source,
+and uploads only the newly prepared `distr.tar.gz`. Do not reuse the 1.4.0 archive.
+Record the release URL, publisher, publication time, tag, and attached inventory
+as publication evidence. Local packaging or tests do not establish publication.
+Immutability is a maintainer commitment; platform-enforced immutability is not
+required for this delivery.
 
 See the [publication and distribution contract](./distribution.md) for the
 source-development requirements behind this interface.

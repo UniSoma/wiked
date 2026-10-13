@@ -91,6 +91,14 @@ Wiki changes go through the agent's governed workflow, rather than direct manual
 edits. You approve meaning and scope; agents handle the related page updates and
 deterministic checks. Validation checks structure, not the truth of your content.
 
+## License
+
+Wiked's own code and instructions are distributed under the [MIT License](./LICENSE),
+Copyright (c) 2026 UniSoma. Installed packages include `skills/wiked/LICENSE`.
+This grant does not claim rights over historical source material, third-party
+works, or consumer-owned content. External tools and dependencies retain their
+own licenses; they are not bundled in the distribution archive.
+
 ## Learn more
 
 - [Installation guide](./docs/installation.md): prerequisites, agent discovery,

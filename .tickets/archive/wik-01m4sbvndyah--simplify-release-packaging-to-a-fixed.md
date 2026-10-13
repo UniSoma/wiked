@@ -1,12 +1,13 @@
 ---
 id: wik-01m4sbvndyah
 title: Simplify release packaging to a fixed distribution archive
-status: in_progress
+status: closed
 type: task
 priority: 2
 mode: hitl
 created: '2026-10-13T00:51:04.254310470Z'
-updated: '2026-10-13T00:56:57.256910361Z'
+updated: '2026-10-13T02:28:43.292440647Z'
+closed: '2026-10-13T02:28:43.292440647Z'
 acceptance:
 - title: Human-confirmed grill closure and approved scope are recorded before source edits.
   done: true
@@ -35,3 +36,7 @@ Methodological grill closure: requester chose fixed distr.tar.gz, validation/pac
 **2026-10-13T00:56:57.256910361Z**
 
 Implementation evidence: uv run pytest completed with 96 passed and 1 optional integration skipped. Synthetic coverage exercises the Bash packaging entrypoint, exact regular-file inventory, unlisted-file exclusion, manifest/runtime agreement, invalid inputs and links, refusal to overwrite output, fresh default output, and package-to-installer compatibility with only distr.tar.gz. Existing installer coverage still verifies local hash baselines, ownership, compatibility, transaction rollback/recovery and official pinned asset URLs. Targeted textual checks confirm obsolete installer/checksum download guidance is removed and README links the inspection section. The first test run found a collision between two synthetic fixture tool directories; isolating the packaging shim fixed it, and the complete suite passed. Publication ticket wik-01m4khsrmqya was reconciled; version work is tracked separately as wik-01m4sbvz62vp. No Git operations, release publication or real consumer installation occurred. Source work is ready for requester acceptance; ticket remains open.
+
+**2026-10-13T02:28:43.292440647Z**
+
+Requester accepted completion on 2026-10-13 and confirmed the remaining old-installer error was caused by cache. Delivered scripts/package-wiked.sh, fixed distr.tar.gz release downloads without checksum assets, preserved local installation hashes and safeguards, reconciled publication guidance and ticket criteria, and created future version-management ticket wik-01m4sbvz62vp. Validation: uv run pytest, 96 passed and 1 optional integration skipped. Human publication was observed separately; agents performed no Git operations or release publication.
