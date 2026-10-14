@@ -28,12 +28,53 @@ Network access is required; this is not an offline installer.
 Archive handling, JSON, SHA-256, file locking, and recovery use Python's standard
 library. `uv` resolves PyYAML for the embedded installer and the release's script
 dependencies in its cache, not your repository's Python project. Optional
-converters are needed only for the ingestion or export capabilities you select
-during setup.
+tools are needed only for the diagram, ingestion, or export capabilities you
+select during setup or request later.
 
 The Wiked installer does not initialize Git or Knot. For other tool provisioning,
 follow each tool's installation instructions; Wiked does not provision your
 environment.
+
+### Optional diagram and export tools
+
+[D2](https://d2lang.com/) (`d2` on `PATH`) is optional: install it to create,
+validate, or regenerate process diagrams. Reading canonical Markdown or copying
+an already accepted SVG does not require D2. Follow D2's installation
+instructions; the Wiked installer does not install it.
+
+Export tools depend on the requested format: `pandoc` for DOCX, `pandoc` and
+`weasyprint` for PDF, and `rsvg-convert` for SVG-to-PNG conversion or diagram
+compatibility where needed. See the
+[export guide](../distr/agents/skills/wiked/guides/export.md#dependencies)
+for the capability-specific requirements. None is a basic installation prerequisite.
+
+### Agent sandbox
+
+Wiked can run inside an agent sandbox instead of directly on your host. Prepare
+the prerequisites above inside the environment where the installer and agent
+commands run; tools installed only on the host may not be available there.
+Include D2 or export tools only for the capabilities you need.
+
+Mount your intended wiki repository read-write or use a persistent workspace,
+and run installation and setup from its root inside the sandbox. Preserve the
+whole repository, including the wiki, local Knot tracker, `.agents/` installation,
+and `.wiked-install.json`, across sandbox restarts. Follow the
+[Knot initialization](#install-and-initialize-knot) and
+[agent discovery](#agent-discovery) steps in that same environment; mounting
+files does not by itself configure skill discovery.
+
+The source repository's [`.sandbox/Dockerfile`](../.sandbox/Dockerfile) is an
+example of provisioning tools for this approach, not a generic Wiked image.
+It extends `aishell:foundation` and relies on that base for tools such as `uv`
+and Babashka/`bbin`; it adds a version-selected D2 renderer, Knot, document
+converters, and the optional Basecamp CLI. Basecamp is not a Wiked prerequisite.
+The Dockerfile does not install Wiked or initialize a repository's tracker.
+Adapt its provisioning to your sandbox and verify all prerequisites, including
+Python 3.11+, rather than assuming another base image supplies them.
+
+A Dockerfile alone does not establish isolation guarantees. Access to files,
+network, credentials, and host resources depends on your sandbox's execution
+configuration, which remains your responsibility.
 
 ### Install and initialize Knot
 

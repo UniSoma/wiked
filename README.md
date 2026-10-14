@@ -43,6 +43,10 @@ You need:
 Missing a tool or unsure about agent discovery? See the
 [installation guide](./docs/installation.md#before-you-start).
 
+You can also run Wiked inside an [agent sandbox](./docs/installation.md#agent-sandbox)
+with these tools available there. D2 is optional, needed only to create or
+regenerate diagrams; ordinary Markdown use does not require it.
+
 ### 2. Install
 
 In a terminal, open the root of the repository where you want your wiki.
