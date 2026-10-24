@@ -8,6 +8,11 @@ Load this guide for consistency or structural review and correction.
 - Read the contract and complete [Contextual Preparation](authoring-context.md) before analyzing content or proposing corrections, including during read-only review.
 - Load `modeling.md` for page, glossary, navigation, provenance, asset, or diagram structure; apply its content boundaries and coverage check to affected context and indexes.
 - Check broken internal references, orphaned assets, incomplete diagram sets, inconsistent terms, incomplete provenance, contradictions, stale statements, and visual-only information. External links and bare URLs are informational outside typed canonical-reference fields and intent-map destination entries.
+- When reviewing process diagrams, load [the diagram protocol](d2.md#step-correspondence-and-navigation)
+  for step-to-section correspondence, matching titles, stable targets, and
+  bidirectional navigation. Include viewer capability and rendered-link checks;
+  inventory gaps and propose authorized corrections rather than assuming that
+  installing a new methodology version makes existing images interactive.
 - Run the distributed validator. Errors are blocking; warnings require reporting and human disposition.
 - The validator cannot decide operational meaning, ownership, order, conditions, naming, source reliability, or divergence.
 
