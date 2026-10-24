@@ -13,3 +13,9 @@ Complete this preparation before analyzing content or proposing authorship decis
 If the configured context is absent in an existing instance, stop normal authorship and report the gap. Do not infer replacement vocabulary from pages or sources, silently create the context, or treat an incomplete instance as a new initialization. Recovery requires an explicitly authorized scope and closed grill before writing. Only explicitly requested initialization or migration uses the bounded exceptions defined in `setup.md`; normal preparation does not require loading that guide.
 
 Preparation authorizes no edits. Read-only review still needs no grill; governed-content changes remain subject to `grill.md`.
+
+## Local Acronym Presentation
+
+Expanding acronyms at first occurrence is an optional instance-local editorial criterion, not a universal requirement or an automatically validated rule. If an instance chooses to adopt it for wiki pages, propose first occurrence per page as a starting point for human approval, not a preset obligation. Keep the approved presentation criterion in the local authoring reference and canonical meanings in the configured context; reference those meanings rather than maintaining competing definitions. This option does not require creating an authoring reference when no local criterion has been adopted. Creating or changing the criterion follows the governed maintenance workflow in `maintenance.md`.
+
+Do not automatically extend a page criterion to responses, exports, or diagrams, or use it to alter canonical titles or labels.
