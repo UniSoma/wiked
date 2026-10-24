@@ -63,7 +63,6 @@ from pathlib import Path, PurePosixPath
 import re
 import runpy
 import shutil
-import shlex
 import signal
 import subprocess
 import sys
@@ -189,7 +188,7 @@ def pending_review(previous, version):
 
 def review_notice(since, version):
     if since is not None:
-        print(f'Maintenance review pending: {since} -> {version}. Consult the installed methodology-impact changelog for this range. Explicit human confirmation is required after report disposition, before recording completion; review completion is not content conformity.')
+        print(f'Maintenance review pending: {since} -> {version}.')
 
 
 def transaction_path(destination):
@@ -515,22 +514,15 @@ def compatibility(root, tree, version, previous, dry_run, approve_ticket=False):
     fail('Candidate contract validation failed; installation blocked.')
 
 
-def maintenance_prompt(root, destination, since, version):
-    skill = destination / 'skills/wiked/SKILL.md'
-    helper = destination / 'skills/wiked/scripts/acknowledge_review.py'
-    print('BEGIN WIKED MAINTENANCE AGENT PROMPT')
-    print(f'Consumer repository: {root}')
-    print(f'Installation root: {destination}')
+def maintenance_prompt(since, version):
+    print('\nWIKED MAINTENANCE AGENT PROMPT:')
+    print('-----\n')
+    print('Use the Wiked skill to perform the installed-version maintenance review')
+    print('in this consumer repository, following its maintenance workflow and local')
+    print('contract. This is maintenance review, not setup.\n')
     print(f'Installed version: {version}')
     print(f'Pending methodology-impact range: {since} -> {version}')
-    print(f'Use the installed Wiked skill at {skill} and its maintenance workflow with the consumer-owned local contract. This is maintenance review, not setup.')
-    print('At the start of review, inspect the installation and retain its version, pending start, and state token:')
-    print(f'uv run --no-project --no-python-downloads --offline --script {shlex.quote(str(helper))} --inspect')
-    print('Review the complete pending changelog range and applicable content. Report methodology impacts, findings, uncertainty, and validation results. Obtain human disposition and follow-ups for every finding, then explicit human confirmation of the exact installed version and pending range before acknowledgment. Incomplete review or missing confirmation leaves review pending.')
-    print(f'Only after complete review/report/disposition and explicit human confirmation, acknowledge with that installed helper, passing --version {version} --since {since}, --state-token with the retained token, and --human-confirmed as an explicit assertion of the actual human confirmation; it is not proof of approval. If the state changes, reassess the installation and obtain renewed approval; do not merely refresh the token to bypass a stale review.')
-    print('The reviewing agent may run only this installed metadata-only helper while active. Do not run installation, updates, or recovery; do not resolve dependencies over the network. Missing offline prerequisites leave review pending for human action. Run one operation at a time; concurrency is unsupported.')
-    print('Corrections and contract migration require separate authorization and a closed grill; optional capabilities are not adopted automatically. Acknowledgment does not establish content conformity or authorize corrections.')
-    print('END WIKED MAINTENANCE AGENT PROMPT')
+    print('\n-----\n')
 
 
 def main():
@@ -642,8 +634,8 @@ def main():
         if previous is None:
             print('First installation: start wiked-setup with the installed skill and consumer contract.')
         if previous and previous['version'] != version:
-            print('Version changed: run a maintenance agent using the copy-ready prompt below.')
-            maintenance_prompt(root, destination, since, version)
+            print('Version changed: run a maintenance agent. Copy the text between the separators below.')
+            maintenance_prompt(since, version)
         review_notice(since, version)
 
 

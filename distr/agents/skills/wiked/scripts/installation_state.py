@@ -108,7 +108,7 @@ def pending_review(previous, version):
 
 def review_notice(since, version):
     if since is not None:
-        print(f'Maintenance review pending: {since} -> {version}. Consult the installed methodology-impact changelog for this range. Explicit human confirmation is required after report disposition, before recording completion; review completion is not content conformity.')
+        print(f'Maintenance review pending: {since} -> {version}.')
 
 
 def transaction_path(destination):

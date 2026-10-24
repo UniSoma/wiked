@@ -335,7 +335,7 @@ def test_version_change_requires_maintenance_review_without_migrating_content(en
     first = run(environment, '--yes')
     assert first.returncode == 0, first.stderr
     assert 'Version changed:' not in first.stdout
-    assert 'BEGIN WIKED MAINTENANCE AGENT PROMPT' not in first.stdout
+    assert 'WIKED MAINTENANCE AGENT PROMPT:' not in first.stdout
     wiki = root / 'wiki'
     wiki.mkdir()
     (wiki / 'wiki-structure.yaml').write_text(yaml.safe_dump(contract()))
@@ -345,31 +345,31 @@ def test_version_change_requires_maintenance_review_without_migrating_content(en
     planned = run(environment, '--dry-run')
     assert planned.returncode == 0, planned.stderr
     assert 'Version changed:' not in planned.stdout
-    assert 'BEGIN WIKED MAINTENANCE AGENT PROMPT' not in planned.stdout
+    assert 'WIKED MAINTENANCE AGENT PROMPT:' not in planned.stdout
     updated = run(environment, '--yes')
     assert updated.returncode == 0, updated.stderr
     assert 'Version changed: run a maintenance agent' in updated.stdout
-    prompt = updated.stdout.split('BEGIN WIKED MAINTENANCE AGENT PROMPT\n', 1)[1].split(
-        '\nEND WIKED MAINTENANCE AGENT PROMPT', 1)[0]
-    assert f'Consumer repository: {root}' in prompt
-    assert f'Installation root: {root / ".agents"}' in prompt
+    before_prompt, block = updated.stdout.split('\n\nWIKED MAINTENANCE AGENT PROMPT:\n-----\n\n', 1)
+    prompt, after_prompt = block.split('\n\n-----\n\n', 1)
+    assert 'Version changed:' in before_prompt
+    assert after_prompt == 'Maintenance review pending: 1.4.0 -> 1.5.0.\n'
+    assert updated.stdout.splitlines().count('-----') == 2
     assert 'Installed version: 1.5.0' in prompt
     assert 'Pending methodology-impact range: 1.4.0 -> 1.5.0' in prompt
-    assert str(root / '.agents/skills/wiked/SKILL.md') in prompt
-    assert str(root / '.agents/skills/wiked/scripts/acknowledge_review.py') in prompt
-    assert '--inspect' in prompt and '--offline' in prompt
-    assert '<installer-command>' not in prompt
+    assert str(root) not in prompt
+    assert '.agents' not in prompt and 'SKILL.md' not in prompt
+    assert 'uv run' not in prompt
     assert 'First installation:' not in updated.stdout
     assert 'no agent has been launched' in updated.stdout
     assert snapshot(wiki) == before
     assert not Path(env['KNOT_LOG']).exists()
     noop = run(environment, '--yes')
     assert noop.returncode == 0 and 'Version changed:' not in noop.stdout
-    assert 'BEGIN WIKED MAINTENANCE AGENT PROMPT' not in noop.stdout
+    assert 'WIKED MAINTENANCE AGENT PROMPT:' not in noop.stdout
     (root / '.agents/skills/wiked/SKILL.md').write_text('local edit')
     repair = run(environment, '--yes')
     assert repair.returncode == 0 and 'Version changed:' not in repair.stdout
-    assert 'BEGIN WIKED MAINTENANCE AGENT PROMPT' not in repair.stdout
+    assert 'WIKED MAINTENANCE AGENT PROMPT:' not in repair.stdout
     assert snapshot(wiki) == before
 
 

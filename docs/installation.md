@@ -202,11 +202,13 @@ configuration or wiki.
 
 After every successful change of installed version, run a maintenance agent using
 the installed Wiked skill and your local contract to review content against the
-new methodology. The installer prints a clearly labeled, self-contained
-maintenance-agent prompt ready to copy and paste, with the actual installation,
-version, and pending interval; it never starts an agent. The prompt requests the
-review, report, human disposition and explicit completion confirmation, then
-agent-operated recording through the installed interface. Its contract-only
+new methodology. The installer prints a clearly labeled maintenance-agent prompt
+with the installed version and pending interval; copy only the text between the
+`-----` separators. The prompt uses no installation paths or embedded commands:
+it routes the agent to the Wiked skill and its installed-version maintenance
+workflow with your local contract. The installer never starts an agent. That
+workflow requires review, report, human disposition and explicit completion
+confirmation, then agent-operated recording through the installed interface. Its contract-only
 preflight does not establish content conformity.
 Corrections or contract migration require separately authorized scope and a closed
 grill; an update does not authorize them. First installation retains the setup

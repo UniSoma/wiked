@@ -4,7 +4,6 @@ import json
 import os
 from pathlib import Path
 import shutil
-import shlex
 import subprocess
 import sys
 
@@ -241,24 +240,22 @@ def test_first_install_has_no_pending_review_and_inspection_does_not_write(envir
     assert snapshot(root) == before
 
 
-def test_copy_ready_handoff_uses_the_actual_custom_installed_interface(environment):
+def test_copy_ready_handoff_is_path_independent_for_custom_installation(environment):
     root, assets, _ = environment
     destination = root / 'custom install'
     assert run(environment, '--destination', str(destination), '--yes').returncode == 0
     release(assets, version='1.6.0')
     result = run(environment, '--destination', str(destination), '--yes')
     assert result.returncode == 0, result.stderr
-    prompt = result.stdout.split('BEGIN WIKED MAINTENANCE AGENT PROMPT\n', 1)[1].split(
-        '\nEND WIKED MAINTENANCE AGENT PROMPT', 1)[0]
-    command = next(line for line in prompt.splitlines() if line.startswith('uv run '))
-    assert shlex.split(command) == ['uv', 'run', '--no-project', '--no-python-downloads',
-                                  '--offline', '--script', str(destination / SCRIPT), '--inspect']
-    assert f'Installation root: {destination}' in prompt
+    prompt = result.stdout.split('\nWIKED MAINTENANCE AGENT PROMPT:\n-----\n\n', 1)[1].split(
+        '\n\n-----\n\n', 1)[0]
+    assert str(root) not in prompt
+    assert destination.name not in prompt
+    assert 'SKILL.md' not in prompt and SCRIPT not in prompt
+    assert 'uv run' not in prompt
     assert 'Installed version: 1.6.0' in prompt
     assert 'Pending methodology-impact range: 1.4.0 -> 1.6.0' in prompt
-    assert '--version 1.6.0 --since 1.4.0' in prompt
-    assert '--state-token' in prompt and '--human-confirmed' in prompt
-    assert '<installer-command>' not in prompt
+    inspected(destination)
 
 
 def test_embedded_installer_core_is_synchronized():

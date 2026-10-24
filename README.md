@@ -99,7 +99,8 @@ deterministic checks. Validation checks structure, not the truth of your content
 
 Stop agents using Wiked and run the same installation command. After a change
 of installed version, the installer prints a maintenance-agent prompt ready to
-copy and paste. Start your agent again in that repository and use that prompt,
+copy and paste. Copy only the text between the `-----` separators. Start your
+agent again in that repository and use that prompt,
 or ask:
 
 > Use the installed Wiked skill and local contract to review this wiki against
