@@ -164,7 +164,7 @@ def test_invalid_changelog_blocks_packaging(packaging, kind):
     source, output, _ = packaging
     path = source / 'distr/agents/skills/wiked/CHANGELOG.md'
     text = path.read_text()
-    heading = f'## {SOURCE_VERSION} - none'
+    heading = next(line for line in text.splitlines() if line.startswith(f'## {SOURCE_VERSION} - '))
     if kind == 'unknown':
         text = text.replace(heading, f'## {SOURCE_VERSION} - unknown')
     elif kind == 'missing-current':

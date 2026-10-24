@@ -18,6 +18,7 @@ components:
     - skills/wiked/guides/modeling.md
     - skills/wiked/guides/setup.md
     - skills/wiked/guides/d2.md
+    - skills/wiked/guides/docsify.md
     - skills/wiked/guides/export.md
   commands:
     - commands/wiked-setup.md
@@ -25,6 +26,7 @@ components:
     - skills/wiked/contracts/README.md
     - skills/wiked/contracts/wiki-structure.schema.json
   runtime:
+    - skills/wiked/viewers/index.html
     - skills/wiked/scripts/README.md
     - skills/wiked/scripts/validate_wiki.py
     - skills/wiked/scripts/distribution.py

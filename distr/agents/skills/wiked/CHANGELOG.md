@@ -2,9 +2,27 @@
 
 Impacts on existing wiki texts; follow [version review](guides/maintenance.md#installed-version-review).
 
-## 1.6.0 - none
+## 1.6.0 - review
 
-No additional review of existing wiki texts is required by this release.
+### Review
+
+Diagram correspondence, matching titles, and stable identity remain required;
+clickable nodes and return links are optional, superseding the generic navigation
+obligation described under 1.5.1. Docsify is an optional viewer, not a dependency.
+
+### Action
+
+During post-installation maintenance, review diagram correspondence using
+[the diagram protocol](guides/d2.md#step-correspondence-and-navigation).
+If the wiki uses Docsify, load [its optional integration guide](guides/docsify.md),
+check compatibility, and propose adoption or review the existing integration.
+Do not flag static diagrams as nonconformant or activate the adapter implicitly.
+Content and viewer changes require authorized scope and grill closure.
+For authorized adoption, adapt the distributed `viewers/index.html` example into
+the consumer repository; its diagram adapter is inline. The adopted viewer is
+consumer-owned and must run without the Wiked installation. Do not reference
+installed skill files or synchronize viewer changes automatically; propose future
+integration updates separately and preserve existing viewer configuration.
 
 ## 1.5.1 - review
 

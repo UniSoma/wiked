@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wiki</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/themes/vue.css">
+</head>
+<body>
+  <div id="app"></div>
+  <!-- Adoption template: adapt language, title, content paths and navigation.
+       Keep this consumer-owned file in the wiki repository, outside wiki/.
+       It runs without an installed Wiked skill. Updates are explicit, not synced. -->
+  <script>
+    window.$docsify = {
+      basePath: '/wiki/',
+      homepage: 'index.md',
+      relativePath: true,
+      routerMode: 'hash',
+      noCompileLinks: ['.*\\.svg(?:[?#].*)?$']
+    };
+  </script>
+  <!-- Integration source: Wiked 1.6.0. Preserve provenance when adopting updates. -->
+  <script id="wiked-docsify-diagrams">
+/* Optional diagram navigation, embedded here; no installed-skill dependency. */
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  if (root && root.document) {
+    root.WikedDocsifyDiagrams = api;
+    root.$docsify = root.$docsify || {};
+    root.$docsify.plugins = [api.plugin, ...(root.$docsify.plugins || [])];
+  }
+})(typeof window === "undefined" ? null : window, function () {
+  "use strict";
+  const SVG = "http://www.w3.org/2000/svg";
+  const ID = /^[a-z][a-z0-9_]*$/;
+  const NODE = /^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$/;
+
+  function fragment(value) {
+    const hash = value.indexOf("#");
+    return new URLSearchParams(hash < 0 ? "" : value.slice(hash + 1));
+  }
+
+  function diagramID(value) {
+    const params = new URLSearchParams(value);
+    const id = params.get("wiked-diagram");
+    return id && ID.test(id) && params.getAll("wiked-diagram").length === 1 ? id : null;
+  }
+
+  function association(value) {
+    const params = fragment(value);
+    const node = params.get("wiked-node");
+    const section = params.get("section");
+    if (!node || !section || !NODE.test(node) || !ID.test(section) ||
+        params.getAll("wiked-node").length !== 1 || params.getAll("section").length !== 1 ||
+        [...params.keys()].some(key => key !== "wiked-node" && key !== "section")) return null;
+    return { node, section };
+  }
+
+  // Compare authored Markdown paths, not the hash-router's document URL.
+  function assetKey(value) {
+    const url = new URL(value, "https://wiked.invalid/");
+    return url.origin + url.pathname + url.search;
+  }
+
+  function sourceURL(value, base) {
+    const url = new URL(value, base);
+    const origin = new URL(base).origin;
+    if (url.origin !== origin || !/^https?:$/.test(url.protocol) ||
+        !url.pathname.endsWith(".svg") || url.username || url.password) {
+      throw new Error("Only same-origin HTTP(S) SVG assets are supported.");
+    }
+    url.hash = "";
+    return url.href;
+  }
+
+  function safeCSS(value) {
+    // Conservative rejection, not a general-purpose SVG/CSS sanitizer.
+    if (/\\|\/\*|@import|expression\s*\(|-moz-binding/i.test(value)) return false;
+    const urls = value.matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/gi);
+    for (const match of urls) {
+      if (!/^#[\w:.-]+$/.test(match[2]) &&
+          !/^data:(?:font\/[\w.-]+|application\/(?:font-woff|x-font-ttf|octet-stream));base64,[a-z0-9+/=]+$/i.test(match[2])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function prepareSVG(text, document) {
+    if (text.length > 4 * 1024 * 1024 || /<!DOCTYPE|<!ENTITY|<\?xml-stylesheet/i.test(text)) {
+      throw new Error("SVG is oversized or contains unsupported declarations.");
+    }
+    const parsed = new document.defaultView.DOMParser().parseFromString(text, "image/svg+xml");
+    const svg = parsed.documentElement;
+    if (parsed.querySelector("parsererror") || svg.localName !== "svg" || svg.namespaceURI !== SVG) {
+      throw new Error("The asset is not valid SVG.");
+    }
+    const blocked = new Set(["script", "foreignobject", "animate", "animatemotion",
+      "animatetransform", "discard", "set", "handler", "iframe", "object", "embed"]);
+    for (const element of [svg, ...svg.querySelectorAll("*")]) {
+      if (element.namespaceURI !== SVG || blocked.has(element.localName.toLowerCase())) {
+        throw new Error("SVG contains unsupported active content.");
+      }
+      for (const attr of element.attributes) {
+        const name = attr.name.toLowerCase();
+        if (name.startsWith("on") || name === "xml:base") {
+          throw new Error("SVG contains unsupported event handlers or base URLs.");
+        }
+        if (attr.localName === "href" && !/^#[^\s]*$/.test(attr.value) &&
+            !(element.localName === "image" && /^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(attr.value))) {
+          throw new Error("SVG contains unsupported external resources or links.");
+        }
+        if (!safeCSS(attr.value)) throw new Error("SVG contains unsupported CSS resources.");
+      }
+      if (element.localName === "style" && !safeCSS(element.textContent)) {
+        throw new Error("SVG contains unsupported CSS resources.");
+      }
+    }
+    return document.importNode(svg, true);
+  }
+
+  function findNode(svg, id, encode) {
+    const encoded = encode(id);
+    const matches = [...svg.querySelectorAll("g[class]")].filter(element => {
+      const classes = (element.getAttribute("class") || "").split(/\s+/);
+      return classes.includes(encoded) || classes.includes(encoded.replace(/=+$/, ""));
+    });
+    if (matches.length !== 1) throw new Error("D2 node is missing or ambiguous: " + id);
+    return matches[0];
+  }
+
+  function moveTo(element) {
+    element.scrollIntoView({ block: "center", inline: "center" });
+    if (!element.hasAttribute("tabindex")) element.setAttribute("tabindex", "-1");
+    element.focus({ preventScroll: true });
+  }
+
+  function plugin(hook, vm) {
+    let generation = 0;
+    let controller;
+    const document = window.document;
+    function invalidate() {
+      generation += 1;
+      if (controller) controller.abort();
+    }
+    hook.beforeEach(markdown => {
+      invalidate();
+      return markdown;
+    });
+    hook.doneEach(async () => {
+      invalidate();
+      const current = generation;
+      controller = new AbortController();
+      const signal = controller.signal;
+      const content = document.querySelector(".markdown-section");
+      if (!content) return;
+      for (const host of content.querySelectorAll("[data-wiked-diagram]")) host.remove();
+      // A new content element or page gets its own handlers; no document listeners.
+      const links = [...content.querySelectorAll("a[href]")];
+      const images = [...content.querySelectorAll("img[data-origin]")]
+        .filter(image => diagramID(image.getAttribute("title") || ""));
+      for (const image of images) {
+        if (image.hasAttribute("data-wiked-original-hidden")) {
+          image.hidden = image.getAttribute("data-wiked-original-hidden") === "true";
+          image.removeAttribute("data-wiked-original-hidden");
+        }
+        image.removeAttribute("data-wiked-error");
+      }
+      const seen = new Set();
+      const ids = images.map(image => diagramID(image.getAttribute("title")));
+      await Promise.all(images.map(async image => {
+        const original = image.getAttribute("data-origin");
+        const id = diagramID(image.getAttribute("title"));
+        try {
+          if (ids.filter(value => value === id).length !== 1) throw new Error("Duplicate diagram identifier: " + id);
+          const key = assetKey(original);
+          if (seen.has(key)) throw new Error("The same interactive asset is embedded more than once.");
+          seen.add(key);
+          const mappings = new Map();
+          for (const link of links) {
+            const raw = link.getAttribute("href");
+            if (!fragment(raw).has("wiked-node") || assetKey(raw) !== key) continue;
+            const entry = association(raw);
+            if (!entry) throw new Error("Malformed diagram return link.");
+            const targets = [...content.querySelectorAll("[id]")].filter(el => el.id === entry.section);
+            if (targets.length !== 1) throw new Error("Section anchor is missing or ambiguous: " + entry.section);
+            const previous = mappings.get(entry.node);
+            if (previous && previous.section !== entry.section) throw new Error("A node maps to multiple sections.");
+            if (!previous) mappings.set(entry.node, { ...entry, target: targets[0], returns: [] });
+            mappings.get(entry.node).returns.push(link);
+          }
+          if (!mappings.size) throw new Error("No step associations found for diagram: " + id);
+          const url = sourceURL(image.src, document.baseURI);
+          const response = await fetch(url, { signal, credentials: "same-origin", redirect: "error" });
+          if (!response.ok) throw new Error("SVG request failed: " + response.status);
+          const svg = prepareSVG(await response.text(), document);
+          const nodes = new Map();
+          for (const [node, mapping] of mappings) {
+            const element = findNode(svg, node, window.btoa);
+            // Existing D2 link/tooltip decorations are not rewritten or hidden.
+            if (element.closest("a")) throw new Error("Remove or separately qualify an existing D2 link before integration.");
+            nodes.set(node, element);
+            element.setAttribute("role", "link");
+            element.setAttribute("tabindex", "0");
+            element.style.cursor = "pointer";
+            const activate = event => {
+              if (event.type === "keydown" && event.key !== "Enter") return;
+              if (event.type === "click" && (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)) return;
+              event.preventDefault();
+              event.stopPropagation();
+              moveTo(mapping.target);
+            };
+            element.addEventListener("click", activate);
+            element.addEventListener("keydown", activate);
+          }
+          if (current !== generation || !content.contains(image)) return;
+          const host = document.createElement("span");
+          host.setAttribute("data-wiked-diagram", id);
+          host.style.display = image.hidden ? "none" : "block";
+          host.hidden = Boolean(image.hidden);
+          // Keep renderer styles/IDs from leaking into other diagrams or the page.
+          const shadow = host.attachShadow({ mode: "open" });
+          const style = document.createElement("style");
+          style.textContent = ":host{display:block}svg{max-width:100%;height:auto}[role=link]:focus-visible{outline:2px solid currentColor}";
+          shadow.append(style, svg);
+          svg.setAttribute("aria-label", image.alt || id);
+          image.after(host);
+          image.setAttribute("data-wiked-original-hidden", String(Boolean(image.hidden)));
+          image.hidden = true;
+          for (const [node, mapping] of mappings) {
+            for (const link of mapping.returns) {
+              link.addEventListener("click", event => {
+                if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+                event.preventDefault();
+                event.stopPropagation();
+                moveTo(nodes.get(node));
+              }, { capture: true, signal });
+            }
+          }
+        } catch (error) {
+          if (current !== generation || signal.aborted) return;
+          image.setAttribute("data-wiked-error", error.message);
+          console.warn("Wiked Docsify diagrams: " + error.message);
+        }
+      }));
+    });
+  }
+
+  return { plugin, diagramID, association, assetKey, sourceURL, safeCSS, prepareSVG, findNode };
+});
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
+</body>
+</html>

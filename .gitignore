@@ -5,3 +5,5 @@ __pycache__/
 .env*
 .automation
 *.tar.gz
+.playwright-cli/
+.test_wiki/

@@ -19,9 +19,10 @@ import sys
 import unicodedata
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 import yaml
 from jsonschema import Draft202012Validator
@@ -257,7 +258,29 @@ def split_page(path: Path, marker: str) -> tuple[dict[str, Any] | None, str, int
     return value, "".join(lines[closing + 1 :]), closing + 1, None
 
 
-def heading_data(body: str, offset: int) -> tuple[list[int], set[str], set[str]]:
+def explicit_anchors(body: str, offset: int) -> list[tuple[str, int]]:
+    """Collect portable <a id="..."> targets, excluding code and comments."""
+    anchors: list[tuple[str, int]] = []
+
+    class AnchorParser(HTMLParser):
+        def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+            identifier = dict(attrs).get("id")
+            if tag == "a" and identifier and not re.search(r"\s", identifier):
+                anchors.append((identifier, base_line + self.getpos()[0] - 1))
+
+        handle_startendtag = handle_starttag
+
+    for token in MarkdownIt("commonmark", {"html": True}).parse(body):
+        base_line = (token.map[0] if token.map else 0) + offset + 1
+        html = [token] if token.type == "html_block" else [
+            child for child in token.children or [] if child.type == "html_inline"
+        ]
+        for fragment in html:
+            AnchorParser().feed(fragment.content)
+    return anchors
+
+
+def heading_data(body: str, offset: int, *, include_explicit: bool = True) -> tuple[list[int], set[str], set[str]]:
     h1_lines: list[int] = []
     headings: set[str] = set()
     anchors: set[str] = set()
@@ -276,6 +299,8 @@ def heading_data(body: str, offset: int) -> tuple[list[int], set[str], set[str]]
         count = counts.get(slug, 0)
         anchors.add(f"{slug}-{count}" if count else slug)
         counts[slug] = count + 1
+    if include_explicit:
+        anchors.update(identifier for identifier, _ in explicit_anchors(body, offset))
     return h1_lines, headings, anchors
 
 
@@ -377,7 +402,11 @@ def validate_references(path: Path, wiki_root: Path, contract: dict[str, Any]) -
     if parse_issue:
         return []
     problems: list[Diagnostic] = []
-    _, _, own_anchors = heading_data(body, offset)
+    _, _, own_anchors = heading_data(body, offset, include_explicit=False)
+    for identifier, line in explicit_anchors(body, offset):
+        if identifier in own_anchors:
+            problems.append(issue("reference.anchor", severity(contract, "reference"), rel, f"Explicit anchor is duplicated or collides with a heading: {identifier}.", line))
+        own_anchors.add(identifier)
     for target, line, _ in markdown_links(body, offset):
         parsed = urlsplit(target)
         if parsed.scheme or parsed.netloc:
@@ -399,6 +428,16 @@ def validate_references(path: Path, wiki_root: Path, contract: dict[str, Any]) -
             _, target_body, target_offset, target_issue = split_page(destination, contract["frontmatter"]["marker"])
             if not target_issue and unquote(parsed.fragment) not in heading_data(target_body, target_offset)[2]:
                 problems.append(issue("reference.fragment", severity(contract, "reference"), rel, f"Target fragment does not exist: {parsed.fragment}.", line))
+        params = parse_qs(parsed.fragment, keep_blank_values=True) if destination.suffix == ".svg" else {}
+        if "wiked-node" in params:
+            node = params.get("wiked-node", [])
+            section = params.get("section", [])
+            if (set(params) != {"wiked-node", "section"} or len(node) != 1 or len(section) != 1
+                    or not re.fullmatch(r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*", node[0])
+                    or not re.fullmatch(r"[a-z][a-z0-9_]*", section[0])):
+                problems.append(issue("reference.diagram", severity(contract, "reference"), rel, "Malformed optional diagram return link.", line))
+            elif section[0] not in own_anchors:
+                problems.append(issue("reference.fragment", severity(contract, "reference"), rel, f"Diagram description anchor does not exist: {section[0]}.", line))
     return problems
 
 

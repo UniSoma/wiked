@@ -23,6 +23,15 @@ Human updates use this mode in the candidate runtime before replacement.
 For a custom installation, replace `.agents/skills/wiked/` in the command with
 the actual installed skill path; always keep the consumer root explicit.
 
+Reference validation accepts portable `<a id="...">` anchors outside code and
+comments, in addition to heading-derived fragments. Duplicate explicit targets
+or collisions with heading targets produce `reference.anchor`. Optional SVG
+return-link markers described in [the Docsify guide](../guides/docsify.md) are
+checked for syntax and an existing description anchor in the current entry;
+malformed markers produce `reference.diagram`. Both use `rules.reference`.
+These checks neither enable a viewer nor verify rendered node identity or browser
+navigation. Unmarked diagrams remain ordinary static assets.
+
 When `navigation.intent_map` is declared, the full validator checks its reserved
 root location, existence, exactly one root-index link, common Markdown format,
 canonical operational-page/index destinations, exact H1 labels, nonempty guidance,

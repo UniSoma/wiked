@@ -9,10 +9,17 @@ Load this guide for consistency or structural review and correction.
 - Load `modeling.md` for page, glossary, navigation, provenance, asset, or diagram structure; apply its content boundaries and coverage check to affected context and indexes.
 - Check broken internal references, orphaned assets, incomplete diagram sets, inconsistent terms, incomplete provenance, contradictions, stale statements, and visual-only information. External links and bare URLs are informational outside typed canonical-reference fields and intent-map destination entries.
 - When reviewing process diagrams, load [the diagram protocol](d2.md#step-correspondence-and-navigation)
-  for step-to-section correspondence, matching titles, stable targets, and
-  bidirectional navigation. Include viewer capability and rendered-link checks;
-  inventory gaps and propose authorized corrections rather than assuming that
-  installing a new methodology version makes existing images interactive.
+  for step-to-section correspondence, matching titles, and stable identity.
+  Interactivity is optional. During post-installation version review, identify
+  whether the consumer uses Docsify from its existing viewer configuration. If it
+  does, load [the optional integration guide](docsify.md), check compatibility,
+  and propose adoption or review an already adopted integration. Do not enable
+  it automatically, require Docsify, or flag static diagrams as nonconformant.
+  Viewer configuration and content changes need authorized scope and grill
+  closure; installation alone does not make images interactive. Adopt the guide's
+  HTML example into a consumer-owned viewer with its adapter inline, never as a
+  dependency on installed skill files. Skill removal or updates must not affect
+  the adopted viewer; propose integration updates separately for authorization.
 - Run the distributed validator. Errors are blocking; warnings require reporting and human disposition.
 - The validator cannot decide operational meaning, ownership, order, conditions, naming, source reliability, or divergence.
 

@@ -28,6 +28,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   make \
   && rm -rf /var/lib/apt/lists/*
 
+# The Playwright agent CLI and the Chromium it asks for, installed by the CLI
+# itself so the two cannot disagree. Runs as root because `--with-deps`
+# shells out to apt-get for native libraries. Bumping the CLI is the one
+# reason to touch this block; afterwards run `playwright-cli install --skills`
+# in the repo so .claude/skills/playwright-cli/ matches the binary.
+ARG PLAYWRIGHT_CLI_VERSION=0.1.19
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
+RUN mkdir -p "${PLAYWRIGHT_BROWSERS_PATH}"; \
+    npm install -g "@playwright/cli@${PLAYWRIGHT_CLI_VERSION}"; \
+    playwright-cli install-browser chromium --with-deps --only-shell; \
+    chmod -R a+rX "${PLAYWRIGHT_BROWSERS_PATH}"; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb
+# Set after the install so it never blocks it. Runtime downloads are off:
+# the image is the only source of a browser.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
 # Instalar uma versão reproduzível do renderizador D2.
 RUN curl -fsSL https://d2lang.com/install.sh | \
   sh -s -- --method standalone --version "$D2_VERSION"

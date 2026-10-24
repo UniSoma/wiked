@@ -28,6 +28,7 @@ Wiked maintains progressively navigated operational Markdown while separating ev
 | Initialize or migrate an instance | `guides/setup.md` and `guides/grill.md` |
 | Operate or associate work tickets | `guides/knot.md` |
 | Create, revise, regenerate, or review a permanent process diagram | `guides/d2.md`, then its operation-specific prerequisites |
+| Propose, enable, or review optional Docsify diagram navigation | `guides/docsify.md`, then its operation-specific prerequisites |
 | Produce a requested PDF, DOCX, SVG, or PNG | `guides/query.md`, then `guides/export.md`; add `guides/d2.md` only for a new or adjusted diagram |
 
 Load only the applicable guides. A guide may explicitly require another guide; do not preload the entire directory.
