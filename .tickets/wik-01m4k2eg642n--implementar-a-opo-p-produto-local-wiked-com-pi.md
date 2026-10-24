@@ -6,7 +6,7 @@ type: epic
 priority: 3
 mode: hitl
 created: '2026-10-10T14:11:08.775081854Z'
-updated: '2026-10-10T18:40:31.148539898Z'
+updated: '2026-10-24T13:08:04.306400533Z'
 assignee: VolneiSantos
 tags:
 - metodologia
@@ -40,6 +40,8 @@ acceptance:
 deps:
 - wik-01m4khsrmqya
 - wik-01m2tpjtev7w
+links:
+- wik-01m5q09kvwzm
 ---
 
 ## Description
@@ -205,3 +207,7 @@ Relatório integral no caminho autoral `reports/investigacao-wiked.md`, v1.1; SH
 **2026-10-10T18:40:31.148539898Z**
 
 Preparação de migração autorizada em 2026-10-10: este ticket aberto pertence à metodologia e será transferido manualmente com seu ID para o tracker autoral independente. Relações com registros que permanecem no consumidor foram retiradas; o contexto necessário está autocontido. Publicação e instalação permanecem trabalhos futuros. Esta nota não registra transferência física nem encerra o grill próprio deste trabalho.
+
+**2026-10-24T13:07:59.337282337Z**
+
+Reorganização autorizada do backlog em 2026-10-24: o épico wik-01m5q079q8jz e a CLI/protocolo de recuperação wik-01m5q09kvwzm são trabalhos independentes deste produto. Ao especificar seleção e consulta do núcleo, avaliar reutilização da API/CLI de recuperação aprovada, evitando segunda lógica de navegação. A nova frente não implementa operações de escrita, autorização, journal ou host Pi deste produto, não exige investimento no aplicativo e não torna RAG obrigatório. Relação informativa, sem nova dependência bloqueante ou alteração de prioridade/aceite deste épico.

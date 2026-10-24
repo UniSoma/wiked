@@ -6,7 +6,7 @@ type: task
 priority: 3
 mode: hitl
 created: '2026-09-18T16:46:57.314059743Z'
-updated: '2026-10-10T18:40:25.335246002Z'
+updated: '2026-10-24T13:08:04.318841697Z'
 assignee: VolneiSantos
 tags:
 - metodologia
@@ -23,6 +23,8 @@ acceptance:
   done: false
 deps:
 - wik-01m4khsrmqya
+links:
+- wik-01m5q082jdqm
 ---
 
 ## Description
@@ -34,3 +36,7 @@ Melhoria genérica independente, após primeira publicação Wiked. Conduzir gri
 **2026-10-10T18:40:25.335246002Z**
 
 Preparação de migração autorizada em 2026-10-10: este ticket aberto pertence à metodologia e será transferido manualmente com seu ID para o tracker autoral independente. Relações com registros que permanecem no consumidor foram retiradas; o contexto necessário está autocontido. Publicação e instalação permanecem trabalhos futuros. Esta nota não registra transferência física nem encerra o grill próprio deste trabalho.
+
+**2026-10-24T13:07:59.194719064Z**
+
+Reorganização autorizada do backlog em 2026-10-24: o épico wik-01m5q079q8jz passa a tratar projeções e recuperação unificada. O contrato mínimo wik-01m5q082jdqm deve preservar capacidades opcionais e composição compatível, mas não implementa a arquitetura geral de skills deste ticket. Os trabalhos permanecem independentes, sem nova dependência bloqueante ou expansão de escopo; eventual integração deve reutilizar as fronteiras aprovadas e manter carregamento progressivo.
