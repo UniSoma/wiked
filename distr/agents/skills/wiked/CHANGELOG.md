@@ -6,23 +6,27 @@ Impacts on existing wiki texts; follow [version review](guides/maintenance.md#in
 
 ### Review
 
-Diagram correspondence, matching titles, and stable identity remain required;
-clickable nodes and return links are optional, superseding the generic navigation
-obligation described under 1.5.1. Docsify is an optional viewer, not a dependency.
+- D2 edge-label placement follows the relationship's meaning; review endpoint
+  association and rendered legibility.
+- Diagram correspondence, matching titles, and stable identity remain required,
+  including distinct identities for repeated step occurrences. Clickable nodes
+  and return links are optional, superseding 1.5.1's generic navigation obligation.
+- Docsify diagram navigation is an optional, consumer-owned integration.
+- First-occurrence acronym expansion is an optional local editorial criterion,
+  not a universal requirement.
 
 ### Action
 
-During post-installation maintenance, review diagram correspondence using
-[the diagram protocol](guides/d2.md#step-correspondence-and-navigation).
-If the wiki uses Docsify, load [its optional integration guide](guides/docsify.md),
-check compatibility, and propose adoption or review the existing integration.
-Do not flag static diagrams as nonconformant or activate the adapter implicitly.
-Content and viewer changes require authorized scope and grill closure.
-For authorized adoption, adapt the distributed `viewers/index.html` example into
-the consumer repository; its diagram adapter is inline. The adopted viewer is
-consumer-owned and must run without the Wiked installation. Do not reference
-installed skill files or synchronize viewer changes automatically; propose future
-integration updates separately and preserve existing viewer configuration.
+- For existing process diagrams, review [edge-label placement](guides/d2.md#edge-label-placement)
+  against canonical meaning and inspect SVG legibility and overlaps. Check
+  [step correspondence](guides/d2.md#step-correspondence-and-navigation), including
+  unambiguous associations for repeated occurrences sharing a description.
+- Do not flag missing interactivity as nonconformity. If the wiki uses Docsify,
+  check compatibility and propose adoption or review the existing integration
+  using [the optional guide](guides/docsify.md); do not activate or update it automatically.
+- Apply acronym expansion only where locally approved, following
+  [local acronym presentation](guides/authoring-context.md#local-acronym-presentation).
+  Do not impose it on other outputs or use it to alter canonical titles or labels.
 
 ## 1.5.1 - review
 
