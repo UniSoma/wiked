@@ -14,7 +14,11 @@ The canonical distribution source is `distr/agents/skills/wiked/`, outside autom
 
 A consumer owns `wiki/wiki-structure.yaml`, operational Markdown under `wiki/`, ingestion material under the fixed `raw/` workspace, and its Knot records. Pending local sources remain under `raw/`; validated indexing moves only ticket-selected material to `raw/archive/YYYY-MM-DD_<ticket-id>/`. The local contract configures Wiked but does not encode human qualification or ingestion paths, move consumer terminology or facts into the distribution, or decide whether ingestion material is persisted in Git. The skill must remain usable without `docs/`.
 
-The Distributed runtime and Instance contract are the repository's only active runtime interfaces. Source-development documents describe their evolution but do not duplicate their executable rules.
+The Distributed runtime and Instance contract are the active wiki-validation
+interfaces. The installed metadata-only review acknowledgment command is a
+separate installation-state interface, governed by the distributed maintenance
+guide. Source-development documents describe their evolution but do not duplicate
+their executable rules.
 
 ## Development workflow
 

@@ -26,6 +26,12 @@ Canonical vocabulary for maintaining and evolving Wiked at its source repository
 
 **Distributed runtime**: the generic validator shipped with Wiked and invoked with an explicit consumer repository root.
 
+**Review acknowledgment interface**: the installed metadata-only command that
+records completion of an installed-version review after explicit human
+disposition and confirmation. It is separate from wiki validation, derives its
+installation from its own location, and neither certifies content conformity nor
+authorizes corrections.
+
 **Harness adapter**: a thin integration entrypoint, such as `wiked-setup`, that delegates to the installed skill without copying workflow rules.
 
 ## Compatibility and transition

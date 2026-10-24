@@ -15,10 +15,10 @@ wiked_confirm() {
         echo "No controlling terminal. Supply explicit approval options for automation." >&2
         return 2
     fi
-    printf '%s [yes/no] ' "$1" >&3
+    printf '%s [y/yes/no] ' "$1" >&3
     read -r answer <&3 || return 1
     case "$answer" in
-        [Yy][Ee][Ss]) return 0 ;;
+        [Yy]|[Yy][Ee][Ss]) return 0 ;;
         *) return 1 ;;
     esac
 }
@@ -63,6 +63,7 @@ from pathlib import Path, PurePosixPath
 import re
 import runpy
 import shutil
+import shlex
 import signal
 import subprocess
 import sys
@@ -72,13 +73,27 @@ from urllib.parse import urlsplit
 
 import yaml
 
-METADATA = '.wiked-install.json'
 OFFICIAL_REPOSITORY = 'UniSoma/wiked'
-MANIFEST = 'wiked-manifest.yaml'
 RUNTIME = 'skills/wiked/scripts/validate_wiki.py'
 SCHEMA = 'skills/wiked/contracts/wiki-structure.schema.json'
 IDENTITY = 'skills/wiked/scripts/distribution.py'
 CHANGELOG = 'skills/wiked/CHANGELOG.md'
+# BEGIN GENERATED INSTALLATION STATE CORE
+"""Canonical installation state and transaction core (also embedded in the installer).
+
+Concurrency is unsupported: run one operation at a time. Review acknowledgment
+does not recover transactions or verify conformity of installed content.
+"""
+
+import hashlib
+import json
+import os
+from pathlib import Path, PurePosixPath
+import re
+import shutil
+
+METADATA = '.wiked-install.json'
+MANIFEST = 'wiked-manifest.yaml'
 SEMVER = r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
 
 
@@ -118,12 +133,14 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def atomic_json(path, data, staging=None):
+def atomic_json(path, data, staging=None, before_replace=None):
     temporary = staging or path.with_name(path.name + '.new')
     with temporary.open('x', encoding='utf-8') as stream:
         json.dump(data, stream, sort_keys=True, indent=2)
         stream.flush()
         os.fsync(stream.fileno())
+    if before_replace is not None:
+        before_replace()
     os.replace(temporary, path)
     sync_directory(path.parent)
 
@@ -134,30 +151,6 @@ def sync_directory(path):
         os.fsync(fd)
     finally:
         os.close(fd)
-
-
-def confirm(message, optional=False):
-    sys.stdout.flush()
-    result = subprocess.run(['bash', '--noprofile', '--norc', '-c',
-                             'wiked_confirm "$1"', 'wiked-ui', message],
-                            stdin=subprocess.DEVNULL)
-    if result.returncode == 2:
-        if optional:
-            return False
-        fail('No terminal available for confirmation; explicit approval required.')
-    if result.returncode not in (0, 1):
-        fail('Bash confirmation failed; nothing approved.')
-    return result.returncode == 0
-
-
-def download(url, path):
-    parsed = urlsplit(url)
-    if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password:
-        fail('Release downloads require HTTPS without embedded credentials.')
-    subprocess.run(['curl', '--fail', '--silent', '--show-error', '--location',
-                    '--proto', '=https', '--proto-redir', '=https',
-                    '--connect-timeout', '30', '--max-time', '300',
-                    '--output', str(path), url], check=True)
 
 
 def baseline(destination):
@@ -196,7 +189,229 @@ def pending_review(previous, version):
 
 def review_notice(since, version):
     if since is not None:
-        print(f'Maintenance review pending: {since} -> {version}. Consult the installed methodology-impact changelog for this range. Human acknowledgment is required after report disposition; review completion is not content conformity.')
+        print(f'Maintenance review pending: {since} -> {version}. Consult the installed methodology-impact changelog for this range. Explicit human confirmation is required after report disposition, before recording completion; review completion is not content conformity.')
+
+
+def transaction_path(destination):
+    return safe_path(destination.with_name('.' + destination.name + '.wiked-transaction'), '')
+
+
+def read_review_state(destination, parse_manifest):
+    """Read a stable snapshot; parsing is supplied by each caller, never fetched."""
+    safe_path(destination, '')
+    if transaction_path(destination).exists():
+        fail('Interrupted operation detected. Human recovery is required; nothing acknowledged.')
+    observed = {name: digest(safe_path(destination, name)) for name in (METADATA, MANIFEST)}
+    previous = baseline(destination)
+    if previous is None:
+        fail('Reviewed version must match a reliable installed version; nothing acknowledged.')
+    since = pending_review(previous, previous['version'])
+    manifest = parse_manifest(safe_path(destination, MANIFEST).read_text())
+    if (not isinstance(manifest, dict) or manifest.get('namespace') != 'wiked'
+            or str(manifest.get('distribution_version')) != previous['version']
+            or manifest.get('entrypoint') != 'skills/wiked/SKILL.md'
+            or manifest.get('preserve_unlisted_files') is not True
+            or not isinstance(manifest.get('components'), dict)):
+        fail('Installed manifest and metadata disagree; invalid Wiked identity; nothing acknowledged.')
+    inventory = []
+    for group in manifest['components'].values():
+        if not isinstance(group, list):
+            fail('Invalid installed manifest inventory; nothing acknowledged.')
+        inventory.extend(owned_path(name) for name in group)
+    if (len(inventory) != len(set(inventory)) or set(inventory) != set(previous['files'])
+            or not {MANIFEST, manifest['entrypoint']} <= set(inventory)):
+        fail('Installed manifest inventory and baseline disagree; nothing acknowledged.')
+    assert_snapshot(destination, observed)
+    token_state = {'installation_root': os.path.abspath(destination), 'files': observed}
+    token = hashlib.sha256(json.dumps(token_state, sort_keys=True).encode('utf-8')).hexdigest()
+    return previous, since, token, observed
+
+
+def assert_snapshot(destination, observed):
+    for name, checksum in observed.items():
+        if digest(safe_path(destination, name)) != checksum:
+            fail(f'Target changed since approval: {name}')
+
+
+def acknowledge_review(destination, previous, since, token, observed, *, version,
+                       approved_since, state_token, human_confirmed, dry_run=False):
+    """The boolean asserts explicit human approval; it is not proof of approval."""
+    if version != previous['version'] or approved_since != since or state_token != token:
+        fail('Reviewed version, pending range, and state token must match; nothing acknowledged.')
+    if not human_confirmed:
+        fail('Explicit human confirmation after review and finding disposition is required; nothing acknowledged.')
+    if transaction_path(destination).exists():
+        fail('Interrupted operation detected. Human recovery is required; nothing acknowledged.')
+    assert_snapshot(destination, observed)
+    if since is None or dry_run:
+        return False
+    install(destination, transaction_path(destination), destination, previous['version'],
+            previous['files'], [], observed, metadata={**previous, 'maintenance_since': None})
+    return True
+
+
+def recover(destination, transaction):
+    journal = transaction / 'journal.json'
+    if not journal.exists():
+        # Preparation never mutates installed files before the journal is durable.
+        shutil.rmtree(transaction)
+        return
+    data = json.loads(journal.read_text())
+    if data['destination'] != str(destination):
+        fail('Recovery destination mismatch.')
+    if data['status'] == 'pending':
+        names = [record['path'] for record in data['files']]
+        if len(names) != len(set(names)) or METADATA not in names:
+            fail('Invalid recovery inventory.')
+        for name in data['directories']:
+            directory = Path(name)
+            if directory != destination and destination not in directory.parents:
+                fail('Unsafe recovery directory.')
+            safe_path(directory, '')
+        for index, record in enumerate(data['files']):
+            name = record['path']
+            if name != METADATA:
+                owned_path(name)
+            target = safe_path(destination, name)
+            if type(record['existed']) is not bool:
+                fail('Invalid recovery file state.')
+            if record['existed']:
+                backup = safe_path(transaction, f'backup/{index}')
+                if digest(backup) != record['hash']:
+                    fail('Recovery backup integrity failure; preserve transaction for manual recovery.')
+            elif target.exists() and not target.is_file():
+                fail('Recovery target is not a regular file.')
+        for index, record in enumerate(data['files']):
+            target = safe_path(destination, record['path'])
+            if record['existed']:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(transaction / 'backup' / str(index), target)
+                with target.open('rb') as stream:
+                    os.fsync(stream.fileno())
+            elif target.exists():
+                target.unlink()
+            if target.parent.exists():
+                sync_directory(target.parent)
+        for name in sorted(data['directories'], key=len, reverse=True):
+            directory = Path(name)
+            try:
+                directory.rmdir()
+            except FileNotFoundError:
+                pass
+            except OSError:
+                if any(directory.iterdir()):
+                    continue  # Preserve third-party content created in the meantime.
+                raise
+    elif data['status'] != 'committed':
+        fail('Unknown recovery status.')
+    shutil.rmtree(transaction)
+    sync_directory(transaction.parent)
+
+
+def install(destination, transaction, tree, version, hashes, changes, observed,
+            maintenance_since=None, metadata=None):
+    transaction.mkdir(mode=0o700)
+    (transaction / 'backup').mkdir()
+    records = []
+    directories = set()
+    journal_written = False
+    mutation_started = False
+    try:
+        assert_snapshot(destination, observed)
+        for index, name in enumerate([*changes, METADATA]):
+            target = safe_path(destination, name)
+            current = digest(target)
+            if current != observed[name]:
+                fail(f'Target changed since approval: {name}')
+            records.append({'path': name, 'existed': current is not None, 'hash': current})
+            if current is not None:
+                backup = transaction / 'backup' / str(index)
+                shutil.copy2(target, backup)
+                if digest(backup) != current:
+                    fail(f'Target changed during backup: {name}')
+                with backup.open('rb') as stream:
+                    os.fsync(stream.fileno())
+            for parent in target.parents:
+                if parent.exists():
+                    break
+                directories.add(str(parent))
+        data = {'destination': str(destination), 'status': 'pending',
+                'files': records, 'directories': sorted(directories)}
+        sync_directory(transaction / 'backup')
+        atomic_json(transaction / 'journal.json', data)
+        journal_written = True
+        sync_directory(transaction.parent)
+        assert_snapshot(destination, observed)
+        for name in changes:
+            target = safe_path(destination, name)
+            if digest(target) != observed[name]:
+                fail(f'Target changed since approval: {name}')
+            mutation_started = True
+            if name in hashes:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with (tree / name).open('rb') as source, target.open('wb') as output:
+                    shutil.copyfileobj(source, output)
+                    output.flush()
+                    os.fsync(output.fileno())
+                target.chmod(0o644)
+            else:
+                target.unlink()
+            sync_directory(target.parent)
+        # Bind metadata-only approval to both original files right up to replace.
+        # Installation may itself replace the manifest, so only recheck unchanged
+        # observed paths here (metadata is always unchanged until this point).
+        assert_snapshot(destination, {name: checksum for name, checksum in observed.items()
+                                      if name not in changes})
+        replacement = (metadata if metadata is not None else
+                       {'format': 1, 'version': version, 'files': hashes,
+                        'maintenance_since': maintenance_since})
+        if not changes:
+            def before_metadata_replace():
+                nonlocal mutation_started
+                assert_snapshot(destination, observed)
+                mutation_started = True
+
+            atomic_json(destination / METADATA, replacement, transaction / 'metadata.new',
+                        before_replace=before_metadata_replace)
+        else:
+            mutation_started = True
+            atomic_json(destination / METADATA, replacement, transaction / 'metadata.new')
+        data['status'] = 'committed'
+        atomic_json(transaction / 'journal.json', data)
+    except BaseException:
+        if journal_written and not mutation_started:
+            # A pre-write race must not roll back somebody else's newer state.
+            shutil.rmtree(transaction)
+            sync_directory(transaction.parent)
+        else:
+            recover(destination, transaction)
+        raise
+    recover(destination, transaction)
+# END GENERATED INSTALLATION STATE CORE
+
+
+def confirm(message, optional=False):
+    sys.stdout.flush()
+    result = subprocess.run(['bash', '--noprofile', '--norc', '-c',
+                             'wiked_confirm "$1"', 'wiked-ui', message],
+                            stdin=subprocess.DEVNULL)
+    if result.returncode == 2:
+        if optional:
+            return False
+        fail('No terminal available for confirmation; explicit approval required.')
+    if result.returncode not in (0, 1):
+        fail('Bash confirmation failed; nothing approved.')
+    return result.returncode == 0
+
+
+def download(url, path):
+    parsed = urlsplit(url)
+    if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password:
+        fail('Release downloads require HTTPS without embedded credentials.')
+    subprocess.run(['curl', '--fail', '--silent', '--show-error', '--location',
+                    '--proto', '=https', '--proto-redir', '=https',
+                    '--connect-timeout', '30', '--max-time', '300',
+                    '--output', str(path), url], check=True)
 
 
 def candidate(directory, approved=False):
@@ -300,115 +515,22 @@ def compatibility(root, tree, version, previous, dry_run, approve_ticket=False):
     fail('Candidate contract validation failed; installation blocked.')
 
 
-def recover(destination, transaction):
-    journal = transaction / 'journal.json'
-    if not journal.exists():
-        # Preparation never mutates installed files before the journal is durable.
-        shutil.rmtree(transaction)
-        return
-    data = json.loads(journal.read_text())
-    if data['destination'] != str(destination):
-        fail('Recovery destination mismatch.')
-    if data['status'] == 'pending':
-        names = [record['path'] for record in data['files']]
-        if len(names) != len(set(names)) or METADATA not in names:
-            fail('Invalid recovery inventory.')
-        for name in data['directories']:
-            directory = Path(name)
-            if directory != destination and destination not in directory.parents:
-                fail('Unsafe recovery directory.')
-            safe_path(directory, '')
-        for index, record in enumerate(data['files']):
-            name = record['path']
-            if name != METADATA:
-                owned_path(name)
-            target = safe_path(destination, name)
-            if type(record['existed']) is not bool:
-                fail('Invalid recovery file state.')
-            if record['existed']:
-                backup = safe_path(transaction, f'backup/{index}')
-                if digest(backup) != record['hash']:
-                    fail('Recovery backup integrity failure; preserve transaction for manual recovery.')
-            elif target.exists() and not target.is_file():
-                fail('Recovery target is not a regular file.')
-        for index, record in enumerate(data['files']):
-            target = safe_path(destination, record['path'])
-            if record['existed']:
-                target.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(transaction / 'backup' / str(index), target)
-                with target.open('rb') as stream:
-                    os.fsync(stream.fileno())
-            elif target.exists():
-                target.unlink()
-            if target.parent.exists():
-                sync_directory(target.parent)
-        for name in sorted(data['directories'], key=len, reverse=True):
-            directory = Path(name)
-            try:
-                directory.rmdir()
-            except FileNotFoundError:
-                pass
-            except OSError:
-                if any(directory.iterdir()):
-                    continue  # Preserve third-party content created in the meantime.
-                raise
-    elif data['status'] != 'committed':
-        fail('Unknown recovery status.')
-    shutil.rmtree(transaction)
-    sync_directory(transaction.parent)
-
-
-def install(destination, transaction, tree, version, hashes, changes, observed, maintenance_since=None):
-    transaction.mkdir(mode=0o700)
-    (transaction / 'backup').mkdir()
-    records = []
-    directories = set()
-    try:
-        for index, name in enumerate([*changes, METADATA]):
-            target = safe_path(destination, name)
-            current = digest(target)
-            if current != observed[name]:
-                fail(f'Target changed since approval: {name}')
-            records.append({'path': name, 'existed': current is not None, 'hash': current})
-            if current is not None:
-                backup = transaction / 'backup' / str(index)
-                shutil.copy2(target, backup)
-                if digest(backup) != current:
-                    fail(f'Target changed during backup: {name}')
-                with backup.open('rb') as stream:
-                    os.fsync(stream.fileno())
-            for parent in target.parents:
-                if parent.exists():
-                    break
-                directories.add(str(parent))
-        data = {'destination': str(destination), 'status': 'pending',
-                'files': records, 'directories': sorted(directories)}
-        sync_directory(transaction / 'backup')
-        atomic_json(transaction / 'journal.json', data)
-        sync_directory(transaction.parent)
-        for name in changes:
-            target = safe_path(destination, name)
-            if digest(target) != observed[name]:
-                fail(f'Target changed since approval: {name}')
-            if name in hashes:
-                target.parent.mkdir(parents=True, exist_ok=True)
-                # Prepared files and backups exist before the first replacement.
-                with (tree / name).open('rb') as source, target.open('wb') as output:
-                    shutil.copyfileobj(source, output)
-                    output.flush()
-                    os.fsync(output.fileno())
-                target.chmod(0o644)
-            else:
-                target.unlink()
-            sync_directory(target.parent)
-        atomic_json(destination / METADATA, {'format': 1, 'version': version, 'files': hashes,
-                                           'maintenance_since': maintenance_since}, transaction / 'metadata.new')
-        data['status'] = 'committed'
-        atomic_json(transaction / 'journal.json', data)
-    except BaseException:
-        recover(destination, transaction)
-        raise
-    recover(destination, transaction)
+def maintenance_prompt(root, destination, since, version):
+    skill = destination / 'skills/wiked/SKILL.md'
+    helper = destination / 'skills/wiked/scripts/acknowledge_review.py'
+    print('BEGIN WIKED MAINTENANCE AGENT PROMPT')
+    print(f'Consumer repository: {root}')
+    print(f'Installation root: {destination}')
+    print(f'Installed version: {version}')
+    print(f'Pending methodology-impact range: {since} -> {version}')
+    print(f'Use the installed Wiked skill at {skill} and its maintenance workflow with the consumer-owned local contract. This is maintenance review, not setup.')
+    print('At the start of review, inspect the installation and retain its version, pending start, and state token:')
+    print(f'uv run --no-project --no-python-downloads --offline --script {shlex.quote(str(helper))} --inspect')
+    print('Review the complete pending changelog range and applicable content. Report methodology impacts, findings, uncertainty, and validation results. Obtain human disposition and follow-ups for every finding, then explicit human confirmation of the exact installed version and pending range before acknowledgment. Incomplete review or missing confirmation leaves review pending.')
+    print(f'Only after complete review/report/disposition and explicit human confirmation, acknowledge with that installed helper, passing --version {version} --since {since}, --state-token with the retained token, and --human-confirmed as an explicit assertion of the actual human confirmation; it is not proof of approval. If the state changes, reassess the installation and obtain renewed approval; do not merely refresh the token to bypass a stale review.')
+    print('The reviewing agent may run only this installed metadata-only helper while active. Do not run installation, updates, or recovery; do not resolve dependencies over the network. Missing offline prerequisites leave review pending for human action. Run one operation at a time; concurrency is unsupported.')
+    print('Corrections and contract migration require separate authorization and a closed grill; optional capabilities are not adopted automatically. Acknowledgment does not establish content conformity or authorize corrections.')
+    print('END WIKED MAINTENANCE AGENT PROMPT')
 
 
 def main():
@@ -445,14 +567,10 @@ def main():
     if args.recover:
         print('No pending operation to recover.')
         return
-    previous = baseline(destination)
-    since = pending_review(previous, previous['version']) if previous else None
     if args.acknowledge_maintenance_review:
-        if previous is None or args.acknowledge_maintenance_review != previous['version']:
+        previous, since, token, observed = read_review_state(destination, yaml.safe_load)
+        if args.acknowledge_maintenance_review != previous['version']:
             fail('Reviewed version must match a reliable installed version; nothing acknowledged.')
-        manifest = yaml.safe_load(safe_path(destination, MANIFEST).read_text())
-        if not isinstance(manifest, dict) or str(manifest.get('distribution_version')) != previous['version']:
-            fail('Installed manifest and metadata disagree; nothing acknowledged.')
         review_notice(since, previous['version'])
         if since is None:
             print('No pending maintenance review; nothing changed.')
@@ -462,10 +580,15 @@ def main():
             return
         if not args.yes and not confirm(f'Acknowledge review through {previous["version"]}, with human disposition and follow-ups for findings?'):
             fail('Review acknowledgment not approved; nothing changed.')
-        observed = {METADATA: digest(safe_path(destination, METADATA))}
-        install(destination, transaction, destination, previous['version'], previous['files'], [], observed)
+        acknowledge_review(destination, previous, since, token, observed,
+                           version=args.acknowledge_maintenance_review, approved_since=since,
+                           state_token=token, human_confirmed=True)
         print(f'Maintenance review acknowledged through {previous["version"]}; this does not establish content conformity or authorize corrections.')
         return
+    metadata_observed = digest(safe_path(destination, METADATA))
+    previous = baseline(destination)
+    assert_snapshot(destination, {METADATA: metadata_observed})
+    since = pending_review(previous, previous['version']) if previous else None
     with tempfile.TemporaryDirectory(prefix='wiked-') as temporary:
         version, tree, hashes = candidate(Path(temporary), args.yes or args.dry_run)
         if previous and tuple(map(int, previous['version'].split('.'))) > tuple(map(int, version.split('.'))):
@@ -474,7 +597,8 @@ def main():
         compatibility(root, tree, version, previous, args.dry_run, args.approve_migration_ticket)
         old = previous['files'] if previous else {}
         observed = {name: digest(safe_path(destination, name)) for name in sorted(set(hashes) | set(old))}
-        observed[METADATA] = digest(safe_path(destination, METADATA))
+        observed[METADATA] = metadata_observed
+        assert_snapshot(destination, {METADATA: metadata_observed})
         changes = []
         collisions = []
         print(f'Destination: {destination}')
@@ -514,9 +638,12 @@ def main():
         install(destination, transaction, tree, version, hashes, changes, observed, since)
         print(f'Installed Wiked {version}. Skill: {destination / "skills/wiked"}')
         print(f'Adapter: {destination / "commands/wiked-setup.md"}')
-        print('Configure agent discovery for custom destinations. Start wiked-setup with the installed skill and consumer contract; no agent has been launched.')
+        print('Configure agent discovery for custom destinations; no agent has been launched.')
+        if previous is None:
+            print('First installation: start wiked-setup with the installed skill and consumer contract.')
         if previous and previous['version'] != version:
-            print('Version changed: run a maintenance agent with the installed Wiked skill and local contract to review content against the new methodology. Corrections and contract migration require separate authorization and a closed grill; optional capabilities are not adopted automatically.')
+            print('Version changed: run a maintenance agent using the copy-ready prompt below.')
+            maintenance_prompt(root, destination, since, version)
         review_notice(since, version)
 
 

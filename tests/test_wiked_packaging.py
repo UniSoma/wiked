@@ -144,16 +144,18 @@ def test_package_reads_version_only_from_manifest_and_reports_publication_tag(pa
     distribution = source / 'distr/agents'
     manifest_path = distribution / 'wiked-manifest.yaml'
     manifest = yaml.safe_load(manifest_path.read_text())
-    manifest['distribution_version'] = '1.5.2'
+    major, minor, _ = map(int, SOURCE_VERSION.split('.'))
+    next_version = f'{major}.{minor + 1}.0'
+    manifest['distribution_version'] = next_version
     manifest_path.write_text(yaml.safe_dump(manifest))
     changelog = distribution / 'skills/wiked/CHANGELOG.md'
     text = changelog.read_text()
     changelog.write_text(text.replace(f'## {SOURCE_VERSION} - ',
-                                     f'## 1.5.2 - none\n\nNo methodological impact.\n\n## {SOURCE_VERSION} - ', 1))
+                                      f'## {next_version} - none\n\nNo methodological impact.\n\n## {SOURCE_VERSION} - ', 1))
     result = package(packaging)
     assert result.returncode == 0, result.stderr
-    assert 'Packaged Wiked 1.5.2:' in result.stdout
-    assert 'GitHub release tag v1.5.2' in result.stdout
+    assert f'Packaged Wiked {next_version}:' in result.stdout
+    assert f'GitHub release tag v{next_version}' in result.stdout
     assert 'No release was published' in result.stdout
 
 

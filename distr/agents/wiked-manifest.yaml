@@ -1,5 +1,5 @@
 namespace: wiked
-distribution_version: 1.5.1
+distribution_version: 1.6.0
 owner: Wiked
 entrypoint: skills/wiked/SKILL.md
 components:
@@ -28,4 +28,6 @@ components:
     - skills/wiked/scripts/README.md
     - skills/wiked/scripts/validate_wiki.py
     - skills/wiked/scripts/distribution.py
+    - skills/wiked/scripts/installation_state.py
+    - skills/wiked/scripts/acknowledge_review.py
 preserve_unlisted_files: true

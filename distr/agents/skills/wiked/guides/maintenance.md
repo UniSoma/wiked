@@ -30,6 +30,14 @@ The manifest is the version authority; metadata records the pending
 Review every intervening entry, including releases skipped during installation.
 Successive updates, same-version repair, and no-op do not clear that pending range.
 
+Before reviewing, inspect the installed acknowledgment interface described in
+[Runtime Interface](../scripts/README.md#maintenance-review-acknowledgment).
+Retain its version, pending start, and state token for the reviewed installation.
+The token identifies a state snapshot, not human consent. If inspection fails,
+report the failure and leave acknowledgment pending; do not repair metadata by hand.
+If no interval is pending, no acknowledgment is needed; do not invent one or
+infer that a separately requested content review is unnecessary.
+
 For a missing/invalid range, manifest/metadata mismatch, or coverage older than
 the changelog baseline, report the uncertainty and seek human disposition; never
 infer that no relevant change occurred. Legacy metadata without the pending field
@@ -45,14 +53,31 @@ unresolved findings; when appropriate, load `knot.md` and create or link correct
 tickets in the consumer-local tracker so work is not forgotten. Review completion
 may precede those corrections, but does not declare content conformity. A failure
 that prevents completing the analysis keeps the review pending.
+Reported content-validation errors remain blocking for accepting the affected
+content, but can be fully analyzed findings with human-assigned follow-ups;
+their presence alone is not proof that the review analysis failed. A validator
+execution failure that prevents assessment does keep the review pending.
 
-After disposition, give the human the installer command with
-`--acknowledge-maintenance-review X.Y.Z` for the exact reviewed installed version
-and the actual `--destination` if customized. The human runs it with agents
-stopped, confirms completion, and records the report/follow-ups as appropriate.
-This metadata-only operation downloads nothing and changes neither wiki nor
-installed skill. Do not acknowledge on the human's behalf or clear metadata by
-hand. A version mismatch or interrupted transaction blocks acknowledgment.
+After the complete report and disposition, ask the human to explicitly confirm
+completion of the review for the exact version and interval. Approval to begin
+review, silence, or acceptance of individual findings is not this confirmation.
+Only after receiving it, invoke the installed acknowledgment interface with the
+retained snapshot and the explicit human-confirmation option. The option asserts
+the confirmation already received; the program cannot establish that a human
+approved or that analysis was complete. Never use it to bypass this gate.
+
+The reviewing agent may remain active for this metadata-only operation. Do not
+run it concurrently with another acknowledgment, installation, update, or recovery.
+Installation, update, and recovery remain human operations with agents stopped.
+The command runs offline, changes neither skill nor wiki, and creates no tickets.
+It does not certify conformity or authorize corrections. Preserve the human
+confirmation and report/follow-ups in the applicable governance records.
+If the state changed, the version/range disagrees, or a transaction is pending,
+stop and report the blocker. Never obtain a fresh token merely to bypass a stale
+review; reassess the changed installation and obtain renewed human confirmation.
+Other failures likewise leave acknowledgment pending until safely retried or
+human recovery is complete. Never hand-edit the metadata or download an installer
+to work around a missing installed interface.
 
 ## Correct
 

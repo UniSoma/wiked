@@ -235,17 +235,45 @@ def test_dry_run_confirmation_and_collision_approval(environment):
     assert (destination / 'other.txt').read_text() == 'third party'
 
 
-def test_interactive_collision_and_operation_have_separate_confirmations(environment):
+@pytest.mark.parametrize('affirmative', ['y', 'Y', 'yes', 'YeS'])
+def test_interactive_collision_and_operation_have_separate_confirmations(environment, affirmative):
     root, _, _ = environment
     (root / '.agents').mkdir()
     (root / '.agents/wiked-manifest.yaml').write_text('unowned')
     result = run_interactive(environment, answers=[
         ('Installation destination [.agents]:', ''),
-        ('Continue with latest stable release 1.4.0?', 'yes'),
-        ('Take ownership of collision wiked-manifest.yaml?', 'yes'),
-        ('Approve this installation plan?', 'yes'),
+        ('Continue with latest stable release 1.4.0?', affirmative),
+        ('Take ownership of collision wiked-manifest.yaml?', affirmative),
+        ('Approve this installation plan?', affirmative),
     ])
     assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize('answer', ['', 'sure'])
+@pytest.mark.parametrize('stage', ['release', 'collision', 'plan', 'acknowledgment'])
+def test_empty_or_unrecognized_terminal_input_never_approves(environment, answer, stage):
+    root, assets, env = environment
+    args = ['--destination', '.agents']
+    answers = [('Continue with latest stable release 1.4.0?', 'y')]
+    if stage == 'acknowledgment':
+        assert run(environment, '--yes').returncode == 0
+        release(assets, version='1.5.0')
+        assert run(environment, '--yes').returncode == 0
+        args += ['--acknowledge-maintenance-review', '1.5.0']
+        answers = [('Acknowledge review through 1.5.0, with human disposition and follow-ups for findings?', answer)]
+    elif stage == 'release':
+        answers = [('Continue with latest stable release 1.4.0?', answer)]
+    elif stage == 'collision':
+        (root / '.agents').mkdir()
+        (root / '.agents/wiked-manifest.yaml').write_text('consumer-owned')
+        answers += [('Take ownership of collision wiked-manifest.yaml?', answer)]
+    else:
+        answers += [('Approve this installation plan?', answer)]
+    before = snapshot(root)
+    result = run_interactive(environment, *args, answers=answers)
+    assert result.returncode == 2, result.stdout
+    assert snapshot(root) == before
+    assert not Path(env['KNOT_LOG']).exists()
 
 
 def test_downgrade_is_not_offered(environment):
@@ -307,6 +335,7 @@ def test_version_change_requires_maintenance_review_without_migrating_content(en
     first = run(environment, '--yes')
     assert first.returncode == 0, first.stderr
     assert 'Version changed:' not in first.stdout
+    assert 'BEGIN WIKED MAINTENANCE AGENT PROMPT' not in first.stdout
     wiki = root / 'wiki'
     wiki.mkdir()
     (wiki / 'wiki-structure.yaml').write_text(yaml.safe_dump(contract()))
@@ -316,19 +345,31 @@ def test_version_change_requires_maintenance_review_without_migrating_content(en
     planned = run(environment, '--dry-run')
     assert planned.returncode == 0, planned.stderr
     assert 'Version changed:' not in planned.stdout
+    assert 'BEGIN WIKED MAINTENANCE AGENT PROMPT' not in planned.stdout
     updated = run(environment, '--yes')
     assert updated.returncode == 0, updated.stderr
     assert 'Version changed: run a maintenance agent' in updated.stdout
-    assert 'Corrections and contract migration require separate authorization and a closed grill' in updated.stdout
-    assert 'optional capabilities are not adopted automatically' in updated.stdout
+    prompt = updated.stdout.split('BEGIN WIKED MAINTENANCE AGENT PROMPT\n', 1)[1].split(
+        '\nEND WIKED MAINTENANCE AGENT PROMPT', 1)[0]
+    assert f'Consumer repository: {root}' in prompt
+    assert f'Installation root: {root / ".agents"}' in prompt
+    assert 'Installed version: 1.5.0' in prompt
+    assert 'Pending methodology-impact range: 1.4.0 -> 1.5.0' in prompt
+    assert str(root / '.agents/skills/wiked/SKILL.md') in prompt
+    assert str(root / '.agents/skills/wiked/scripts/acknowledge_review.py') in prompt
+    assert '--inspect' in prompt and '--offline' in prompt
+    assert '<installer-command>' not in prompt
+    assert 'First installation:' not in updated.stdout
     assert 'no agent has been launched' in updated.stdout
     assert snapshot(wiki) == before
     assert not Path(env['KNOT_LOG']).exists()
     noop = run(environment, '--yes')
     assert noop.returncode == 0 and 'Version changed:' not in noop.stdout
+    assert 'BEGIN WIKED MAINTENANCE AGENT PROMPT' not in noop.stdout
     (root / '.agents/skills/wiked/SKILL.md').write_text('local edit')
     repair = run(environment, '--yes')
     assert repair.returncode == 0 and 'Version changed:' not in repair.stdout
+    assert 'BEGIN WIKED MAINTENANCE AGENT PROMPT' not in repair.stdout
     assert snapshot(wiki) == before
 
 
@@ -415,7 +456,8 @@ def test_acknowledgment_requires_matching_manifest_and_no_pending_transaction(en
     assert result.returncode == 2 and 'Run --recover' in result.stderr
 
 
-def test_human_terminal_acknowledgment_is_separate_from_installation(environment):
+@pytest.mark.parametrize('affirmative', ['y', 'YES'])
+def test_human_terminal_acknowledgment_is_separate_from_installation(environment, affirmative):
     root, assets, env = environment
     assert run(environment, '--yes').returncode == 0
     release(assets, version='1.5.0')
@@ -427,7 +469,7 @@ def test_human_terminal_acknowledgment_is_separate_from_installation(environment
     ])
     assert result.returncode == 2 and snapshot(root / '.agents') == before
     result = run_interactive(environment, '--acknowledge-maintenance-review', '1.5.0', answers=[
-        ('Acknowledge review through 1.5.0, with human disposition and follow-ups for findings?', 'yes'),
+        ('Acknowledge review through 1.5.0, with human disposition and follow-ups for findings?', affirmative),
     ])
     assert result.returncode == 0, result.stdout
     assert json.loads((root / '.agents/.wiked-install.json').read_text())['maintenance_since'] is None
@@ -502,7 +544,10 @@ def test_candidate_checks_only_contract_preserves_consumer_and_never_calls_track
 
 @pytest.mark.parametrize('local,confirmation,ticket', [(False, 'yes\n', False),
                                                        (True, 'no\n', False),
-                                                       (True, 'yes\n', True)])
+                                                       (True, '\n', False),
+                                                       (True, 'sure\n', False),
+                                                       (True, 'y\n', True),
+                                                       (True, 'YES\n', True)])
 def test_incompatibility_blocks_replacement_and_requires_separate_local_confirmation(environment, local, confirmation, ticket):
     root, _, env = environment
     assert run(environment, '--yes').returncode == 0

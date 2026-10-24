@@ -6,7 +6,7 @@ type: task
 priority: 3
 mode: hitl
 created: '2026-10-13T00:51:14.236745554Z'
-updated: '2026-10-13T21:08:31.514371444Z'
+updated: '2026-10-24T12:05:13.679870501Z'
 closed: '2026-10-13T21:08:31.514371444Z'
 acceptance:
 - title: Methodological grill decides the single version authority, increment policy and publication boundaries.
@@ -17,6 +17,7 @@ acceptance:
   done: true
 links:
 - wik-01m4sbvndyah
+- wik-01m5pwszwv9v
 ---
 
 ## Description

@@ -69,7 +69,7 @@ to add `~/.local/bin` to your `PATH` before continuing. Python and `uv` must
 already be available; these commands do not install them.
 
 Accept the default `.agents/` location, review the selected release and file plan,
-and confirm the installation.
+and confirm the installation with `y` or `yes` (case-insensitive).
 
 The `curl` commands download and run scripts from `main`; use them only if you
 trust their sources. Wiked does not verify download checksums. Prefer to inspect
@@ -98,10 +98,23 @@ deterministic checks. Validation checks structure, not the truth of your content
 ## Update and review an existing wiki
 
 Stop agents using Wiked and run the same installation command. After a change
-of installed version, start your agent again and ask:
+of installed version, the installer prints a maintenance-agent prompt ready to
+copy and paste. Start your agent again in that repository and use that prompt,
+or ask:
 
-> Use the installed Wiked skill to review this wiki after the update and help me
-> track any necessary corrections.
+> Use the installed Wiked skill and local contract to review this wiki against
+> the installed version, covering the pending version interval and its changelog.
+> Report impacts, findings, validation results, and uncertainties. Obtain my
+> disposition of findings and explicit confirmation of review completion, then
+> record it through the installed acknowledgment interface. Leave review pending
+> if analysis is incomplete. Do not apply corrections or migrate the contract
+> without separate authorization and a closed grill.
+
+You decide what happens to findings. Once you explicitly confirm the completed
+review, the agent records its completion without asking you to reconstruct an
+installer command. Corrections can remain pending; this is not certification
+that the wiki conforms. Only this metadata operation may run with the reviewing
+agent active, without concurrent installation, update, acknowledgment, or recovery.
 
 For more details, see the
 [review acknowledgment instructions](./docs/installation.md#acknowledge-a-maintenance-review).

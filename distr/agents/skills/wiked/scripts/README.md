@@ -33,3 +33,42 @@ diagnostics use `rules.navigation`; general reference checks also verify existin
 fragments. The validator does not decide usefulness, coverage, or operational
 truth. Contract-only mode checks the declaration and minimum methodology 1.5.0,
 not the map file or content. Instances without a map retain existing behavior.
+
+## Maintenance review acknowledgment
+
+Load this interface only for the installed-version workflow in
+[Maintenance](../guides/maintenance.md#installed-version-review). It is separate
+from validation and does not certify content conformity or authorize corrections.
+
+At the start of review, inspect the installation containing this command:
+
+```sh
+uv run --no-project --no-python-downloads --offline --script .agents/skills/wiked/scripts/acknowledge_review.py --inspect
+```
+
+Retain the returned `version`, `maintenance_since`, and `state_token` for the
+review. After completed analysis, reporting, human disposition, and explicit human
+confirmation of that version and interval, invoke the same script with
+`--version`, `--since`, and `--state-token` set to those returned values and
+`--human-confirmed`. That flag is an assertion of received consent, not proof of
+it. `--dry-run` validates the request without recording completion. Missing
+confirmation, a stale snapshot/version/range, unreliable identity/baseline, or a
+pending transaction prevents acknowledgment. If no review is pending, there is
+nothing to acknowledge.
+
+Use the actual installed script path for custom locations. Unlike the validator,
+this command derives the installation root from its own location, independently
+of cwd; keep `acknowledge_review.py` and its shared `installation_state.py` module
+in their manifested relative layout. It does not infer or operate on consumer
+wiki content. It changes only
+`.wiked-install.json`, preserving version, inventory, and baseline hashes, through
+the installer's transactional journal. It never downloads releases, modifies
+installed skill files, invokes Knot, or performs recovery. Handled failures roll
+back; abrupt interruption requires human installer recovery with agents stopped.
+
+The reviewing agent may run this command while active, but no acknowledgment,
+installation, update, or recovery may overlap. No general concurrency exclusion
+is provided. The offline invocation prohibits dependency and interpreter downloads;
+Python, `uv`, and cached dependencies must already be available. If prerequisites
+are unavailable, report the blocker and leave review pending rather than allowing
+network resolution. Do not hand-edit metadata or replace the installed skill.

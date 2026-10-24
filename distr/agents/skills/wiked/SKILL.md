@@ -51,3 +51,6 @@ Load only the applicable guides. A guide may explicitly require another guide; d
 ## Versioned Interfaces
 
 The distribution owns `contracts/wiki-structure.schema.json` and `scripts/validate_wiki.py`. Validate a consumer with `uv run --script <wiked-skill>/scripts/validate_wiki.py --repository-root <consumer-root>`.
+Installed-version review uses the metadata-only acknowledgment interface under
+`guides/maintenance.md`; load it only for that workflow. It does not replace or
+authorize modification of this skill.

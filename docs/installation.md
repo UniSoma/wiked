@@ -25,7 +25,7 @@ The installer checks prerequisites and reports missing tools; it does not instal
 them. Python must already be present: automatic Python downloads are disabled.
 Network access is required; this is not an offline installer.
 
-Archive handling, JSON, SHA-256, file locking, and recovery use Python's standard
+Archive handling, JSON, SHA-256, and recovery use Python's standard
 library. `uv` resolves PyYAML for the embedded installer and the release's script
 dependencies in its cache, not your repository's Python project. Optional
 tools are needed only for the diagram, ingestion, or export capabilities you
@@ -136,8 +136,9 @@ always `UniSoma/wiked`; there is no origin argument or repository question.
 
 It selects and validates the latest stable release once, then asks whether to
 continue with that version. There is no older-version selection. Inspect the
-displayed file plan and answer `yes` to approve it. Providing a value skips its
-question, not its validation or the plan approval.
+displayed file plan and answer `y` or `yes` to approve it, case-insensitively.
+Empty or unrecognized responses never approve an operation. Providing a value
+skips its question, not its validation or the plan approval.
 
 ## Inspect the installer first
 
@@ -165,7 +166,7 @@ bash "$installer_dir/install-wiked.sh"
 
 Each invocation pins the latest stable release, validates the archive inventory
 and version, and displays additions, replacements, removals, local edits, and
-unowned collisions. Answer `yes` to approve the operation.
+unowned collisions. Answer `y` or `yes` to approve the operation.
 
 ## Set up your wiki
 
@@ -201,11 +202,16 @@ configuration or wiki.
 
 After every successful change of installed version, run a maintenance agent using
 the installed Wiked skill and your local contract to review content against the
-new methodology. The installer displays this required next step but never starts
-an agent. Its contract-only preflight does not establish content conformity.
+new methodology. The installer prints a clearly labeled, self-contained
+maintenance-agent prompt ready to copy and paste, with the actual installation,
+version, and pending interval; it never starts an agent. The prompt requests the
+review, report, human disposition and explicit completion confirmation, then
+agent-operated recording through the installed interface. Its contract-only
+preflight does not establish content conformity.
 Corrections or contract migration require separately authorized scope and a closed
 grill; an update does not authorize them. First installation retains the setup
-instruction; same-version repair and intact no-op do not trigger this review.
+instruction; same-version repair and intact no-op do not trigger a new review or
+repeat the version-change prompt, but may remind you of an existing pending review.
 In 1.5.0, the intent map remains optional: maintenance does not imply adopting it.
 The [README maintenance prompt](../README.md#update-and-review-an-existing-wiki)
 starts this review without authorizing edits. The installed changelog covers the
@@ -249,20 +255,31 @@ appropriate. Corrections may remain pending; acknowledgment means the analysis
 and human disposition are complete, not that the wiki is conformant. An analysis
 failure leaves the review pending.
 
-Stop agents and run the downloaded installer with the exact reviewed installed
-version (replace `X.Y.Z` below):
+Explicitly confirm the completed review for the version and interval in the
+agent's report. The agent can then record acknowledgment through the
+[installed interface](../distr/agents/skills/wiked/scripts/README.md#maintenance-review-acknowledgment),
+without a separate human installer command. The agent retains an inspection token
+from the reviewed installation and supplies it with the exact version, pending
+start, and an assertion of the human confirmation received. The program validates
+state, not whether a human actually approved or the analysis was complete; those
+remain mandatory workflow gates.
 
-```sh
-bash /path/to/downloaded/install-wiked.sh --acknowledge-maintenance-review X.Y.Z
-# Include --destination /path/to/installation if customized.
-```
+This operation runs offline and changes only installation metadata through the
+same recovery journal, not wiki, contract, skill, or tickets. `--dry-run` leaves
+it pending. A stale snapshot/version/range, manifest/metadata disagreement,
+unreliable baseline, or interrupted transaction blocks it. Prerequisites must
+already be available offline; failures leave the review pending. No-op and repair
+may remind you of an existing pending range, but never acknowledge it.
 
-This separate human-confirmed operation downloads nothing and changes only
-installation metadata through the same recovery journal, not wiki, contract,
-skill, or tickets. `--yes` explicitly confirms this acknowledgment without a
-terminal; `--dry-run` leaves it pending. A stale version, manifest/metadata
-disagreement, unreliable baseline, or interrupted transaction blocks it. No-op
-and repair may remind you of an existing pending range, but never acknowledge it.
+Only this metadata operation may run with the reviewing agent active. Do not
+overlap acknowledgments, installation, update, or recovery. Human installation,
+update, and recovery still require agents to be stopped. An interrupted record
+requires human installer recovery; do not delete its journal or hand-edit state.
+If the installation changed, reassess it and obtain renewed human confirmation,
+not merely a fresh token. Older installations without the interface require a
+human update, never an agent replacing its own skill. The existing human-operated
+installer acknowledgment option remains available, with its separate approval
+and stopped-agent requirements; it is not the default agent handoff.
 Report records and correction tickets remain consumer governance, not operational
 evidence or installer-owned content.
 
@@ -293,7 +310,8 @@ effect in a dry run. Collision approval remains separate as described above.
 
 ## Interrupted installation and recovery
 
-The user must run installation, update, and recovery one operation at a time.
+The user must run installation, update, and recovery one operation at a time,
+with agents stopped. None may overlap a maintenance acknowledgment.
 Concurrent operations are unsupported and are not prevented by the installer.
 Run `--recover` only after the previous operation has stopped.
 Temporary backups and a durable journal live in the sibling

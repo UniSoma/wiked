@@ -238,15 +238,21 @@ use a separate explicit `--approve-migration-ticket` option. `--yes` never grant
 this permission, and dry runs never create tickets. Verify tracker locality
 before any create command, including configured ticket/archive paths.
 
-After success, provide the instruction to begin `wiked-setup` using the installed
-skill and consumer contract. Do not launch an agent or create domain content.
-After every effective version change from a recorded installation, additionally
-require a maintenance agent review using the installed skill and local contract
+After first installation, provide the instruction to begin `wiked-setup` using
+the installed skill and consumer contract. Keep this distinct from update and
+repair output. Do not launch an agent or create domain content.
+After every effective version change from a recorded installation, print a
+clearly labeled, self-contained maintenance-agent prompt ready to copy and paste,
+including actual installation paths, version, and pending interval without command
+placeholders. Require a maintenance agent review using the installed skill and local contract
 to assess content against the new methodology. Contract-only preflight is not
 content validation. The notice does not authorize corrections, contract migration,
 or automatic adoption of optional capabilities; those need their own governance.
 First installation, same-version repair, intact no-op, and dry run do not trigger
-this version-change notice.
+this version-change prompt. The prompt requests impacts, findings, validation,
+uncertainties, human disposition and explicit completion confirmation, followed by
+recording through the installed acknowledgment interface; it grants no correction
+authority. Same-version pending-review reminders remain distinct.
 
 Preserve `maintenance_since` in installation metadata across successive updates:
 oldest unreviewed version exclusive, installed version inclusive. Initial
@@ -261,15 +267,39 @@ and human disposition, not an inferred absence of impact.
 The agent reports impacts, findings, validation, and uncertainties. Human
 disposition assigns explicit follow-ups, including consumer-local correction
 tickets when appropriate. Review may finish before corrections do, but not when
-analysis itself was prevented. The human separately runs
-`--acknowledge-maintenance-review X.Y.Z` for the exact installed version, with
-agents stopped. This operation confirms only review/disposition, never wiki
-conformity or correction authority. It downloads nothing, changes only metadata
-using transactional recovery, preserves version/inventory/hashes, and neither
-modifies the skill/wiki nor creates tickets. Stale versions, manifest mismatch,
-unreliable baseline, and pending transactions block acknowledgment. Dry runs do
-not acknowledge; `--yes` explicitly approves this separate operation. The agent
-must not perform it on the human's behalf.
+analysis itself was prevented. After the completed report and disposition, the
+human must explicitly confirm review completion for the exact installed version
+and interval. Only then may the reviewing agent record acknowledgment through a
+dedicated installed command. Inspection captures a token bound to metadata and
+manifest before the review; the command requires that snapshot, exact version and
+pending start, and an explicit assertion of received human confirmation. A flag
+cannot prove consent or complete analysis: the installed workflow enforces those
+human gates. A changed installation requires reassessment and renewed confirmation,
+not simply obtaining a new token to bypass a stale review.
+
+The reviewing agent may remain active only for this metadata operation. No
+acknowledgment may overlap installation, update, recovery, or another acknowledgment;
+general concurrency exclusion is not introduced. Human installation, update, and
+recovery still require agents stopped. The command runs offline, never downloads
+a release or resolves dependencies over the network, and changes only metadata
+using transactional recovery. Preserve version/inventory/hashes and the metadata
+format; add no audit-log schema. It neither modifies skill/wiki/contract nor
+creates tickets. Stale snapshots, version/range disagreement, invalid manifest
+identity, unreliable baseline, and pending transactions block acknowledgment.
+Recheck the reviewed state before mutation, without requiring current installed
+files to match every baseline hash. Dry runs do not acknowledge. Missing offline
+prerequisites block rather than authorize downloads. Handled failures roll back;
+abrupt interruptions require human recovery through the installer. The existing
+human installer option remains compatible and separately approved, with agents
+stopped; agents use the installed interface, not the downloaded installer.
+
+`installation_state.py` is the canonical shared state/transaction implementation.
+The self-contained installer embeds it; `scripts/sync-installer-core.py` generates
+that block and offers a non-mutating synchronization check. Tests must verify
+synchronization and recovery compatibility between entrypoints. Both short `y`
+and full `yes` interactive approvals are accepted case-insensitively, with prompts
+listing accepted responses; empty/unrecognized input never grants approval.
+Neither form broadens `--yes` authorization to collisions or migration tickets.
 
 ## Execution and verification
 
@@ -308,6 +338,14 @@ was explicitly closed on 2026-10-13 for the authority/increment policy above,
 review and human acknowledgment, README maintenance prompt, and synthetic tests.
 No consumer installation, Git operation, or publication is authorized by that
 source delivery.
+
+The requester explicitly closed the Methodological grill for
+`wik-01m5pwszwv9v` on 2026-10-24, approving the installed agent-operated
+acknowledgment exception, shared embedded core, stale-state safeguards, distinct
+copy-ready maintenance handoff, and short/full interactive confirmations above.
+Prepare 1.6.0 as a compatible evolution, with `none` impact on existing wiki
+texts. This approval authorizes source preparation and synthetic testing only,
+not publication, installation, Git operations, or consumer changes.
 
 This contract's consolidation changes only source documentation and executor
 tickets. Implementing these interfaces, changing the distributed inventory or

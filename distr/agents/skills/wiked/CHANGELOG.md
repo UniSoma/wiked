@@ -2,6 +2,10 @@
 
 Impacts on existing wiki texts; follow [version review](guides/maintenance.md#installed-version-review).
 
+## 1.6.0 - none
+
+No additional review of existing wiki texts is required by this release.
+
 ## 1.5.1 - review
 
 ### Review
