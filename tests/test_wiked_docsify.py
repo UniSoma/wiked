@@ -85,6 +85,7 @@ def test_docsify_browser_integration(tmp_path):
         code = (ROOT / "tests/js/docsify-browser-check.js").read_text(encoding="utf-8")
         result = invoke("run-code", code)
         assert result.returncode == 0 and "WIKED_BROWSER_PASS" in result.stdout, result.stdout + result.stderr
+        print(result.stdout.split("### Ran Playwright code", 1)[0])
     finally:
         invoke("close")
         server.shutdown()

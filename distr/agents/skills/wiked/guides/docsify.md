@@ -160,6 +160,15 @@ entries or shareable direct node URLs. Enter activates a focused node. SVG style
 and renderer IDs are isolated in a shadow root, so multiple diagrams do not leak
 styles or collide. It does not modify diagram files, labels, geometry, or layout.
 
+Each successfully enhanced diagram also exposes a native "Open original diagram"
+link to its validated SVG URL, without forcing a new tab. Adapt this label in the
+inline adapter to the instance language during adoption. The link shares the
+diagram's original visibility and is removed with it when rebuilding the entry.
+It opens the static original, not the interactive node/description navigation;
+users can choose the browser's open-in-new-tab actions and available zoom controls.
+Browser zoom support varies; this is not an embedded zoom feature or a universal
+zoom guarantee. Failed or stale enhancements must not leave generated links.
+
 ## Trust, Failure, and Validation
 
 Only use reviewed, locally generated SVGs from the same origin as the viewer.
@@ -169,6 +178,8 @@ Renderer styles are isolated; these checks are conservative rejection, **not a
 general-purpose sanitizer for hostile SVG**. Do not point it at uploads or
 untrusted sources. Bundled raster images and embedded font resources are allowed;
 unsupported SVG features must be reported, not made to work by weakening checks.
+Opening the original requests the raw asset again; the inline checks do not
+sanitize that document or guarantee that a later response has identical bytes.
 
 On a failed enhancement the image remains visible, a diagnostic is logged to
 the browser console, and `data-wiked-error` identifies the affected image. Outside
@@ -198,8 +209,14 @@ In the actual viewer, verify:
 5. Renaming a heading without changing its explicit anchor preserves navigation.
    Read-only/static presentation remains useful without the adapter.
 6. Serve only the consumer-owned HTML, content, and approved viewer assets with
-   the Wiked installation unavailable. Verify entry navigation and both diagram
-   directions after reload, with no requests or build inputs from the skill.
+    the Wiked installation unavailable. Verify entry navigation and both diagram
+    directions after reload, with no requests or build inputs from the skill.
+7. Each enhanced diagram's original-file link reaches its own SVG, including from
+   nested entries, is reachable by Tab and activated by Enter, and does not force
+   a new tab. Check user-chosen independent opening and the browser's available
+   zoom controls. Originally hidden images must not expose a visible link. Repeat
+   navigation after returning and reloading; links must not duplicate or survive
+   failed/stale enhancements.
 
 Record viewer/renderer versions, results, unsupported behavior, and any untested
 cases. A successful installation or validator run is not browser acceptance.

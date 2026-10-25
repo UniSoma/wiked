@@ -224,8 +224,14 @@
           // Keep renderer styles/IDs from leaking into other diagrams or the page.
           const shadow = host.attachShadow({ mode: "open" });
           const style = document.createElement("style");
-          style.textContent = ":host{display:block}svg{max-width:100%;height:auto}[role=link]:focus-visible{outline:2px solid currentColor}";
-          shadow.append(style, svg);
+           style.textContent = ":host{display:block}svg{max-width:100%;height:auto}a{display:block}[role=link]:focus-visible{outline:2px solid currentColor}";
+           const open = document.createElement("a");
+           open.setAttribute("data-wiked-diagram-open", id);
+           open.setAttribute("href", url);
+           // Native navigation also permits the browser's open-in-new-tab actions.
+           // Adapt this label to the instance language during adoption.
+           open.textContent = "Open original diagram";
+           shadow.append(style, svg, open);
           svg.setAttribute("aria-label", image.alt || id);
           image.after(host);
           image.setAttribute("data-wiked-original-hidden", String(Boolean(image.hidden)));

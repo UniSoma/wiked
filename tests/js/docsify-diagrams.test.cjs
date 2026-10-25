@@ -76,6 +76,7 @@ class Element {
       (selector === "g[class]" && node.localName === "g" && node.hasAttribute("class")) ||
       (selector === "[id]" && node.hasAttribute("id")) ||
       (selector === "[data-wiked-diagram]" && node.hasAttribute("data-wiked-diagram")) ||
+      (selector === "[data-wiked-diagram-open]" && node.hasAttribute("data-wiked-diagram-open")) ||
       (selector === "img[data-origin]" && node.localName === "img" && node.hasAttribute("data-origin")) ||
       (selector === "a[href]" && node.localName === "a" && node.hasAttribute("href"));
     return this.children.flatMap(child => [...(match(child) ? [child] : []), ...child.querySelectorAll(selector)]);
@@ -165,6 +166,31 @@ async function withPlugin(content, fetcher, run) {
 
 const response = async () => ({ ok: true, text: async () => "<svg/>" });
 
+function originalLinks(content) {
+  return content.querySelectorAll("[data-wiked-diagram]")
+    .flatMap(host => host.shadowRoot.querySelectorAll("[data-wiked-diagram-open]"));
+}
+
+test("original link uses the validated resolved SVG URL and preserves native actions", async () => {
+  const first = entry();
+  first.image.setAttribute("src", "https://example.test/wiki/nested/assets/process.svg?v=2#ignored");
+  const content = new Element("main", {}, first.children);
+  await withPlugin(content, response, async hooks => {
+    await hooks.done();
+    const [link] = originalLinks(content);
+    assert.equal(originalLinks(content).length, 1);
+    assert.equal(link.localName, "a");
+    assert.equal(link.getAttribute("href"), "https://example.test/wiki/nested/assets/process.svg?v=2");
+    assert.equal(link.getAttribute("data-wiked-diagram-open"), "process");
+    assert.equal(link.textContent, "Open original diagram");
+    assert.equal(link.hasAttribute("target"), false);
+    for (const modifiers of [{}, { ctrlKey: true }, { metaKey: true }, { button: 1 }]) {
+      assert.notEqual(link.fire("click", modifiers).prevented, true);
+    }
+    assert.notEqual(link.fire("keydown", { key: "Enter" }).prevented, true);
+  });
+});
+
 test("enhancement supports both directions, keyboard and repeated occurrences without redraw", async () => {
   const first = entry();
   const second = new Element("a", { href: "process.svg#wiked-node=receive_again&section=step_receive" });
@@ -204,6 +230,8 @@ test("different diagrams may reuse the same source node key", async () => {
     await hooks.done();
     const hosts = content.querySelectorAll("[data-wiked-diagram]");
     assert.equal(hosts.length, 2);
+    assert.deepEqual(originalLinks(content).map(link => link.getAttribute("href")),
+      [first.image.src, second.image.src]);
     first.link.fire("click");
     second.link.fire("click");
     assert.equal(hosts[0].shadowRoot.children[1].children[0].scrolled, 1);
@@ -223,6 +251,7 @@ test("reopening rebuilds once and aborts old link handlers", async () => {
     await hooks.done();
     const hosts = content.querySelectorAll("[data-wiked-diagram]");
     assert.equal(hosts.length, 1);
+    assert.equal(originalLinks(content).length, 1);
     first.link.fire("click");
     assert.equal(hosts[0].shadowRoot.children[1].children[0].scrolled, 1);
   });
@@ -239,6 +268,7 @@ test("stale SVG loads cannot enhance an entry after navigation", async () => {
     release(await response());
     await completion;
     assert.equal(content.querySelectorAll("[data-wiked-diagram]").length, 0);
+    assert.equal(originalLinks(content).length, 0);
     assert.notEqual(first.image.hidden, true);
   });
 });
@@ -251,6 +281,92 @@ test("failed requests preserve static images and expose a diagnostic", async () 
     assert.notEqual(first.image.hidden, true);
     assert.match(first.image.getAttribute("data-wiked-error"), /404/);
     assert.equal(content.querySelectorAll("[data-wiked-diagram]").length, 0);
+    assert.equal(originalLinks(content).length, 0);
     assert.equal(warnings.length, 1);
   });
+});
+
+test("unmarked static images never gain original links", async () => {
+  const first = entry();
+  first.image.removeAttribute("title");
+  const content = new Element("main", {}, first.children);
+  await withPlugin(content, async () => { throw new Error("Unexpected fetch"); }, async hooks => {
+    await hooks.done();
+    assert.equal(originalLinks(content).length, 0);
+    assert.notEqual(first.image.hidden, true);
+    assert.equal(first.image.hasAttribute("data-wiked-error"), false);
+  });
+});
+
+test("an older successful response cannot duplicate a newer generation's original link", async () => {
+  const first = entry();
+  const content = new Element("main", {}, first.children);
+  let release;
+  const pending = new Promise(resolve => { release = resolve; });
+  let calls = 0;
+  await withPlugin(content, () => ++calls === 1 ? pending : response(), async hooks => {
+    const old = hooks.done();
+    await hooks.done();
+    const [link] = originalLinks(content);
+    release(await response());
+    await old;
+    assert.deepEqual(originalLinks(content), [link]);
+    assert.equal(first.image.hidden, true);
+  });
+});
+
+test("originally hidden images keep the original link hidden across rebuilds and failure", async () => {
+  const first = entry();
+  first.image.hidden = true;
+  const content = new Element("main", {}, first.children);
+  let fail = false;
+  await withPlugin(content, async () => fail ? { ok: false, status: 404 } : response(), async hooks => {
+    for (let repeat = 0; repeat < 2; repeat++) {
+      await hooks.done();
+      const [host] = content.querySelectorAll("[data-wiked-diagram]");
+      assert.equal(host.hidden, true);
+      assert.equal(host.style.display, "none");
+      assert.equal(originalLinks(content).length, 1);
+    }
+    fail = true;
+    await hooks.done();
+    assert.equal(first.image.hidden, true);
+    assert.equal(originalLinks(content).length, 0);
+  });
+});
+
+test("failed rebuild removes the old original link and restores the static fallback", async () => {
+  const first = entry();
+  const content = new Element("main", {}, first.children);
+  let fail = false;
+  await withPlugin(content, async () => {
+    if (fail) throw new Error("Network failure");
+    return response();
+  }, async hooks => {
+    await hooks.done();
+    assert.equal(originalLinks(content).length, 1);
+    fail = true;
+    await hooks.done();
+    assert.equal(originalLinks(content).length, 0);
+    assert.equal(first.image.hidden, false);
+    assert.equal(first.image.hasAttribute("data-wiked-original-hidden"), false);
+  });
+});
+
+test("rejected URLs, SVG content and associations never publish original links", async () => {
+  for (const failure of ["url", "svg", "association"]) {
+    const first = entry();
+    if (failure === "url") first.image.setAttribute("src", "https://other.test/process.svg");
+    if (failure === "association") first.link.removeAttribute("href");
+    const content = new Element("main", {}, first.children);
+    await withPlugin(content, response, async (hooks, document, warnings) => {
+      if (failure === "svg") document.defaultView.DOMParser = class {
+        parseFromString() { return xmlDocument(new Element("svg", {}, [new Element("script")])); }
+      };
+      await hooks.done();
+      assert.notEqual(first.image.hidden, true);
+      assert.equal(originalLinks(content).length, 0);
+      assert.equal(warnings.length, 1);
+    });
+  }
 });
