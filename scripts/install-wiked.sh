@@ -518,7 +518,7 @@ def maintenance_prompt(since, version):
     print('\nWIKED MAINTENANCE AGENT PROMPT:')
     print('-----\n')
     print('Use the Wiked skill to perform the installed-version maintenance review')
-    print('in this consumer repository, following its maintenance workflow and local')
+    print('in this consumer repository, following its maintenance workflow and instance')
     print('contract. This is maintenance review, not setup.\n')
     print(f'Installed version: {version}')
     print(f'Pending methodology-impact range: {since} -> {version}')
@@ -632,7 +632,7 @@ def main():
         print(f'Adapter: {destination / "commands/wiked-setup.md"}')
         print('Configure agent discovery for custom destinations; no agent has been launched.')
         if previous is None:
-            print('First installation: start wiked-setup with the installed skill and consumer contract.')
+            print('First installation: start wiked-setup with the installed skill and instance contract.')
         if previous and previous['version'] != version:
             print('Version changed: run a maintenance agent. Copy the text between the separators below.')
             maintenance_prompt(since, version)

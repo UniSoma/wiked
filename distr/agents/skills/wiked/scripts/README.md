@@ -1,6 +1,6 @@
 # Runtime Interface
 
-`validate_wiki.py` is Wiked's portable PEP 723 validator. Invoke it with an explicit consumer repository root:
+`validate_wiki.py` is Wiked's distributed validator, a portable PEP 723 script. Invoke it with an explicit consumer repository root:
 
 ```text
 uv run --script .agents/skills/wiked/scripts/validate_wiki.py --repository-root .
@@ -8,7 +8,7 @@ uv run --script .agents/skills/wiked/scripts/validate_wiki.py --repository-root 
 
 Keep `distribution.py`, the schema, and `wiked-manifest.yaml` in their manifested
 relative layout. The runtime reads its methodology version from that manifest,
-independently of cwd and consumer contract requirements; there is no second
+independently of cwd and instance contract requirements; there is no second
 current-version literal. Missing or invalid distribution identity is a blocking
 `runtime.version` diagnostic. Contract format and feature-introduction minimums
 are distinct from the current distribution version. Normal validation does not

@@ -103,13 +103,14 @@ copy and paste. Copy only the text between the `-----` separators. Start your
 agent again in that repository and use that prompt,
 or ask:
 
-> Use the installed Wiked skill and local contract to review this wiki against
-> the installed version, covering the pending version interval and its changelog.
-> Report impacts, findings, validation results, and uncertainties. Obtain my
-> disposition of findings and explicit confirmation of review completion, then
-> record it through the installed acknowledgment interface. Leave review pending
-> if analysis is incomplete. Do not apply corrections or migrate the contract
-> without separate authorization and a closed grill.
+> Use the installed Wiked skill and instance contract (`wiki/wiki-structure.yaml`)
+> to review this wiki against the installed version, covering the pending version
+> interval and its changelog. Report impacts, findings, validation results, and
+> uncertainties. Obtain my disposition of findings and explicit confirmation of
+> review completion, then record it through the installed acknowledgment
+> interface. Leave review pending if analysis is incomplete. Do not apply
+> corrections or migrate the contract without separate authorization and a
+> closed grill.
 
 You decide what happens to findings. Once you explicitly confirm the completed
 review, the agent records its completion without asking you to reconstruct an

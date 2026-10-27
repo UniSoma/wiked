@@ -10,7 +10,7 @@ Wiked maintains progressively navigated operational Markdown while separating ev
 ## Start
 
 1. Resolve the consumer repository root from the user's workspace. Never infer it from this skill's installation path.
-2. Read `wiki/wiki-structure.yaml`, which configures language, version compatibility, paths, vocabulary labels, page types, states, navigation, an optional intent map and local authoring reference, and Knot mappings. It is not operational evidence.
+2. Read `wiki/wiki-structure.yaml`, the instance contract, which configures language, version compatibility, paths, vocabulary labels, page types, states, navigation, an optional intent map and local authoring reference, and Knot mappings. It is not operational evidence.
 3. If the contract is absent, use `guides/setup.md` only when the user asks to initialize Wiked. Otherwise stop and report that the instance is not configured.
 4. Read the installed `distribution_version` from `../../wiked-manifest.yaml`, relative to this skill directory. Require `contract_version: 1.0` and a `methodology_version` in the installed major that is not newer than the distribution. If either version is malformed or incompatible, stop without processing wiki content; use `guides/setup.md` only for an explicitly requested migration.
    A declared `navigation.intent_map` additionally requires `methodology_version` 1.5.0 or newer. Do not adopt it or migrate the contract automatically.
@@ -51,7 +51,7 @@ Load only the applicable guides. A guide may explicitly require another guide; d
 
 ## Versioned Interfaces
 
-The distribution owns `contracts/wiki-structure.schema.json` and `scripts/validate_wiki.py`. Validate a consumer with `uv run --script <wiked-skill>/scripts/validate_wiki.py --repository-root <consumer-root>`.
+The distribution owns `contracts/wiki-structure.schema.json` and the distributed validator, `scripts/validate_wiki.py`. Validate a consumer with `uv run --script <wiked-skill>/scripts/validate_wiki.py --repository-root <consumer-root>`.
 Installed-version review uses the metadata-only acknowledgment interface under
 `guides/maintenance.md`; load it only for that workflow. It does not replace or
 authorize modification of this skill.

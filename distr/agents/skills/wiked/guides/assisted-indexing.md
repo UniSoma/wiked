@@ -45,7 +45,7 @@ After explicit grill closure:
 
 - Keep only the same source and objective in the current ticket; record independent discoveries separately.
 - Record changed pages in the ticket.
-- Run the versioned validator through the command declared by the distribution and resolve all errors. Report every warning for human disposition.
+- Run the distributed validator through the command declared by the distribution and resolve all errors. Report every warning for human disposition.
 - Before closing the ticket, reassess affected pages and acceptance criteria.
 - A ticket with external work-item references follows the synchronization procedure in `knot.md` after successful local closure.
 - The indexer and instance maintainer decide whether to persist ingestion material in Git. Never alter Git or treat `raw/` material as operational evidence.

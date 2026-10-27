@@ -201,12 +201,12 @@ configuration blocks the update; the installer never migrates or changes your
 configuration or wiki.
 
 After every successful change of installed version, run a maintenance agent using
-the installed Wiked skill and your local contract to review content against the
-new methodology. The installer prints a clearly labeled maintenance-agent prompt
+the installed Wiked skill and your instance contract (`wiki/wiki-structure.yaml`)
+to review content against the new methodology. The installer prints a clearly labeled maintenance-agent prompt
 with the installed version and pending interval; copy only the text between the
 `-----` separators. The prompt uses no installation paths or embedded commands:
 it routes the agent to the Wiked skill and its installed-version maintenance
-workflow with your local contract. The installer never starts an agent. That
+workflow with your instance contract. The installer never starts an agent. That
 workflow requires review, report, human disposition and explicit completion
 confirmation, then agent-operated recording through the installed interface. Its contract-only
 preflight does not establish content conformity.

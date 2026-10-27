@@ -7,7 +7,7 @@ This guide is not a general Docsify installation, theme, search, or publishing g
 
 ## Authority and Adoption
 
-- Read the local contract. For review, complete `authoring-context.md`; no grill
+- Read the instance contract. For review, complete `authoring-context.md`; no grill
   is needed unless objective qualification is requested. Before changing content
   or viewer configuration, satisfy `grill.md`, including qualification and explicit
   scope confirmation. For diagram changes, also load `d2.md`.
