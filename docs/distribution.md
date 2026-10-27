@@ -238,9 +238,15 @@ use a separate explicit `--approve-migration-ticket` option. `--yes` never grant
 this permission, and dry runs never create tickets. Verify tracker locality
 before any create command, including configured ticket/archive paths.
 
-After first installation, provide the instruction to begin `wiked-setup` using
-the installed skill and Instance contract. Keep this distinct from update and
-repair output. Do not launch an agent or create domain content.
+After first installation without an Instance contract, provide the instruction
+to begin `wiked-setup` with the installed skill to create it. When a compatible
+Instance contract already exists, the candidate Distributed validator reports its
+declared methodology version. If that version equals the installed one, route the
+operator to the installed skill and reserve `wiked-setup` for an authorized
+contract migration. If it is older, record the pending review from the declared
+version and print the maintenance-agent prompt for that interval instead of the
+setup instruction. Keep this output distinct from update and repair output. Do
+not launch an agent or create domain content.
 After every effective version change from a recorded installation, print a
 clearly labeled maintenance-agent prompt ready to copy and paste. Place the title
 `WIKED MAINTENANCE AGENT PROMPT:` outside the copyable region, delimit that region
@@ -248,14 +254,14 @@ with two `-----` lines, and separate the prompt from the delimiters and surround
 logs with blank lines. Tell the operator to copy only the text between the
 separators. Include the installed version and pending interval, but no repository,
 installation, or skill paths and no embedded commands. Route the agent to the
-Wiked skill's installed-version maintenance workflow and consumer-owned local
+Wiked skill's installed-version maintenance workflow and consumer-owned Instance
 contract, explicitly distinguishing review from setup. The installed guide owns
 the review and acknowledgment procedure; do not duplicate it in the prompt.
 Require review to assess content against the new methodology. Contract-only preflight is not
 content validation. The notice does not authorize corrections, contract migration,
 or automatic adoption of optional capabilities; those need their own governance.
-First installation, same-version repair, intact no-op, and dry run do not trigger
-this version-change prompt. The delegated workflow requires impacts, findings,
+First installation without an older Instance contract, same-version repair,
+intact no-op, and dry run do not trigger this version-change prompt. The delegated workflow requires impacts, findings,
 validation, uncertainties, human disposition and explicit completion confirmation,
 followed by recording through the installed acknowledgment interface; the prompt
 grants no correction authority. Same-version pending-review reminders remain

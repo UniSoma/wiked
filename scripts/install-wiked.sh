@@ -467,13 +467,19 @@ def candidate(directory, approved=False):
 def compatibility(root, tree, version, previous, dry_run, approve_ticket=False):
     contract = root / 'wiki/wiki-structure.yaml'
     if not contract.exists():
-        return
+        return None
     result = subprocess.run(['uv', 'run', '--no-project', '--no-python-downloads', '--script',
                              str(tree / RUNTIME), '--repository-root', str(root),
                              '--contract-only', '--format', 'json'], cwd=root,
                             stdin=subprocess.DEVNULL, capture_output=True, text=True)
     if result.returncode == 0:
-        return
+        try:
+            declared = json.loads(result.stdout)['contract']['methodology_version']
+        except (ValueError, KeyError, TypeError):
+            declared = None
+        if not isinstance(declared, str) or not re.fullmatch(SEMVER, declared):
+            fail('Candidate runtime did not report the contract methodology version; installation blocked.')
+        return declared
     details = result.stdout + result.stderr
     try:
         report = json.loads(result.stdout)
@@ -586,7 +592,10 @@ def main():
         if previous and tuple(map(int, previous['version'].split('.'))) > tuple(map(int, version.split('.'))):
             fail('The latest stable release is older than the installation; downgrade is not supported.')
         since = pending_review(previous, version)
-        compatibility(root, tree, version, previous, args.dry_run, args.approve_migration_ticket)
+        declared = compatibility(root, tree, version, previous, args.dry_run, args.approve_migration_ticket)
+        if (previous is None and declared is not None
+                and tuple(map(int, declared.split('.'))) < tuple(map(int, version.split('.')))):
+            since = declared  # An existing contract enters at its declared methodology version.
         old = previous['files'] if previous else {}
         observed = {name: digest(safe_path(destination, name)) for name in sorted(set(hashes) | set(old))}
         observed[METADATA] = metadata_observed
@@ -631,8 +640,16 @@ def main():
         print(f'Installed Wiked {version}. Skill: {destination / "skills/wiked"}')
         print(f'Adapter: {destination / "commands/wiked-setup.md"}')
         print('Configure agent discovery for custom destinations; no agent has been launched.')
-        if previous is None:
-            print('First installation: start wiked-setup with the installed skill and instance contract.')
+        if previous is None and declared is None:
+            print('First installation: start wiked-setup with the installed skill to create the '
+                  'instance contract (wiki/wiki-structure.yaml).')
+        elif previous is None and since is None:
+            print('First installation: an instance contract already exists; operate the wiki through '
+                  'the installed skill. Use wiked-setup only for an authorized contract migration.')
+        elif previous is None:
+            print(f'First installation over an instance contract declaring methodology {declared}: '
+                  'run a maintenance agent. Copy the text between the separators below.')
+            maintenance_prompt(since, version)
         if previous and previous['version'] != version:
             print('Version changed: run a maintenance agent. Copy the text between the separators below.')
             maintenance_prompt(since, version)

@@ -152,12 +152,15 @@ def test_contract_only_cli_never_reads_pages_or_tracker(tmp_path: Path) -> None:
     result = invoke()
     assert result.returncode == 0, result.stdout + result.stderr
     assert json.loads(result.stdout)["summary"]["files_checked"] == 0
+    assert json.loads(result.stdout)["contract"] == {"methodology_version": "1.0.0"}
     incompatible = contract()
     incompatible["methodology_version"] = "2.0.0"
     path.write_text(yaml.safe_dump(incompatible))
     assert invoke().returncode == 2
     path.unlink()
-    assert invoke().returncode == 2
+    result = invoke()
+    assert result.returncode == 2
+    assert "contract" not in json.loads(result.stdout)
     assert not (tmp_path / "tracker-called").exists()
 
 
@@ -337,6 +340,7 @@ def test_intent_map_is_optional_and_accepts_shared_cross_trunk_destinations(tmp_
     result = run_portable(tmp_path, repository)
     assert result.returncode == 0, result.stdout + result.stderr
     assert json.loads(result.stdout)["summary"] == {"files_checked": 7, "errors": 0, "warnings": 0}
+    assert json.loads(result.stdout)["contract"] == {"methodology_version": "1.5.0"}
 
 
 @pytest.mark.parametrize("name", ["index.md", "CONTEXT.md", "authoring.md", "nested/routes.md", "../routes.md", "routes.yaml"])

@@ -1200,14 +1200,14 @@ def validate_tracking(wiki_root: Path, contract: dict[str, Any], repository_root
     return problems
 
 
-def validate(repository_root: Path, schema_path: Path) -> tuple[list[Diagnostic], int, bool]:
+def validate(repository_root: Path, schema_path: Path) -> tuple[list[Diagnostic], int, bool, dict[str, Any] | None]:
     wiki_root = repository_root / "wiki"
     contract_path = wiki_root / "wiki-structure.yaml"
     if not wiki_root.is_dir():
-        return [issue("runtime.wiki-missing", "error", "wiki", "Wiki directory not found.")], 0, True
+        return [issue("runtime.wiki-missing", "error", "wiki", "Wiki directory not found.")], 0, True, None
     contract, problems = validate_contract(contract_path, schema_path)
     if contract is None:
-        return sorted(problems, key=issue_key), 0, True
+        return sorted(problems, key=issue_key), 0, True, None
     markdown = sorted((path for path in wiki_root.rglob("*.md") if path.is_file()), key=lambda path: relative(path, wiki_root))
     for path in markdown:
         try:
@@ -1215,7 +1215,7 @@ def validate(repository_root: Path, schema_path: Path) -> tuple[list[Diagnostic]
         except (OSError, UnicodeError) as exc:
             problems.append(issue("runtime.page-read", "error", relative(path, wiki_root), f"Could not read Markdown file: {exc}"))
     if any(item.code.startswith("runtime.") for item in problems):
-        return sorted(problems, key=issue_key), 0, True
+        return sorted(problems, key=issue_key), 0, True, contract
     problems.extend(validate_topology(wiki_root, contract))
     problems.extend(validate_initial_content(wiki_root, contract))
     for path in markdown:
@@ -1230,15 +1230,18 @@ def validate(repository_root: Path, schema_path: Path) -> tuple[list[Diagnostic]
     problems.extend(validate_tracking(wiki_root, contract, repository_root, "pendency"))
     problems.extend(validate_tracking(wiki_root, contract, repository_root, "proposal"))
     runtime_failure = any(item.code.startswith("runtime.") for item in problems)
-    return sorted(problems, key=issue_key), len(markdown), runtime_failure
+    return sorted(problems, key=issue_key), len(markdown), runtime_failure, contract
 
 
-def render(problems: list[Diagnostic], files_checked: int, output_format: str) -> str:
+def render(problems: list[Diagnostic], files_checked: int, output_format: str, contract: dict[str, Any] | None = None) -> str:
     errors = sum(item.severity == "error" for item in problems)
     warnings = sum(item.severity == "warning" for item in problems)
     summary = {"files_checked": files_checked, "errors": errors, "warnings": warnings}
     if output_format == "json":
-        return json.dumps({"ok": errors == 0, "summary": summary, "diagnostics": [asdict(item) for item in problems]}, indent=2) + "\n"
+        report: dict[str, Any] = {"ok": errors == 0, "summary": summary, "diagnostics": [asdict(item) for item in problems]}
+        if contract is not None:
+            report["contract"] = {"methodology_version": contract["methodology_version"]}
+        return json.dumps(report, indent=2) + "\n"
     lines = [f"Files checked: {files_checked}", f"Errors: {errors}", f"Warnings: {warnings}"]
     for item in problems:
         location = f"{item.path}:{item.line}" if item.line is not None else item.path
@@ -1261,12 +1264,13 @@ def main(argv: list[str] | None = None) -> int:
             files_checked = 0
             preflight_failure = contract is None
         else:
-            problems, files_checked, preflight_failure = validate(repository_root, schema_path)
+            problems, files_checked, preflight_failure, contract = validate(repository_root, schema_path)
     except (OSError, UnicodeError, ValueError) as exc:
         problems = [issue("runtime.failure", "error", repository_root, f"Could not traverse the repository: {exc}")]
         files_checked = 0
         preflight_failure = True
-    print(render(problems, files_checked, args.format), end="")
+        contract = None
+    print(render(problems, files_checked, args.format, contract), end="")
     if preflight_failure:
         return 2
     return 1 if any(item.severity == "error" for item in problems) else 0

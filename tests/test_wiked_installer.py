@@ -542,6 +542,38 @@ def test_candidate_checks_only_contract_preserves_consumer_and_never_calls_track
     assert not Path(env['KNOT_LOG']).exists()
 
 
+def test_first_installation_routes_by_existing_contract_methodology(environment):
+    root, _, _ = environment
+    wiki = root / 'wiki'
+    wiki.mkdir()
+    current = contract()
+    current['methodology_version'] = '1.4.0'
+    (wiki / 'wiki-structure.yaml').write_text(yaml.safe_dump(current))
+    result = run(environment, '--yes')
+    assert result.returncode == 0, result.stderr
+    assert 'First installation:' in result.stdout and 'wiked-setup only' in result.stdout
+    assert 'WIKED MAINTENANCE AGENT PROMPT:' not in result.stdout
+    assert json.loads((root / '.agents/.wiked-install.json').read_text())['maintenance_since'] is None
+
+
+def test_first_installation_over_older_contract_requires_maintenance_review(environment):
+    root, _, _ = environment
+    wiki = root / 'wiki'
+    wiki.mkdir()
+    (wiki / 'wiki-structure.yaml').write_text(yaml.safe_dump(contract()))
+    planned = run(environment, '--dry-run')
+    assert planned.returncode == 0, planned.stderr
+    assert 'WIKED MAINTENANCE AGENT PROMPT:' not in planned.stdout
+    result = run(environment, '--yes')
+    assert result.returncode == 0, result.stderr
+    assert 'start wiked-setup' not in result.stdout
+    _, block = result.stdout.split('\n\nWIKED MAINTENANCE AGENT PROMPT:\n-----\n\n', 1)
+    prompt, after_prompt = block.split('\n\n-----\n\n', 1)
+    assert 'Pending methodology-impact range: 1.0.0 -> 1.4.0' in prompt
+    assert after_prompt == 'Maintenance review pending: 1.0.0 -> 1.4.0.\n'
+    assert json.loads((root / '.agents/.wiked-install.json').read_text())['maintenance_since'] == '1.0.0'
+
+
 @pytest.mark.parametrize('local,confirmation,ticket', [(False, 'yes\n', False),
                                                        (True, 'no\n', False),
                                                        (True, '\n', False),
