@@ -1,13 +1,12 @@
-# Historical research
+# Research
 
 `investigacao-wiked.md` is the original Portuguese research report v1.1,
-dated 2026-10-10. It is preserved byte-for-byte as a historical artifact.
+dated 2026-10-10. It is maintained research: its local references are kept
+current with the source layout, while its findings and original language are
+preserved.
 
-- SHA-256: `272b49fdd54426533aeecef9bcb0a9f814e08476a07f947f73f78d7b119e418d`
-- Its historical links to `../.agents/` now correspond to `../distr/agents/`.
-  The report is preserved unchanged; use that mapping to locate distribution
-  sources. Authoring documents and tests also evolve, so source links do not
-  reconstruct the historical snapshot.
+- Its local references point at current source files. Authoring documents and
+  tests evolve, so those links do not reconstruct the 2026-10-10 snapshot.
 - Historical ticket IDs identify the original investigation. Closed tickets are
   not part of the open-ticket transfer and are not prerequisites for reading it.
 - Consumer examples and the original language are intentionally preserved as

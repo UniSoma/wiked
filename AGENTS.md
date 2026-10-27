@@ -3,8 +3,8 @@
 This repository authors the Wiked methodology, distribution, schema, runtime,
 tests, and development context. It does not host an operational wiki.
 
-Read `CONTEXT-MAP.md`, `docs/CONTEXT.md`, and `docs/metodologia.md` before source
-work. Classify the request before loading `grilling`:
+Read `GLOSSARY.md` and `docs/metodologia.md` before source work. Classify the
+request before loading `grilling`:
 
 - Read-only methodological review requires no ticket. Do not load or require
   `grilling` unless the requester asks to qualify the objective; that exception
@@ -20,8 +20,8 @@ Before creating or changing governed content, invoke the environment-provided
 ## Invariants
 
 - Generic instructions, runtime messages, schemas, and tests are in English and
-  contain no consumer-specific knowledge. Preserve historical research in its
-  original language; it is not normative guidance or operational evidence.
+  contain no consumer-specific knowledge. Preserve research in
+  its original language; it is not normative guidance or operational evidence.
 - Progressive disclosure is a design principle of the Wiked skill. Every
   methodology evolution must preserve lazy, objective-specific loading of its
   instructions and dependencies. Keep shared rules canonical and independently
@@ -31,8 +31,10 @@ Before creating or changing governed content, invoke the environment-provided
 - Use the `knot` skill and CLI for every ticket operation. Never read or edit
   `.tickets/` directly. Humans initialize the independent tracker and transfer
   its selected open tickets; never fall back to an ancestor's consumer tracker.
-- Do not manipulate Git, publish releases, install tools, or replace a running
-  agent's installed skill. Those operations belong to humans.
+- Staging and committing on the official branches `develop` and `main` are
+  exclusively human. Agents may create other branches and stage or commit on
+  them. Pushing, merging, rebasing, tagging, publishing releases, installing
+  tools, and replacing a running agent's installed skill belong to humans.
 - Run all Python commands through `uv run`. Runtime or test changes require
   `uv run pytest`; instruction-only changes require targeted textual checks.
 - Do not add tests that freeze methodological prose through substring, regex,
@@ -46,7 +48,8 @@ Before creating or changing governed content, invoke the environment-provided
 - Preserve ownership boundaries in `distr/agents/wiked-manifest.yaml`. Consumer wiki,
   contract, ingestion material, governance, and unrelated agent files remain
   consumer-owned. Never embed a real consumer as a required source fixture.
-- The distributed runtime and instance contract are the active runtime interfaces.
+- The Distributed validator and Instance contract are the active wiki-validation
+  interfaces.
   Do not introduce wrappers or duplicate their rules in this file.
 
 ## Layout
@@ -54,9 +57,23 @@ Before creating or changing governed content, invoke the environment-provided
 - `distr/agents/skills/wiked/`: copyable instructions, schema, and portable runtime.
 - `distr/agents/wiked-manifest.yaml`: version and exact distribution ownership.
 - `distr/agents/commands/wiked-setup.md`: thin consumer setup adapter.
-- `docs/`: source-development vocabulary and workflow.
+- `GLOSSARY.md`: canonical source-development vocabulary.
+- `docs/`: source-development workflow, installation, and publication contract.
+- `docs/agents/`: per-repository configuration for engineering skills.
 - `tests/`: synthetic coverage and explicitly selected external integration.
-- `reports/`: historical, non-normative research and its provenance.
+- `reports/`: non-normative research and its provenance.
 
 To operate an external consumer, work in that repository through its installed
-skill and local contract. Source documents never authorize consumer edits.
+skill and Instance contract. Source documents never authorize consumer edits.
+
+## Agent skills
+
+### Issue tracker
+
+Work is tracked in the local Knot tracker through the `knot` skill and CLI. See
+`docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: one root `GLOSSARY.md` and ADRs under `docs/adr/`. See
+`docs/agents/domain.md`.

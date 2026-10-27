@@ -215,7 +215,7 @@ Do not update automatically while an agent is using the methodology.
 
 ## Compatibility and agent-assisted setup
 
-Use a public contract-only validation mode in the candidate Distributed runtime
+Use a public contract-only validation mode in the candidate Distributed validator
 before replacing an existing installation with a configured Instance contract.
 It must not require a full wiki check or access the tracker. Expose the existing
 contract validation boundary rather than duplicate its rules in Bash. Missing
@@ -239,7 +239,7 @@ this permission, and dry runs never create tickets. Verify tracker locality
 before any create command, including configured ticket/archive paths.
 
 After first installation, provide the instruction to begin `wiked-setup` using
-the installed skill and consumer contract. Keep this distinct from update and
+the installed skill and Instance contract. Keep this distinct from update and
 repair output. Do not launch an agent or create domain content.
 After every effective version change from a recorded installation, print a
 clearly labeled maintenance-agent prompt ready to copy and paste. Place the title

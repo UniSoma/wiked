@@ -134,14 +134,14 @@ own licenses; they are not bundled in the distribution archive.
   updates, automation, and recovery.
 - [How Wiked works](./distr/agents/skills/wiked/SKILL.md): the agent's workflows
   and operating rules.
-- [Architecture and vocabulary](./docs/CONTEXT.md): the distribution, runtime,
-  and per-wiki configuration.
+- [Vocabulary](./GLOSSARY.md): the distribution, runtime, and per-wiki
+  configuration.
 - [Governance and development](./docs/metodologia.md): how changes to Wiked itself
   are proposed and validated.
 - [Releases](https://github.com/UniSoma/wiked/releases) and
   [distribution contract](./docs/distribution.md): versioning and packaging.
-- [Historical research](./reports/README.md): background, not operating instructions.
+- [Research](./reports/README.md): background, not operating instructions.
 
 This repository develops and distributes Wiked; it is not a live wiki. Install
 Wiked in your own repository to use it. Contributors should start with
-[AGENTS.md](./AGENTS.md) and the [context map](./CONTEXT-MAP.md).
+[AGENTS.md](./AGENTS.md) and the [glossary](./GLOSSARY.md).

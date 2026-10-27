@@ -60,15 +60,15 @@ Estas referências são fontes de software/governança. Os links são relativos 
 
 | Código | Referência | Uso e fotografia |
 |---|---|---|
-| L1 | [AGENTS.md](../AGENTS.md), [mapa de contexto](../CONTEXT-MAP.md), [contexto autor](../docs/CONTEXT.md), [evolução metodológica](../docs/metodologia.md) | Autor/consumidor, pesquisa versus alteração governada, Git humano; snapshot de 2026-10-10 |
-| L2 | [Manifesto da distribuição](../.agents/wiked-manifest.yaml) | Wiked 1.4.0, propriedade de 16 arquivos e preservação de terceiros |
-| L3 | [Skill Wiked](../.agents/skills/wiked/SKILL.md) | Roteamento e autoridades vigentes |
-| L4 | [Consulta](../.agents/skills/wiked/guides/query.md), [indexação assistida](../.agents/skills/wiked/guides/assisted-indexing.md), [grill](../.agents/skills/wiked/guides/grill.md), [Knot](../.agents/skills/wiked/guides/knot.md) | Evidência, fonte, qualificação, confirmação, arquivo e governança |
-| L5 | [Contrato: documentação](../.agents/skills/wiked/contracts/README.md), [schema](../.agents/skills/wiked/contracts/wiki-structure.schema.json) | Contrato 1.0 e JSON Schema draft 2020-12 |
-| L6 | [Runtime: documentação](../.agents/skills/wiked/scripts/README.md), [validador Python](../.agents/skills/wiked/scripts/validate_wiki.py) | Runtime 1.4.0; CLI, dependências e diagnósticos |
+| L1 | [AGENTS.md](../AGENTS.md), [glossário](../GLOSSARY.md), [evolução metodológica](../docs/metodologia.md) | Autor/consumidor, pesquisa versus alteração governada, Git humano; snapshot de 2026-10-10 |
+| L2 | [Manifesto da distribuição](../distr/agents/wiked-manifest.yaml) | Wiked 1.4.0, propriedade de 16 arquivos e preservação de terceiros |
+| L3 | [Skill Wiked](../distr/agents/skills/wiked/SKILL.md) | Roteamento e autoridades vigentes |
+| L4 | [Consulta](../distr/agents/skills/wiked/guides/query.md), [indexação assistida](../distr/agents/skills/wiked/guides/assisted-indexing.md), [grill](../distr/agents/skills/wiked/guides/grill.md), [Knot](../distr/agents/skills/wiked/guides/knot.md) | Evidência, fonte, qualificação, confirmação, arquivo e governança |
+| L5 | [Contrato: documentação](../distr/agents/skills/wiked/contracts/README.md), [schema](../distr/agents/skills/wiked/contracts/wiki-structure.schema.json) | Contrato 1.0 e JSON Schema draft 2020-12 |
+| L6 | [Runtime: documentação](../distr/agents/skills/wiked/scripts/README.md), [validador Python](../distr/agents/skills/wiked/scripts/validate_wiki.py) | Runtime 1.4.0; CLI, dependências e diagnósticos |
 | L7 | [Testes do validador](../tests/test_wiked_validator.py), [projeto fonte](../pyproject.toml) | 32 definições de testes observadas pelo inventário; projeto fonte 0.1.0 é versão distinta |
-| L8 | [Diagramas](../.agents/skills/wiked/guides/d2.md), [exportação](../.agents/skills/wiked/guides/export.md), [manutenção](../.agents/skills/wiked/guides/maintenance.md), [setup](../.agents/skills/wiked/guides/setup.md), [modelagem](../.agents/skills/wiked/guides/modeling.md) | Capacidades especializadas a preservar |
-| L9 | [Adaptador de setup](../.agents/commands/wiked-setup.md), [README do repositório](../README.md) | Adaptador fino e identificação contextual de UniSoma/aishell |
+| L8 | [Diagramas](../distr/agents/skills/wiked/guides/d2.md), [exportação](../distr/agents/skills/wiked/guides/export.md), [manutenção](../distr/agents/skills/wiked/guides/maintenance.md), [setup](../distr/agents/skills/wiked/guides/setup.md), [modelagem](../distr/agents/skills/wiked/guides/modeling.md) | Capacidades especializadas a preservar |
+| L9 | [Adaptador de setup](../distr/agents/commands/wiked-setup.md), [README do repositório](../README.md) | Adaptador fino e identificação contextual de UniSoma/aishell |
 
 Hashes registrados pelo inventário, não identificadores de release assinada: manifesto `a302ceee142edc0fe45d3e7034839064bd494683776b952a40306c4c3e5d9040`; runtime `2017e27978a09b651942ee0b6d8d069b4d84aa9ef405af1b1d135d93ba35e8d9`; schema `f89d24a7223c27796d288f8794db3f03391a1e600c0340f5db0ffd9b7a842775`; testes `66bd0a7c1c1c0e3d4a431f794709ba76be2e4f060a24d5702cd599e545332853`. Não houve consulta Git para fixar SHA local.
 
