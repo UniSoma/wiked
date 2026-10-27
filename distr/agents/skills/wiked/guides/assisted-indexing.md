@@ -37,7 +37,7 @@ After explicit grill closure:
 2. For source incorporation, record the configured provenance fields, including unavailable dates explicitly.
 3. Consolidate operational pages, then agreed terms and definitions in the configured context and navigation in indexes, within the confirmed scope. Apply `modeling.md`'s content boundaries and destination coverage check. Update approved intent routes and review directly affected associations without relaxing index invariants.
 4. Use the latest evidence explicitly describing current operation; retain unresolved conflicts as configured pending items.
-5. Attach contextual source-page citations to interpretations, time-sensitive claims, and divergences.
+5. State the effective date or period of time-sensitive claims in the text. Add contextual source-page citations only as the [local criterion](authoring-context.md#local-contextual-citations) allows.
 6. If validated process changes affect a diagram, update canonical Markdown first, then load `d2.md`.
 7. Only after validation, move each ticket-selected local source from `raw/` to `raw/archive/YYYY-MM-DD_<ticket-id>/`, where the date is the completed indexing date. It may be a file or directory at any depth below `raw/` except `raw/archive/`; preserve its name and contents, and stop rather than overwrite an existing destination. Nothing else under `raw/` enters scope implicitly. External sources remain external.
 

@@ -60,7 +60,7 @@ Load the map when proposing routes or checking associations directly affected by
 ## Provenance and Visuals
 
 - Every page that the contract assigns an operational-content role must carry its configured source references.
-- Use contextual citations where interpretation, currency, or divergence depends on one source page.
+- Contextual source-page citations in the body follow the [local criterion](authoring-context.md#local-contextual-citations).
 - Promote content to a page when independent consultation, recurring use, or a canonical place for curated relevant relationships justifies it. This does not imply a complete backlink or mention inventory. Only the contract may require a page split.
 - A process diagram complements its canonical Markdown. Load `d2.md` for any diagram work.
 - A configured diagram set shares one stem across required extensions and embeds exactly one configured visualization, never the maintenance source.
