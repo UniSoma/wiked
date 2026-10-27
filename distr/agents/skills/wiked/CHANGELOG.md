@@ -2,6 +2,26 @@
 
 Impacts on existing wiki texts; follow [version review](guides/maintenance.md#installed-version-review).
 
+## 1.7.0 - review
+
+### Review
+
+- Contextual source-page citations in page bodies are an optional local editorial
+  criterion, not a universal requirement; configured source references remain mandatory.
+- The optional Docsify integration example now exposes a native link to each
+  enhanced diagram's original SVG.
+
+### Action
+
+- Do not flag existing body citations as nonconformity or remove them automatically.
+  Maintenance may propose removing them or adopting a criterion in the local authoring
+  reference, following [local contextual citations](guides/authoring-context.md#local-contextual-citations).
+- Review time-sensitive claims that relied on a body citation for currency and state
+  their effective date or period in the text.
+- If the wiki already uses the Docsify integration, propose adopting the
+  original-diagram link per [viewer configuration](guides/docsify.md#viewer-configuration),
+  adapting its label to the instance language; do not update the viewer automatically.
+
 ## 1.6.0 - review
 
 ### Review
