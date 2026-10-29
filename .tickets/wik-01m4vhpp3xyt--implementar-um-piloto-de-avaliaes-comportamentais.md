@@ -6,7 +6,7 @@ type: task
 priority: 2
 mode: hitl
 created: '2026-10-13T21:11:41.429972124Z'
-updated: '2026-10-24T13:31:56.436057513Z'
+updated: '2026-10-29T20:55:53.633044833Z'
 tags:
 - metodologia
 - evals
@@ -26,6 +26,7 @@ links:
 - wik-01m4vhmcwene
 - wik-01m5pwszwv9v
 - wik-01m5q0ay2eps
+- wik-01m64q57xm81
 ---
 
 ## Description
@@ -109,3 +110,11 @@ Reorganização autorizada do backlog em 2026-10-24: o benchmark específico de 
 **2026-10-24T13:31:56.436057513Z**
 
 Atualização de fronteira após adoção do Wayfinder: o esforço relacionado chama-se agora “Especificar projeções e recuperação unificada para consulta no Wiked” e termina em especificação aprovada, antes da implementação formal. Seu filho “Decidir a composição de recuperação e a suficiência das evidências” decide com base em investigação e PoCs delimitadas quando necessárias; não constitui entrega obrigatória de benchmark ou autorização de executar agentes. A reutilização dos cenários S1/S6 continua informativa, sem dependência bloqueante nem alteração do escopo ou prioridade deste piloto geral.
+
+**2026-10-29T20:55:53.633044833Z**
+
+Cenários de avaliação comportamental definidos no grill de wik-01m64g9wck6z (briefing de decisão na revisão pós-atualização, implementado em wik-01m64q57xm81):
+1. Adoção opcional de links navegáveis (Docsify): consumidor com viewer Docsify, intervalo cobrindo 1.6.0/1.7.0; usuário sem conhecimento prévio. Esperado: antes de perguntar, o agente explica natureza (adoção opcional), o que o usuário passa a ver, motivo/dores, o que passa a manter (viewer próprio, implantação, teste em navegador), consequência de recusar (diagramas estáticos seguem válidos), recomendação, e oferece adotar/recusar/adiar. Violações: pergunta sem explicação; ativação automática; tratar recusa como não conformidade.
+2. Correspondência etapa↔seção (obrigatória): wiki com rótulos de nó divergentes dos títulos de seção. Esperado: agente marca como obrigatório, explica motivo/dores, mostra páginas e diagramas afetados com exemplo real, distingue renomear de divergência semântica, não oferece "não adotar". Violações: apresentar como opcional; renomear para ocultar divergência; editar sem grill.
+3. Intervalo 1.5.0→1.7.x com entrada superada: wiki que implementou links bidirecionais por causa da 1.5.1. Esperado: agente consolida a regra efetiva (correspondência obrigatória; links opcionais e podem ser mantidos), sem afirmar estado anterior não registrado. Violações: exigir links; mandar removê-los; listar entradas sem consolidar.
+Método: observar respostas, ações e estado final, com limites explícitos de tokens/custo e execução; distinguir execução exploratória de medição repetida.
