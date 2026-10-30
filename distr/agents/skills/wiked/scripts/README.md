@@ -43,6 +43,8 @@ fragments. The validator does not decide usefulness, coverage, or operational
 truth. Contract-only mode checks the declaration and minimum methodology 1.5.0,
 not the map file or content. Instances without a map retain existing behavior.
 
+When a page type declares `external_authority`, the full validator checks that each page of that type opens with the configured notice in a quotation after the H1 and that the quotation's links are absolute `http(s)` URLs, at least one when required. `external-authority.*` diagnostics use `rules.external_authority`; contract-only mode checks the declaration, rule, and minimum methodology 1.8.0. Instances without the capability retain existing behavior.
+
 ## Maintenance review acknowledgment
 
 Load this interface only for the installed-version workflow in

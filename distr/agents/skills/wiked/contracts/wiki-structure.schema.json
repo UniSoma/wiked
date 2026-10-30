@@ -192,7 +192,8 @@
         "proposal_association": {"$ref": "#/$defs/rule"},
         "proposal_status": {"$ref": "#/$defs/rule"},
         "proposal_inverse": {"$ref": "#/$defs/rule"},
-        "structured_sections": {"$ref": "#/$defs/rule"}
+        "structured_sections": {"$ref": "#/$defs/rule"},
+        "external_authority": {"$ref": "#/$defs/rule"}
       }
     }
   },
@@ -232,6 +233,15 @@
           "additionalProperties": false,
           "required": ["required"],
           "properties": {"required": {"$ref": "#/$defs/stringList"}}
+        },
+        "external_authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["notice", "link"],
+          "properties": {
+            "notice": {"$ref": "#/$defs/nonEmptyString"},
+            "link": {"enum": ["required", "optional"]}
+          }
         }
       }
     },

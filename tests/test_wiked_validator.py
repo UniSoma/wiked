@@ -1089,3 +1089,117 @@ def test_structured_sections_validate_generic_records_values_and_disjunction(tmp
     assert result.returncode == 0, result.stdout + result.stderr
     assert payload["summary"]["warnings"] > 0
     assert "structured.disjoint" in {item["code"] for item in payload["diagnostics"]}
+
+
+NOTICE = "This page mirrors an external policy; it is not the official document."
+OPERATIONS_BODY = "See the [source](../sources/manual.md).\n\n![Diagram](./operations.svg)\n\n## Sources\n\n- [Manual](../sources/manual.md)\n"
+
+
+def write_external_authority(tmp_path: Path, link: str = "required", rule: bool = True, version: str = "1.8.0") -> tuple[Path, Path, Path]:
+    """Prepare an instance whose article type declares external authority and a runtime at the minimum version."""
+    repository = write_instance(tmp_path)
+    config_path = repository / "wiki/wiki-structure.yaml"
+    data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    data["methodology_version"] = version
+    data["page_types"]["article"]["external_authority"] = {"notice": NOTICE, "link": link}
+    if rule:
+        data["rules"]["external_authority"] = {"severity": "error"}
+    config_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    script = copy_runtime(tmp_path)
+    (tmp_path / "portable/wiked-manifest.yaml").write_text("namespace: wiked\ndistribution_version: 1.8.0\n", encoding="utf-8")
+    return repository, script, repository / "wiki/handbook/operations.md"
+
+
+def run_script(tmp_path: Path, script: Path, repository: Path, *extra: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["uv", "run", "--script", str(script), "--repository-root", str(repository), "--format", "json", *extra],
+        env=knot_environment(tmp_path, repository), text=True, capture_output=True,
+    )
+
+
+def write_operations(page: Path, lead: str) -> None:
+    page.write_text(f"---\ntype: article\nstate: current\n---\n# Operations\n\n{lead}{OPERATIONS_BODY}", encoding="utf-8")
+
+
+@pytest.mark.parametrize("lead", [
+    f"> {NOTICE}\n>\n> [Official policy](https://policies.example.test/security)\n\n",
+    "> **This page mirrors an external policy;**\n> it is *not* the `official document`. [Official](http://example.test/p)\n\n",
+    f"> Note: {NOTICE} <https://example.test/policy>\n\n",
+])
+def test_external_authority_accepts_notice_and_official_link(tmp_path: Path, lead: str) -> None:
+    repository, script, page = write_external_authority(tmp_path)
+    write_operations(page, lead)
+    result = run_script(tmp_path, script, repository)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["summary"]["warnings"] == 0
+
+
+@pytest.mark.parametrize("link,lead,code", [
+    ("required", "", "external-authority.missing"),
+    ("required", f"{NOTICE} [Official](https://example.test/p)\n\n", "external-authority.missing"),
+    ("required", f"Introduction.\n\n> {NOTICE} [Official](https://example.test/p)\n\n", "external-authority.position"),
+    ("required", f"> Mirror. [Official](https://example.test/p)\n>\n> {NOTICE}\n\n", "external-authority.position"),
+    ("required", "> This page mirrors a policy. [Official](https://example.test/p)\n\n", "external-authority.notice"),
+    ("required", f"> {NOTICE.lower()} [Official](https://example.test/p)\n\n", "external-authority.notice"),
+    ("required", f"> {NOTICE}\n\n", "external-authority.link"),
+    ("required", f"> {NOTICE} [Official](../sources/manual.md)\n\n", "external-authority.link"),
+    ("optional", f"> {NOTICE} [Official](ftp://example.test/p)\n\n", "external-authority.link"),
+    ("optional", f"> {NOTICE} [Official](https:///p)\n\n", "external-authority.link"),
+])
+def test_external_authority_diagnoses_notice_position_text_and_link(tmp_path: Path, link: str, lead: str, code: str) -> None:
+    repository, script, page = write_external_authority(tmp_path, link=link)
+    write_operations(page, lead)
+    result = run_script(tmp_path, script, repository)
+    codes = {item["code"] for item in json.loads(result.stdout)["diagnostics"]}
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert codes == {code}
+
+
+def test_external_authority_optional_link_and_warning_severity(tmp_path: Path) -> None:
+    repository, script, page = write_external_authority(tmp_path, link="optional")
+    write_operations(page, f"> {NOTICE}\n\n")
+    result = run_script(tmp_path, script, repository)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+    config_path = repository / "wiki/wiki-structure.yaml"
+    data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    data["page_types"]["article"]["external_authority"]["link"] = "required"
+    data["rules"]["external_authority"] = {"severity": "warning"}
+    config_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    result = run_script(tmp_path, script, repository)
+    payload = json.loads(result.stdout)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert [(item["code"], item["severity"]) for item in payload["diagnostics"]] == [("external-authority.link", "warning")]
+
+
+@pytest.mark.parametrize("rule,version", [(False, "1.8.0"), (True, "1.7.0")])
+def test_external_authority_requires_rule_and_minimum_version(tmp_path: Path, rule: bool, version: str) -> None:
+    repository, script, _ = write_external_authority(tmp_path, rule=rule, version=version)
+    result = run_script(tmp_path, script, repository, "--contract-only")
+    assert result.returncode == 2
+    assert {item["code"] for item in json.loads(result.stdout)["diagnostics"]} == {"contract.relation"}
+
+
+@pytest.mark.parametrize("declaration", [{"notice": NOTICE}, {"notice": "", "link": "required"}, {"notice": NOTICE, "link": "always"}, {"notice": NOTICE, "link": "optional", "url": "https://example.test"}])
+def test_external_authority_schema_rejects_malformed_declarations(tmp_path: Path, declaration: dict[str, str]) -> None:
+    repository, script, _ = write_external_authority(tmp_path)
+    config_path = repository / "wiki/wiki-structure.yaml"
+    data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    data["page_types"]["article"]["external_authority"] = declaration
+    config_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    result = run_script(tmp_path, script, repository, "--contract-only")
+    assert result.returncode == 2
+    assert {item["code"] for item in json.loads(result.stdout)["diagnostics"]} == {"contract.schema"}
+
+
+def test_external_authority_rule_without_capability_preserves_results(tmp_path: Path) -> None:
+    baseline = write_instance(tmp_path / "baseline")
+    expected = run_portable(tmp_path / "baseline", baseline)
+    repository = write_instance(tmp_path)
+    config_path = repository / "wiki/wiki-structure.yaml"
+    data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    data["rules"]["external_authority"] = {"severity": "error"}
+    config_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == expected.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["diagnostics"] == json.loads(expected.stdout)["diagnostics"]

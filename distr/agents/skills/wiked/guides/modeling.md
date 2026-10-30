@@ -23,6 +23,10 @@ Markdown bodies remain canonical. Configuration validates form, not operational 
 
 For a page type with `structured_sections`, use its named section exclusively for immediate record subheadings. Put each field in a direct `- **Field:** value` item, or use `- **Field:**` with a nested list for multiple values. Follow configured cardinality and explicit empty values exactly. Every `page` value uses a relative canonical link; `text` is for values not modeled as pages. Keep deterministic field rules out of the local authoring reference.
 
+## External Authority
+
+For a page type declaring `external_authority`, start each page with a quotation immediately after the H1. Its first paragraph contains the configured notice; add the official source as an absolute `http(s)` link inside the quotation, as the contract requires or permits. Humans keep the notice, the link, and the page's provenance coherent and decide whether the content still reflects the official source.
+
 ## Pages and Navigation
 
 - Start navigation at the root index and preserve progressive top-level indexes.

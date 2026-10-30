@@ -142,6 +142,11 @@ def validate_contract(contract_path: Path, schema_path: Path) -> tuple[dict[str,
             relations.append(issue("contract.relation", "error", contract_label, f"Page type {name!r} declares a field as both required and optional."))
         if not set(fields["date"]) <= allowed_fields:
             relations.append(issue("contract.relation", "error", contract_label, f"Page type {name!r} has a date field that is not allowed."))
+    if any("external_authority" in page_type for page_type in contract["page_types"].values()):
+        if required_version < (1, 8, 0):
+            relations.append(issue("contract.relation", "error", contract_label, "External authority requires methodology_version 1.8.0 or newer."))
+        if "external_authority" not in contract["rules"]:
+            relations.append(issue("contract.relation", "error", contract_label, "A page type with external authority requires rules.external_authority."))
     for collection in contract.get("structured_sections", []):
         configured_types = set(collection["page_types"])
         if not configured_types <= page_types:
@@ -1045,6 +1050,67 @@ def validate_structured_sections(wiki_root: Path, contract: dict[str, Any]) -> l
     return problems
 
 
+def inline_text(token: Any) -> str:
+    """Return rendered inline text without formatting markers, with collapsed whitespace."""
+    parts = [
+        child.content if child.type in {"text", "code_inline"} else " "
+        for child in token.children or []
+        if child.type in {"text", "code_inline", "softbreak", "hardbreak"}
+    ]
+    return " ".join("".join(parts).split())
+
+
+def validate_external_authority(wiki_root: Path, contract: dict[str, Any]) -> list[Diagnostic]:
+    """Check the configured notice and official link at the top of external-authority pages."""
+    configured = {name: config["external_authority"] for name, config in contract["page_types"].items() if "external_authority" in config}
+    if not configured:
+        return []
+    rule = severity(contract, "external_authority")
+    notice_fragments = {name: " ".join(config["notice"].split()) for name, config in configured.items()}
+    problems: list[Diagnostic] = []
+    for path, frontmatter, body, offset, _ in structured_pages(wiki_root, contract).values():
+        config = configured.get(frontmatter["type"])
+        if config is None:
+            continue
+        rel = relative(path, wiki_root)
+        notice = notice_fragments[frontmatter["type"]]
+        tokens = MarkdownIt().parse(body)
+        h1 = next((index for index, token in enumerate(tokens) if token.type == "heading_open" and token.tag == "h1"), None)
+        if h1 is None:
+            continue  # h1.count reports the missing title.
+        first = h1 + 3
+        line = tokens[first].map[0] + offset + 1 if first < len(tokens) and tokens[first].map else None
+        quote_end = None
+        if first < len(tokens) and tokens[first].type == "blockquote_open":
+            quote_end = next(index for index in range(first + 1, len(tokens)) if tokens[index].type == "blockquote_close" and tokens[index].level == tokens[first].level)
+        lead = tokens[first + 2] if quote_end is not None and tokens[first + 1].type == "paragraph_open" else None
+        quoted_notice = False
+        depth = 0
+        for token in tokens:
+            depth += {"blockquote_open": 1, "blockquote_close": -1}.get(token.type, 0)
+            quoted_notice = quoted_notice or (depth > 0 and token.type == "inline" and notice in inline_text(token))
+        if lead is None or notice not in inline_text(lead):
+            if quoted_notice:
+                problems.append(issue("external-authority.position", rule, rel, "The external-authority notice must be in the first paragraph of a quotation immediately after the H1.", line))
+            elif quote_end is not None:
+                problems.append(issue("external-authority.notice", rule, rel, "The quotation after the H1 does not contain the configured external-authority notice.", line))
+            else:
+                problems.append(issue("external-authority.missing", rule, rel, "The configured external-authority notice is missing.", line))
+            continue
+        quote = tokens[first:quote_end]
+        targets = [
+            dict(child.attrs or []).get("href") or ""
+            for token in quote if token.type == "inline"
+            for child in token.children or [] if child.type == "link_open"
+        ]
+        invalid = [target for target in targets if not (urlsplit(target).scheme in {"http", "https"} and urlsplit(target).netloc)]
+        for target in invalid:
+            problems.append(issue("external-authority.link", rule, rel, f"External-authority link must be an absolute http(s) URL: {target}.", line))
+        if config["link"] == "required" and len(targets) == len(invalid):
+            problems.append(issue("external-authority.link", rule, rel, "The external-authority quotation must contain an absolute http(s) link to the official source.", line))
+    return problems
+
+
 def tracking_ticket_id(content: str, pattern: str) -> str | None:
     candidates = [value for value in re.findall(r"\[([^\]\r\n]*)\]", content) if re.fullmatch(pattern, value)]
     if len(candidates) != 1 or re.fullmatch(rf"\[{re.escape(candidates[0])}\]\s+\S.*", content) is None:
@@ -1227,6 +1293,7 @@ def validate(repository_root: Path, schema_path: Path) -> tuple[list[Diagnostic]
     problems.extend(validate_provenance(wiki_root, contract))
     problems.extend(validate_contextual_citations(wiki_root, contract))
     problems.extend(validate_structured_sections(wiki_root, contract))
+    problems.extend(validate_external_authority(wiki_root, contract))
     problems.extend(validate_tracking(wiki_root, contract, repository_root, "pendency"))
     problems.extend(validate_tracking(wiki_root, contract, repository_root, "proposal"))
     runtime_failure = any(item.code.startswith("runtime.") for item in problems)
