@@ -27,6 +27,12 @@ For a page type with `structured_sections`, use its named section exclusively fo
 
 For a page type declaring `external_authority`, start each page with a quotation immediately after the H1. Its first paragraph contains the configured notice; add the official source as an absolute `http(s)` link inside the quotation, as the contract requires or permits. Humans keep the notice, the link, and the page's provenance coherent and decide whether the content still reflects the official source.
 
+Adoption is optional. It offers readers a visible, validated distinction between derived pages and content the wiki itself governs, with a direct path to the official document. It requires a governed contract change declaring the notice, link policy, and `rules.external_authority` with `methodology_version` 1.8.0 or newer, then adding the quotation to every page of that type; the consumer remains responsible for the notice's accuracy and the link's currency. See the [contract format](../contracts/README.md).
+
+## External Links
+
+`rules.external_links` optionally enables an offline check of external link and image destinations in page bodies. Adoption offers early detection of malformed addresses and disallowed schemes during ordinary validation, without network access. It requires a governed contract change setting the rule's severity with `methodology_version` 1.8.0 or newer, and correcting or dispositioning the existing findings it reveals. It does not establish that destinations are reachable or current. See the [contract format](../contracts/README.md).
+
 ## Pages and Navigation
 
 - Start navigation at the root index and preserve progressive top-level indexes.
@@ -60,6 +66,8 @@ Each entry contains one relative canonical Markdown link followed by ` - ` and n
 Keep the map small and human-curated for recurring, important, or difficult-to-locate needs. Guidance explains where to consult, not an operational sequence, responsibilities, or new rules. Do not reproduce procedures, promise completeness, or compensate for coverage limitations with invented knowledge. Humans validate meaning, usefulness, and support in the canonical destinations; automation checks only form and references. Do not reuse the local authoring reference as a domain map.
 
 Load the map when proposing routes or checking associations directly affected by in-scope page changes. Creating or revising routes follows `assisted-indexing.md`, with editorial authority and explicit human curation. A new page or question does not automatically justify a new route.
+
+Adoption is optional. It offers readers with task-shaped questions curated entry points across trunks without relaxing index rules. It requires a governed contract change declaring the map with `methodology_version` 1.5.0 or newer, a human-curated map linked from the root index, and keeping routes coherent as pages are renamed, removed, or revised.
 
 ## Provenance and Visuals
 

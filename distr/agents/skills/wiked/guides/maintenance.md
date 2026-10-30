@@ -54,6 +54,23 @@ Release declarations marked `none` do not dispense with the required maintenance
 review. The changelog narrows change-specific checks, not the ordinary review
 obligations above. It is methodological guidance, not operational evidence.
 
+Before asking for any disposition, brief the human in the instance language.
+Start with a short overview of the interval. Then, one impact at a time, give one
+short paragraph stating its nature from the Action marker; the effective rule,
+consolidating entries that later ones supersede; its rationale and resolved pains;
+its concrete effect on this wiki, with an example from its own content; the
+consequences of adopting and of declining, including the consumer's resulting
+responsibilities; and an explicit recommendation. Only then ask. Explain without
+persuading and deepen only on request. Never state how earlier versions worked
+unless the changelog or installed guides record it; report an unrecorded rationale
+as such. The briefing changes none of the gates below.
+
+For each `Optional adoption:` item, offer three responses: adopt, as a correction
+with its own grill and ticket; decline, recorded in the review report without
+asking again until a later entry concerns the topic; or defer, through a follow-up
+ticket in the consumer-local tracker. None of them blocks review completion.
+`Required:` items follow the disposition below.
+
 Report the reviewed interval, applicable impacts, affected content, validator
 results, and findings. Obtain human disposition and explicit follow-ups for
 unresolved findings; when appropriate, load `knot.md` and create or link correction

@@ -20,6 +20,10 @@ Expanding acronyms at first occurrence is an optional instance-local editorial c
 
 Do not automatically extend a page criterion to responses, exports, or diagrams, or use it to alter canonical titles or labels.
 
+Adoption offers readers who open a page directly the meaning of its acronyms without consulting the context, at the cost of repetition. It requires a human-approved criterion in the local authoring reference, creating that reference if absent, and applying the criterion through governed revisions; it is not validated automatically.
+
 ## Local Contextual Citations
 
 Contextual source-page citations in page bodies are an optional instance-local editorial criterion, not a universal requirement. Without an approved criterion, the page's configured source references provide provenance: do not add body citations, and do not treat existing ones as nonconformity or remove them automatically. If an instance adopts a criterion, it defines where and how citations appear; keep it in the local authoring reference. Every source page linked in a body must also appear among the page's configured source references. This option does not require creating an authoring reference when no criterion has been adopted. Creating or changing the criterion follows the governed maintenance workflow in `maintenance.md`.
+
+Adopting a criterion offers in-text source traceability where the instance values it, at the cost of reading flow and of removing citations superseded by later sources. It requires a human-approved criterion in the local authoring reference and governed revisions to apply it. Declining keeps provenance in the configured source references; removing existing body citations is itself a governed correction.

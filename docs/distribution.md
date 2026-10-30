@@ -113,12 +113,21 @@ current version, and adds its declaration to the distributed
 `skills/wiked/CHANGELOG.md`. That changelog records only impacts that may demand
 review of existing wiki texts, not every internal optimization. Each release has
 one `## X.Y.Z - review` or `## X.Y.Z - none` declaration, newest first, with a
-nonempty explanation. Impactful entries include `### Review` and `### Action`
-sections describing affected content, required actions, and optional adoption.
+nonempty explanation. Impactful entries include `### Review`, `### Rationale`,
+and `### Action` sections. Review describes affected content. Rationale states
+why each impact was made and the pains it resolves, in up to three lines per
+impact; it need not describe earlier behavior, and a motivation absent from the
+historical record is declared unrecorded rather than inferred. Action contains
+only list items, each starting with `Required:`, `Optional adoption:`, or
+`Informational:`. Every `Optional adoption:` item links to an installed guide
+section containing a short paragraph on what adoption offers and requires; the
+changelog states why, the guide states the consequences. The installed-version
+review uses these fields to brief the human before asking for disposition.
 Write an impact index, not a second manual: keep each impact to a few lines stating
 what to review, when it applies, and where to find the canonical rules. Link to
 installed guides instead of repeating methodology, governance, or procedures.
 Use one sentence for `none` and `baseline` entries; omit internal-change narratives.
+Packaging and installation check only the presence of these sections and markers.
 The oldest `baseline` entry starts coverage at 1.4.1; prior history is out of
 scope. The changelog must extend through the current manifest version. Structural
 checks cannot certify the maintainer's semantic classification or historical
@@ -359,6 +368,17 @@ copy-ready maintenance handoff, and short/full interactive confirmations above.
 Prepare 1.6.0 as a compatible evolution, with `none` impact on existing wiki
 texts. This approval authorizes source preparation and synthetic testing only,
 not publication, installation, Git operations, or consumer changes.
+
+The requester explicitly closed the Methodological grill for
+`wik-01m64g9wck6z` on 2026-10-29 and confirmed its implementation scope for
+`wik-01m64q57xm81` on 2026-10-30, approving the changelog Rationale and action
+markers above, the decision briefing in the installed-version review, adoption
+paragraphs in the guides, and the retroactive rewrite of the 1.5.0 through 1.7.0
+entries without changing their meaning. Prepare 1.8.0 as a compatible evolution
+with `review` impact, covering this change and the optional external-authority
+and offline external-link capabilities. This approval authorizes source
+preparation and synthetic testing only, not publication, installation, Git
+operations, or consumer changes.
 
 This contract's consolidation changes only source documentation and executor
 tickets. Implementing these interfaces, changing the distributed inventory or

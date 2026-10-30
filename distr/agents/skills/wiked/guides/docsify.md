@@ -27,6 +27,14 @@ This guide is not a general Docsify installation, theme, search, or publishing g
   proposal, authorized scope, preservation of local configuration, and browser
   acceptance; never synchronize or overwrite the viewer during skill updates.
 
+Adoption offers readers clickable diagram steps leading to their canonical
+sections, return links back to the exact node, and a link to each original SVG.
+It requires a consumer already using or choosing Docsify, a governed change copying
+the example into a consumer-owned viewer, explicit anchors and return links in
+affected pages, browser acceptance, and consumer ownership of that viewer's
+configuration, deployment, and future updates. Static diagrams remain conformant
+without it.
+
 ## Integration Contract
 
 The reference target is Docsify **4.13.1**, hash routing, same-origin HTTP(S) SVGs,

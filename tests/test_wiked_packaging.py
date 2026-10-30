@@ -159,7 +159,8 @@ def test_package_reads_version_only_from_manifest_and_reports_publication_tag(pa
     assert 'No release was published' in result.stdout
 
 
-@pytest.mark.parametrize('kind', ['unknown', 'missing-current', 'duplicate', 'missing-baseline', 'missing-action'])
+@pytest.mark.parametrize('kind', ['unknown', 'missing-current', 'duplicate', 'missing-baseline', 'missing-action',
+                                  'missing-rationale', 'unmarked-action', 'action-paragraph', 'empty-action'])
 def test_invalid_changelog_blocks_packaging(packaging, kind):
     source, output, _ = packaging
     path = source / 'distr/agents/skills/wiked/CHANGELOG.md'
@@ -173,8 +174,18 @@ def test_invalid_changelog_blocks_packaging(packaging, kind):
         text = text.replace(heading, f'{heading}\n\nDuplicate.\n\n{heading}')
     elif kind == 'missing-baseline':
         text = text.replace('1.4.1 - baseline', '1.4.1 - none')
-    else:
+    elif kind == 'missing-action':
         text = text.replace('### Action', '### Missing')
+    elif kind == 'missing-rationale':
+        text = text.replace('### Rationale', '### Missing')
+    else:
+        action = {'unmarked-action': '- Review the affected pages.',
+                  'action-paragraph': 'Review the affected pages.',
+                  'empty-action': ''}[kind]
+        start = text.index(heading)
+        end = text.index('\n## ', start)
+        text = (f'{text[:start]}## {SOURCE_VERSION} - review\n\n### Review\n\n- Pages.\n\n'
+                f'### Rationale\n\n- Reason.\n\n### Action\n\n{action}\n{text[end:]}')
     path.write_text(text)
     result = package(packaging)
     assert result.returncode == 2

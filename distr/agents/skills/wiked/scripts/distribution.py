@@ -25,6 +25,27 @@ def distribution_version(root: Path | None = None) -> str:
     return version
 
 
+REVIEW_SECTIONS = ("Review", "Rationale", "Action")
+ACTION_MARKERS = ("Required:", "Optional adoption:", "Informational:")
+
+
+def review_entry(body: str) -> None:
+    """Check review-entry format: sections present and every action item marked."""
+    parts = re.split(r"^### (.+)\n", body, flags=re.MULTILINE)
+    sections = {parts[index].strip(): parts[index + 1] for index in range(1, len(parts), 2)}
+    if not all(name in sections for name in REVIEW_SECTIONS):
+        raise ValueError("Methodological impacts need Review, Rationale, and Action sections.")
+    items = 0
+    for line in sections["Action"].splitlines():
+        if not line.strip() or line.startswith((" ", "\t")):
+            continue
+        if not line.startswith("- ") or not line[2:].startswith(ACTION_MARKERS):
+            raise ValueError("Each Action item must start with Required:, Optional adoption:, or Informational:.")
+        items += 1
+    if not items:
+        raise ValueError("Methodological impacts need at least one Action item.")
+
+
 def release_declarations(root: Path) -> dict[str, str]:
     """Validate declarations, not the maintainer's semantic impact classification."""
     version = distribution_version(root)
@@ -40,8 +61,8 @@ def release_declarations(root: Path) -> dict[str, str]:
         version_tuple(declared)
         if declared in releases or impact not in {"baseline", "review", "none"}:
             raise ValueError("Duplicate release or invalid changelog impact.")
-        if impact == "review" and not all(marker in body for marker in ("### Review", "### Action")):
-            raise ValueError("Methodological impacts need Review and Action sections.")
+        if impact == "review":
+            review_entry(body)
         releases[declared] = impact
     ordered = sorted(releases, key=version_tuple, reverse=True)
     if (not ordered or list(releases) != ordered or ordered[0] != version
