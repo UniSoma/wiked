@@ -193,7 +193,8 @@
         "proposal_status": {"$ref": "#/$defs/rule"},
         "proposal_inverse": {"$ref": "#/$defs/rule"},
         "structured_sections": {"$ref": "#/$defs/rule"},
-        "external_authority": {"$ref": "#/$defs/rule"}
+        "external_authority": {"$ref": "#/$defs/rule"},
+        "external_links": {"$ref": "#/$defs/rule"}
       }
     }
   },

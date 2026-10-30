@@ -36,8 +36,10 @@ def test_cutover_leaves_one_self_contained_manifested_distribution() -> None:
     assert not (ROOT / "docs/contratos/estrutura-da-wiki.yaml").exists()
 
     runtime = (WIKED / "scripts/validate_wiki.py").read_text(encoding="utf-8")
-    assert "METHODOLOGY_VERSION" not in runtime
-    assert "from distribution import distribution_version" in runtime
+    core = (WIKED / "scripts/wiki_core.py").read_text(encoding="utf-8")
+    assert "METHODOLOGY_VERSION" not in runtime + core
+    assert "from wiki_core import" in runtime
+    assert "from distribution import distribution_version" in core
 
     text_artifacts = [DISTRIBUTION / path for path in owned if Path(path).suffix in {".md", ".py", ".json", ".yaml"}]
     assert not [path for path in text_artifacts if "docs/" in path.read_text(encoding="utf-8")]
@@ -1203,3 +1205,89 @@ def test_external_authority_rule_without_capability_preserves_results(tmp_path: 
     result = run_portable(tmp_path, repository)
     assert result.returncode == expected.returncode == 0, result.stdout + result.stderr
     assert json.loads(result.stdout)["diagnostics"] == json.loads(expected.stdout)["diagnostics"]
+
+
+def write_external_links(tmp_path: Path, links: str, rule: str | None = "error", version: str = "1.8.0") -> tuple[Path, Path]:
+    """Prepare an instance whose operations page carries the given links and a runtime at the minimum version."""
+    repository = write_instance(tmp_path)
+    config_path = repository / "wiki/wiki-structure.yaml"
+    data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    data["methodology_version"] = version
+    if rule:
+        data["rules"]["external_links"] = {"severity": rule}
+    config_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    write_operations(repository / "wiki/handbook/operations.md", f"{links}\n\n")
+    script = copy_runtime(tmp_path)
+    (tmp_path / "portable/wiked-manifest.yaml").write_text("namespace: wiked\ndistribution_version: 1.8.0\n", encoding="utf-8")
+    return repository, script
+
+
+def test_external_links_accept_allowed_schemes_and_ignore_non_links(tmp_path: Path) -> None:
+    links = (
+        "[Web](https://example.test/a?b=c#d) [Plain](http://192.0.2.1:8080/x) [V6](http://[2001:db8::1]/)\n"
+        "[Case](HTTPS://Example.TEST) [Unicode](https://bücher.example/) <https://example.test/auto>\n"
+        "[Mail](mailto:team@example.test,ops@example.test?subject=Hi) <mailto:team@example.test> [Ref][ref]\n"
+        "![Remote](https://example.test/image.png) ![Inline](data:image/png;base64,AAAA) [Data](data:text/plain,hi)\n"
+        "Bare https://exa mple.test and `[code](javascript:x)`\n\n"
+        "    [block](file:///etc/passwd)\n\n"
+        "<a href=\"javascript:x\">raw</a>\n\n"
+        "[ref]: https://example.test/reference"
+    )
+    repository, script = write_external_links(tmp_path, links)
+    result = run_script(tmp_path, script, repository)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["diagnostics"] == []
+
+
+@pytest.mark.parametrize("link,code", [
+    ("[x](javascript:alert(1))", "external-link.scheme"),
+    ("[x](file:///etc/passwd)", "external-link.scheme"),
+    ("[x](ftp://example.test/file)", "external-link.scheme"),
+    ("[x](//example.test/path)", "external-link.scheme"),
+    ("![x](mailto:team@example.test)", "external-link.scheme"),
+    ("![x](file:///tmp/image.png)", "external-link.scheme"),
+    ("[x](<http://exa mple.test>)", "external-link.malformed"),
+    ("[x](https:no-host)", "external-link.malformed"),
+    ("[x](https:///path)", "external-link.malformed"),
+    ("[x](http://example.test:99999/)", "external-link.malformed"),
+    ("[x](http://[::1)", "external-link.malformed"),
+    ("[x](http://-bad-.example/)", "external-link.malformed"),
+    ("[x](mailto:)", "external-link.malformed"),
+    ("[x](mailto:team)", "external-link.malformed"),
+    ("![x](https://exa_mple.test/i.png)", "external-link.malformed"),
+])
+def test_external_links_diagnose_malformed_urls_and_disallowed_schemes(tmp_path: Path, link: str, code: str) -> None:
+    repository, script = write_external_links(tmp_path, link)
+    result = run_script(tmp_path, script, repository)
+    diagnostics = json.loads(result.stdout)["diagnostics"]
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert [(item["code"], item["severity"], item["path"]) for item in diagnostics] == [(code, "error", "handbook/operations.md")]
+
+
+def test_external_links_check_every_wiki_markdown_body_with_configured_severity(tmp_path: Path) -> None:
+    repository, script = write_external_links(tmp_path, "[x](ftp://example.test) [y](ftp://example.test)", rule="warning")
+    index = repository / "wiki/sources/index.md"
+    index.write_text(index.read_text(encoding="utf-8") + "\n[z](https:no-host)\n", encoding="utf-8")
+    result = run_script(tmp_path, script, repository)
+    payload = json.loads(result.stdout)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert [(item["code"], item["severity"], item["path"]) for item in payload["diagnostics"]] == [
+        ("external-link.scheme", "warning", "handbook/operations.md"),
+        ("external-link.scheme", "warning", "handbook/operations.md"),
+        ("external-link.malformed", "warning", "sources/index.md"),
+    ]
+
+
+def test_external_links_require_minimum_version(tmp_path: Path) -> None:
+    repository, script = write_external_links(tmp_path, "", version="1.7.0")
+    result = run_script(tmp_path, script, repository, "--contract-only")
+    assert result.returncode == 2
+    assert {item["code"] for item in json.loads(result.stdout)["diagnostics"]} == {"contract.relation"}
+
+
+def test_contracts_without_external_links_rule_preserve_results(tmp_path: Path) -> None:
+    links = "[x](javascript:alert(1)) [y](ftp://example.test) [z](https:no-host) ![i](mailto:a@example.test)"
+    repository, script = write_external_links(tmp_path, links, rule=None)
+    result = run_script(tmp_path, script, repository)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout)["diagnostics"] == []

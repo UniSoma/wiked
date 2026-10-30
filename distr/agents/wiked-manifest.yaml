@@ -30,6 +30,7 @@ components:
     - skills/wiked/scripts/README.md
     - skills/wiked/scripts/validate_wiki.py
     - skills/wiked/scripts/distribution.py
+    - skills/wiked/scripts/wiki_core.py
     - skills/wiked/scripts/installation_state.py
     - skills/wiked/scripts/acknowledge_review.py
 preserve_unlisted_files: true

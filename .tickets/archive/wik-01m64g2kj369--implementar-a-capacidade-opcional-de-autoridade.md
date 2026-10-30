@@ -1,12 +1,13 @@
 ---
 id: wik-01m64g2kj369
 title: Implementar a capacidade opcional de autoridade externa por tipo de página
-status: in_progress
+status: closed
 type: feature
 priority: 2
 mode: hitl
 created: '2026-10-29T18:52:06.586236773Z'
-updated: '2026-10-30T14:32:47.675510662Z'
+updated: '2026-10-30T14:36:35.207469783Z'
+closed: '2026-10-30T14:36:35.207469783Z'
 tags:
 - metodologia
 - wiked
@@ -48,3 +49,7 @@ Entendimento compartilhado confirmado explicitamente pelo requerente validador e
 **2026-10-30T14:32:47.478888496Z**
 
 Implementação na branch wik-01m64g2kj369-autoridade-externa (sem commit). Evidência: uv run pytest — suíte completa aprovada (2 skips de integração externa), incluindo 21 casos novos em tests/test_wiked_validator.py com fixtures sintéticas, manifesto sintético 1.8.0 e asserções apenas sobre códigos, severidades e exit codes. Targeted textual checks: sem dependência de docs/ nos arquivos distribuídos alterados, texto genérico em inglês, sem conhecimento de consumidor, âncoras referenciadas (modeling.md#intent-map, scripts/README.md#maintenance-review-acknowledgment) preservadas, nenhum arquivo novo fora do manifesto. Manifesto e CHANGELOG permanecem em 1.7.0 por decisão Q1: contratos que declaram a capacidade são rejeitados até a preparação humana da 1.8.0.
+
+**2026-10-30T14:36:35.207469783Z**
+
+Capacidade opcional page_types.<tipo>.external_authority implementada (schema, relações de contrato com mínimo 1.8.0 e rules.external_authority, diagnósticos external-authority.missing|position|notice|link, documentação e testes sintéticos); aceita pelo requerente validador em 2026-10-30. Manifesto e CHANGELOG 1.8.0 ficam para a preparação humana da release.

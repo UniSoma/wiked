@@ -6,7 +6,7 @@
 uv run --script .agents/skills/wiked/scripts/validate_wiki.py --repository-root .
 ```
 
-Keep `distribution.py`, the schema, and `wiked-manifest.yaml` in their manifested
+Keep `distribution.py`, the shared `wiki_core.py` module, the schema, and `wiked-manifest.yaml` in their manifested
 relative layout. The runtime reads its methodology version from that manifest,
 independently of cwd and instance contract requirements; there is no second
 current-version literal. Missing or invalid distribution identity is a blocking
@@ -14,7 +14,7 @@ current-version literal. Missing or invalid distribution identity is a blocking
 are distinct from the current distribution version. Normal validation does not
 load the changelog or acknowledge maintenance completion.
 
-The validator derives `wiki/` and `wiki/wiki-structure.yaml` from that root. It never derives the consumer root from the script location and does not require a Python project in the consumer. It validates internal references, configured names, the optional root authoring reference, declared assets, and configured diagram sets; external links and bare URLs are informational outside typed canonical-reference fields and intent-map destination entries. It validates only the authoring reference's structural integration, not its human-review criteria. It does not inspect or require `raw/` or `raw/archive/`; those directories hold ingestion material managed by the setup and assisted-indexing workflows, not contract configuration or operational evidence. Exit codes are `0` for success (warnings allowed), `1` for structural errors, and `2` for contract or runtime failures. Use `--format json` for deterministic structured diagnostics. When the contract passes schema validation, the JSON report also includes `contract.methodology_version`, the methodology version it declares.
+The validator derives `wiki/` and `wiki/wiki-structure.yaml` from that root. It never derives the consumer root from the script location and does not require a Python project in the consumer. It validates internal references, configured names, the optional root authoring reference, declared assets, and configured diagram sets; external links and bare URLs are informational outside typed canonical-reference fields and intent-map destination entries unless `rules.external_links` enables the offline check described below. It validates only the authoring reference's structural integration, not its human-review criteria. It does not inspect or require `raw/` or `raw/archive/`; those directories hold ingestion material managed by the setup and assisted-indexing workflows, not contract configuration or operational evidence. Exit codes are `0` for success (warnings allowed), `1` for structural errors, and `2` for contract or runtime failures. Use `--format json` for deterministic structured diagnostics. When the contract passes schema validation, the JSON report also includes `contract.methodology_version`, the methodology version it declares.
 
 Add `--contract-only` to validate only the contract's schema, compatibility, and
 relational rules. This mode checks no Markdown pages and never invokes Knot;
@@ -44,6 +44,8 @@ truth. Contract-only mode checks the declaration and minimum methodology 1.5.0,
 not the map file or content. Instances without a map retain existing behavior.
 
 When a page type declares `external_authority`, the full validator checks that each page of that type opens with the configured notice in a quotation after the H1 and that the quotation's links are absolute `http(s)` URLs, at least one when required. `external-authority.*` diagnostics use `rules.external_authority`; contract-only mode checks the declaration, rule, and minimum methodology 1.8.0. Instances without the capability retain existing behavior.
+
+When `rules.external_links` is declared, the full validator checks external link and image destinations offline for allowed schemes and syntax, reporting `external-link.scheme` and `external-link.malformed` under that rule; it never accesses the network. Contract-only mode checks the minimum methodology 1.8.0. Instances without the rule retain existing behavior.
 
 ## Maintenance review acknowledgment
 
