@@ -34,9 +34,15 @@ The main installer and root license were also verified available. Release
 preparation must verify the documented download paths before announcing them;
 never infer repository authority from schema IDs.
 The maintainer explicitly approved `wik-01m4s821zj1m` to make `UniSoma/wiked` the
-installer's only release origin. Do not expose an origin argument or ask users
+installer's only release origin. Do not expose a remote origin argument or ask users
 to choose a repository. Synthetic tests intercept transport for the official
 URLs rather than introduce a configurable alternative origin.
+The maintainer approved `wik-01m66t0dc77b` as the only exception: `--source`
+installs from a local Wiked clone, never a URL, to test unpublished releases or
+branches on real wikis. The clone's own `scripts/package-wiked.sh` builds the
+candidate archive, which then follows the official candidate path unchanged.
+Its user owns that choice: installation metadata does not record the source,
+uncommitted changes are not checked, and older versions are still rejected.
 Humans operate Git and publish releases. Agents prepare and verify release material
 without installing tools on the host or replacing their running skill.
 
@@ -154,8 +160,8 @@ human questions and confirmations; Python owns release selection, validation,
 planning, and transactional execution. Ask for a missing destination
 through the controlling terminal, never stdin, which may contain
 the piped script. Supplied values bypass questions, not authoritative validation.
-Display and confirm only the selected latest stable version; do not introduce
-older-version selection. Keep that selection, candidate, and plan in one
+Display and confirm only the selected latest stable version, or the version
+packaged from an explicit local `--source`; do not introduce older-version selection. Keep that selection, candidate, and plan in one
 operation through final approval. The operation-level approval follows Python's
 displayed plan, not merely the initial parameter questions.
 

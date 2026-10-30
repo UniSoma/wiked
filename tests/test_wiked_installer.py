@@ -1002,10 +1002,97 @@ def test_release_assets_cannot_redirect_to_another_repository(environment):
     assert 'other/wiked' not in Path(env['REQUEST_LOG']).read_text()
 
 
+def clone(directory, version='1.5.0', packager=None):
+    """A local source whose packager stub emits a synthetic release archive."""
+    release(directory / 'built', version=version)
+    (directory / 'scripts').mkdir(parents=True, exist_ok=True)
+    (directory / 'scripts/package-wiked.sh').write_text(packager or f'''#!/usr/bin/env bash
+set -eu
+mkdir -p "$2"
+cp "{directory}/built/distr.tar.gz" "$2/distr.tar.gz"
+''')
+    return directory
+
+
+def test_local_source_installs_through_the_official_candidate_path(environment, tmp_path):
+    root, _, env = environment
+    source = clone(tmp_path / 'clone')
+    result = run(environment, '--source', str(source), '--yes')
+    assert result.returncode == 0, result.stderr
+    assert 'Selected local source' in result.stdout and 'not an official release' in result.stdout
+    state = json.loads((root / '.agents/.wiked-install.json').read_text())
+    assert state['version'] == '1.5.0'
+    assert set(state) == {'format', 'version', 'files', 'maintenance_since'}
+    assert not Path(env['REQUEST_LOG']).exists()
+
+
+def test_local_source_packages_a_real_clone_with_its_own_packager(environment, tmp_path):
+    root, _, _ = environment
+    source = tmp_path / 'clone'
+    shutil.copytree(DISTRIBUTION, source / 'distr/agents')
+    (source / 'scripts').mkdir()
+    shutil.copy(ROOT / 'scripts/package-wiked.sh', source / 'scripts')
+    result = run(environment, '--source', str(source), '--yes')
+    assert result.returncode == 0, result.stderr
+    version = yaml.safe_load((DISTRIBUTION / 'wiked-manifest.yaml').read_text())['distribution_version']
+    assert json.loads((root / '.agents/.wiked-install.json').read_text())['version'] == str(version)
+    assert (root / '.agents/skills/wiked/SKILL.md').read_bytes() == (DISTRIBUTION / 'skills/wiked/SKILL.md').read_bytes()
+
+
+@pytest.mark.parametrize('kind', ['url', 'no-packager', 'packager-failure'])
+def test_invalid_local_source_installs_nothing(environment, tmp_path, kind):
+    root, _, env = environment
+    if kind == 'url':
+        source = 'https://github.com/UniSoma/wiked'
+    elif kind == 'no-packager':
+        source = tmp_path / 'empty'
+        source.mkdir()
+    else:
+        source = clone(tmp_path / 'clone', packager='#!/usr/bin/env bash\necho broken >&2\nexit 2\n')
+    result = run(environment, '--source', str(source), '--yes')
+    assert result.returncode == 2
+    message = {'url': 'not a URL', 'no-packager': 'scripts/package-wiked.sh',
+               'packager-failure': 'Packaging the local source failed'}[kind]
+    assert message in result.stderr
+    assert not (root / '.agents').exists()
+    assert not Path(env['REQUEST_LOG']).exists()
+
+
+def test_local_source_versions_update_reinstall_and_never_downgrade(environment, tmp_path):
+    root, _, _ = environment
+    assert run(environment, '--yes').returncode == 0
+    source = clone(tmp_path / 'clone', version='1.5.0')
+    result = run(environment, '--source', str(source), '--yes')
+    assert result.returncode == 0 and 'Version changed' in result.stdout
+    state = json.loads((root / '.agents/.wiked-install.json').read_text())
+    assert state['version'] == '1.5.0' and state['maintenance_since'] == '1.4.0'
+    release(source / 'built', version='1.5.0', extra={'skills/wiked/SKILL.md': b'iterated'})
+    result = run(environment, '--source', str(source), '--yes')
+    assert result.returncode == 0 and 'Reinstall' in result.stdout
+    assert 'Version changed' not in result.stdout
+    assert (root / '.agents/skills/wiked/SKILL.md').read_bytes() == b'iterated'
+    assert json.loads((root / '.agents/.wiked-install.json').read_text())['maintenance_since'] == '1.4.0'
+    clone(tmp_path / 'older', version='1.4.0')
+    result = run(environment, '--source', str(tmp_path / 'older'), '--yes')
+    assert result.returncode == 2 and 'The local source is older' in result.stderr
+
+
+def test_interactive_local_source_keeps_destination_question_and_approvals(environment, tmp_path):
+    root, _, _ = environment
+    source = clone(tmp_path / 'clone')
+    result = run_interactive(environment, '--source', str(source), answers=[
+        ('Installation destination [.agents]:', ''),
+        ('Continue with local source version 1.5.0?', 'yes'),
+        ('Approve this installation plan?', 'yes'),
+    ])
+    assert result.returncode == 0, result.stdout
+    assert (root / '.agents/.wiked-install.json').exists()
+
+
 def test_help_does_not_prompt_and_describes_explicit_approval(environment):
     result = run(environment, '--help')
     assert result.returncode == 0
-    assert '--approve-migration-ticket' in result.stdout
+    assert '--approve-migration-ticket' in result.stdout and '--source' in result.stdout
     assert '--repository' not in result.stdout
     assert 'No controlling terminal' not in result.stderr
 

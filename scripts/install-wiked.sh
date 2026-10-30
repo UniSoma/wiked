@@ -29,13 +29,13 @@ destination_given=false
 prompt_parameters=true
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --destination|--approve-collision)
+        --destination|--approve-collision|--source)
             option="$1"
             [[ $# -ge 2 && "$2" != --* ]] || { prompt_parameters=false; break; }
             [[ "$option" != --destination ]] || destination_given=true
             shift 2 ;;
         --destination=*) destination_given=true; shift ;;
-        --approve-collision=*|--approve-migration-ticket) shift ;;
+        --approve-collision=*|--source=*|--approve-migration-ticket) shift ;;
         --yes|--dry-run|--recover|--help|-h) prompt_parameters=false; shift ;;
         *) prompt_parameters=false; shift ;;
     esac
@@ -413,7 +413,9 @@ def download(url, path):
                     '--output', str(path), url], check=True)
 
 
-def candidate(directory, approved=False):
+def candidate(directory, approved=False, source=None):
+    if source is not None:
+        return local_candidate(directory, approved, source)
     release_path = directory / 'release.json'
     download(f'https://api.github.com/repos/{OFFICIAL_REPOSITORY}/releases/latest', release_path)
     release = json.loads(release_path.read_text())
@@ -434,7 +436,37 @@ def candidate(directory, approved=False):
         if assets[name] != expected:
             fail(f'Unexpected asset URL: {name}')
         download(assets[name], directory / name)
-    archive_path = directory / archive_name
+    return extract(directory, directory / archive_name, version)
+
+
+def local_candidate(directory, approved, source):
+    # A local clone is packaged by its own packager; its user owns that choice.
+    if re.match(r'[A-Za-z][A-Za-z0-9+.-]*://', source):
+        fail('--source takes a local directory, not a URL.')
+    root = Path(source).resolve()
+    packager = root / 'scripts/package-wiked.sh'
+    if not root.is_dir() or not packager.is_file():
+        fail(f'--source must be a local Wiked clone containing scripts/package-wiked.sh: {root}')
+    output = directory / 'package'
+    result = subprocess.run(['bash', str(packager), '--output', str(output)], cwd=root,
+                            stdin=subprocess.DEVNULL, capture_output=True, text=True)
+    if result.returncode != 0:
+        fail('Packaging the local source failed; nothing installed.\n' + result.stdout + result.stderr)
+    archive_path = output / 'distr.tar.gz'
+    with tarfile.open(archive_path, 'r:gz') as archive:
+        try:
+            version = str(yaml.safe_load(archive.extractfile(MANIFEST).read())['distribution_version'])
+        except (KeyError, TypeError, AttributeError):
+            fail('Local package manifest missing or invalid.')
+    if not re.fullmatch(SEMVER, version):
+        fail('Local source version is not a stable SemVer version.')
+    print(f'Selected local source: {root} (version {version}; not an official release)', flush=True)
+    if not approved and not confirm(f'Continue with local source version {version}?'):
+        fail('Local source not approved; nothing installed.')
+    return extract(directory, archive_path, version)
+
+
+def extract(directory, archive_path, version):
     tree = directory / 'candidate'
     tree.mkdir()
     with tarfile.open(archive_path, 'r:gz') as archive:
@@ -538,11 +570,14 @@ def main():
     parser.add_argument('--yes', action='store_true', help='Approve the displayed operation, not collisions or migration tickets.')
     parser.add_argument('--approve-collision', action='append', default=[], metavar='PATH', help='Explicitly approve taking over this manifest-relative path.')
     parser.add_argument('--approve-migration-ticket', action='store_true', help='Separately approve a P1 HITL migration ticket, only on incompatibility with a proven local tracker.')
+    parser.add_argument('--source', metavar='PATH', help='Install from a local Wiked clone, packaged by its own packager, instead of the latest official release.')
     parser.add_argument('--recover', action='store_true', help='Restore an interrupted transaction, without downloading or installing.')
     parser.add_argument('--acknowledge-maintenance-review', metavar='VERSION', help='Human confirmation of review and finding disposition for the installed version; metadata only, no download.')
     args = parser.parse_args()
-    if args.acknowledge_maintenance_review and (args.recover or args.approve_collision or args.approve_migration_ticket):
-        fail('Review acknowledgment cannot be combined with recovery or installation approvals.')
+    if args.acknowledge_maintenance_review and (args.recover or args.approve_collision or args.approve_migration_ticket or args.source):
+        fail('Review acknowledgment cannot be combined with recovery, installation approvals, or a source.')
+    if args.recover and args.source:
+        fail('Recovery does not install; it cannot be combined with --source.')
     root = Path.cwd().resolve()
     destination = Path(os.path.abspath(args.destination))
     safe_path(destination, '')
@@ -588,9 +623,10 @@ def main():
     assert_snapshot(destination, {METADATA: metadata_observed})
     since = pending_review(previous, previous['version']) if previous else None
     with tempfile.TemporaryDirectory(prefix='wiked-') as temporary:
-        version, tree, hashes = candidate(Path(temporary), args.yes or args.dry_run)
+        version, tree, hashes = candidate(Path(temporary), args.yes or args.dry_run, args.source)
         if previous and tuple(map(int, previous['version'].split('.'))) > tuple(map(int, version.split('.'))):
-            fail('The latest stable release is older than the installation; downgrade is not supported.')
+            selected = 'The local source' if args.source else 'The latest stable release'
+            fail(f'{selected} is older than the installation; downgrade is not supported.')
         since = pending_review(previous, version)
         declared = compatibility(root, tree, version, previous, args.dry_run, args.approve_migration_ticket)
         if (previous is None and declared is not None
@@ -626,7 +662,7 @@ def main():
             review_notice(since, version)
             return
         if previous and previous['version'] == version:
-            print('Reinstall requested version to repair changed or missing files.')
+            print('Reinstall the same version over changed, missing, or differing files.')
         if args.dry_run:
             print('Dry run: no installed files or tickets changed.')
             return

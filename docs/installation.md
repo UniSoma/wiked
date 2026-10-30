@@ -168,6 +168,30 @@ Each invocation pins the latest stable release, validates the archive inventory
 and version, and displays additions, replacements, removals, local edits, and
 unowned collisions. Answer `y` or `yes` to approve the operation.
 
+## Install from a local clone
+
+To try an unpublished release or a branch on a real wiki, pass the root of a
+local Wiked clone instead of using the latest official release:
+
+```sh
+bash /path/to/wiked/scripts/install-wiked.sh --source /path/to/wiked --dry-run
+bash /path/to/wiked/scripts/install-wiked.sh --source /path/to/wiked
+```
+
+`--source` takes a local directory containing `scripts/package-wiked.sh`, never
+a URL. The installer runs that clone's packager in a temporary directory and
+then treats the resulting `distr.tar.gz` like an official release archive: the
+same inventory, contract, plan, approvals, transaction, and maintenance review
+apply. The package reflects the clone's working tree, including uncommitted
+changes. Nothing records that the installation came from a clone; choosing one
+is your responsibility.
+
+A newer version updates normally and requires the maintenance review. The same
+version with different content is offered as a reinstall, without a new review.
+An older version is rejected. To return to official releases, run the usual
+installer: a newer official release replaces the clone's files, and so does
+the same version when its content differs.
+
 ## Set up your wiki
 
 After installation, open your agent in the same repository and ask:
