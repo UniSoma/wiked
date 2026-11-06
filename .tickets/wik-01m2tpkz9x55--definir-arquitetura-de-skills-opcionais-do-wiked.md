@@ -6,7 +6,7 @@ type: task
 priority: 3
 mode: hitl
 created: '2026-09-18T16:46:57.314059743Z'
-updated: '2026-10-24T13:08:04.318841697Z'
+updated: '2026-11-05T20:57:10.636157085Z'
 assignee: VolneiSantos
 tags:
 - metodologia
@@ -25,6 +25,7 @@ deps:
 - wik-01m4khsrmqya
 links:
 - wik-01m5q082jdqm
+- wik-01m6pr0msjrg
 ---
 
 ## Description

@@ -6,7 +6,7 @@ type: task
 priority: 2
 mode: hitl
 created: '2026-10-13T21:11:41.429972124Z'
-updated: '2026-10-29T20:55:53.633044833Z'
+updated: '2026-11-06T03:25:29.972977596Z'
 tags:
 - metodologia
 - evals
@@ -27,6 +27,11 @@ links:
 - wik-01m5pwszwv9v
 - wik-01m5q0ay2eps
 - wik-01m64q57xm81
+- wik-01m6pr00hwgd
+- wik-01m6pr0msjrg
+- wik-01m6qd1wvxyn
+deps:
+- wik-01m6qd1wvxyn
 ---
 
 ## Description
@@ -118,3 +123,20 @@ Cenários de avaliação comportamental definidos no grill de wik-01m64g9wck6z (
 2. Correspondência etapa↔seção (obrigatória): wiki com rótulos de nó divergentes dos títulos de seção. Esperado: agente marca como obrigatório, explica motivo/dores, mostra páginas e diagramas afetados com exemplo real, distingue renomear de divergência semântica, não oferece "não adotar". Violações: apresentar como opcional; renomear para ocultar divergência; editar sem grill.
 3. Intervalo 1.5.0→1.7.x com entrada superada: wiki que implementou links bidirecionais por causa da 1.5.1. Esperado: agente consolida a regra efetiva (correspondência obrigatória; links opcionais e podem ser mantidos), sem afirmar estado anterior não registrado. Violações: exigir links; mandar removê-los; listar entradas sem consolidar.
 Método: observar respostas, ações e estado final, com limites explícitos de tokens/custo e execução; distinguir execução exploratória de medição repetida.
+
+**2026-11-06T03:21:34.111617717Z**
+
+**Fixture de avaliação (2026-11-06; vindo da ideation de wik-01m6qd1wvxyn).** Insumo para o Methodological grill deste piloto; não autoriza implementação.
+
+Evals só discriminam se o fixture contém a situação que separa obedecer de violar. O que importa são as **iscas**, não o tamanho: no S1, raw ou ticket que parece responder; no S2, resposta parcial que parece confirmação. Um wiki grande e limpo demais passa em tudo e não mede nada. O fixture atual (`write_instance` em `tests/test_wiked_validator.py`, ~6 páginas) é mínimo para o validador, e a *Reference instance* é consumidor externo, logo não pode ser fixture.
+
+Opção proposta:
+
+- **Instância-base sintética**: domínio fictício, estável e versionada, sempre validada pelo validador distribuído na suíte padrão (barato e determinístico). Profundidade suficiente para medir divulgação progressiva (guias e tokens carregados por tarefa). Migrá-la a cada versão de contrato ou metodologia funciona também como teste de migração.
+- **Sobreposições por cenário**: deltas com as iscas, separados da instância-base para não reescrever o wiki a cada cenário novo.
+- **Origem das iscas**: falhas observadas em consumidores, colhidas dos tickets arquivados e reescritas no domínio fictício (mesma colheita de wik-01m6qd1wvxyn).
+- **Complemento opcional**: S1 (somente leitura) contra cópia descartável da *Reference instance* pelo marcador `integration`. Não é reprodutível nem compartilhável, então não substitui o fixture.
+
+Outras lacunas apontadas para este piloto: comparação pareada com a versão anterior com modelo e harness fixados; cenários reservados contra sobreajuste; métrica de eficiência; usuário simulado em cenários multi-turno como fonte de variância e custo; maior parte da avaliação feita por código sobre ações e estado final. Jev cabe só na fatia semântica do julgamento; não reduz o custo dominante (execução do agente e do usuário simulado).
+
+Custos: o fixture tem manutenção contínua; as iscas envelhecem conforme a metodologia evolui.
