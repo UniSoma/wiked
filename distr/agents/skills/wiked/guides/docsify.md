@@ -1,8 +1,9 @@
-# Optional Docsify Diagram Navigation
+# Optional Docsify Integration
 
-Load only to propose, enable, or review interactive process diagrams in a consumer
-using Docsify. Docsify and clickable diagrams are optional; static diagrams remain
-valid under [the diagram protocol](d2.md#step-correspondence-and-navigation).
+Load only to propose, enable, or review the Docsify integration in a consumer:
+interactive process diagrams and heading-fragment resolution. Docsify and both
+features are optional; static diagrams remain valid under
+[the diagram protocol](d2.md#step-correspondence-and-navigation).
 This guide is not a general Docsify installation, theme, search, or publishing guide.
 
 ## Authority and Adoption
@@ -15,7 +16,7 @@ This guide is not a general Docsify installation, theme, search, or publishing g
   to identify Docsify. Propose this integration and report compatibility or
   deployment gaps. Installing Wiked does not activate it or authorize viewer edits.
 - Wiked owns the distributed [HTML example](../viewers/index.html), including its
-  inline diagram adapter. Authorized adoption copies/adapts it into the consumer
+  inline diagram adapter and heading resolver. Authorized adoption copies/adapts it into the consumer
   repository; that viewer, its embedded code, configuration, deployment, assets,
   and operational Markdown are consumer-owned. Never edit the installed example
   or install tools while operating a wiki. Humans install tools and arrange
@@ -28,7 +29,8 @@ This guide is not a general Docsify installation, theme, search, or publishing g
   acceptance; never synchronize or overwrite the viewer during skill updates.
 
 Adoption offers readers clickable diagram steps leading to their canonical
-sections, return links back to the exact node, and a link to each original SVG.
+sections, return links back to the exact node, a link to each original SVG, and
+heading links that reach their sections (see [Heading Fragments](#heading-fragments)).
 It requires a consumer already using or choosing Docsify, a governed change copying
 the example into a consumer-owned viewer, explicit anchors and return links in
 affected pages, browser acceptance, and consumer ownership of that viewer's
@@ -97,7 +99,8 @@ This avoids Docsify's special rewriting of ignored `./` links and makes nested
 entries independent of the viewer document's URL. Do not turn these local
 references into hardcoded deployment URLs. A return link names an SVG node and
 a section in the **current entry**; cross-entry associations are not supported
-by this adapter. Ordinary wiki page links remain ordinary Markdown links.
+by this adapter. Ordinary wiki page links remain ordinary Markdown links; their
+fragments follow [Heading Fragments](#heading-fragments).
 Keep the image URL free of fragments: Docsify 4.13.1 can discard its filename
 while resolving a relative image URL containing `#`. The title marker avoids
 that behavior while retaining normal static Markdown image rendering.
@@ -129,12 +132,35 @@ repeat, append " - <occurrence context>", including diagram context when needed.
 Do not rename nodes merely to disambiguate return links. Multiple diagrams use
 different image identifiers and asset paths; each can contain the same node key.
 
+## Heading Fragments
+
+Docsify 4.13.1 derives heading ids differently from the Wiked validator: it keeps
+accents and most non-ASCII letters, keeps `_`, and prefixes `_` to a leading digit,
+while Wiked folds the reader-visible heading text to ASCII. A link the validator
+accepts through a heading slug, such as `#resume` for a heading `Résumé`,
+then opens the entry at its top with no visible error. Other renderers, including
+GitHub, differ in similar ways.
+
+The example includes an inline heading resolver in
+`<script id="wiked-docsify-headings">`. Before Docsify inserts an entry, it adds an
+empty `<a id>` with the Wiked slug before each rendered heading, numbering repeated
+slugs as the validator does, unless the entry already has that id. Docsify then
+scrolls to it like any other target. The resolver only keeps the reference viewer
+consistent with the validator; it does not make heading slugs portable. Prefer
+explicit anchors as authoring guidance in [modeling](modeling.md#heading-fragments),
+which also covers slugs Docsify cannot address, such as a leading digit.
+
+Existing viewers adopt the resolver like any other integration update: an explicit
+proposal and authorized scope, merging the inline block without replacing local
+configuration, and browser acceptance.
+
 ## Viewer Configuration
 
 Use the complete [index.html example](../viewers/index.html) as the adoption
 source, not as a runtime URL. It includes the mount element, a pinned Docsify
-stylesheet and script, configuration, and the diagram adapter inline in
-`<script id="wiked-docsify-diagrams">`. There is no separate adapter JS to deploy.
+stylesheet and script, configuration, the diagram adapter inline in
+`<script id="wiked-docsify-diagrams">`, and the heading resolver inline in
+`<script id="wiked-docsify-headings">`. There is no separate JS to deploy.
 
 For a new viewer, copy/adapt the example to a consumer-owned file outside the
 governed `wiki/` tree, such as `viewer/index.html`. Keep that HTML in the wiki
@@ -150,7 +176,7 @@ skill to be present at build or serving time. Wiked supplies an adoption example
 not a service or an operational wiki dependency. Docsify remains the chosen viewer
 dependency, independently of Wiked.
 
-The inline adapter must execute **after configuration but before Docsify**.
+Both inline blocks must execute **after configuration but before Docsify**.
 Preserve existing
 `noCompileLinks` entries and add the SVG pattern: SVG return URLs must not become
 Docsify entry routes. If a content-security policy disallows inline scripts,
@@ -199,7 +225,8 @@ stale requests and rebuilds its associations.
 Run the distributed validator. It recognizes portable explicit anchor targets,
 reports duplicate/colliding anchors, and checks the optional return-link syntax
 and description anchor. It still checks ordinary heading links and the required
-single Markdown visualization embedding. It does **not** establish node existence
+single Markdown visualization embedding; `rules.heading_fragments` optionally reports
+fragments that depend on heading slugs. It does **not** establish node existence
 in rendered SVG, title equality, semantic correspondence, or browser behavior.
 
 ### Browser Acceptance
@@ -225,6 +252,10 @@ In the actual viewer, verify:
    zoom controls. Originally hidden images must not expose a visible link. Repeat
    navigation after returning and reloading; links must not duplicate or survive
    failed/stale enhancements.
+8. A link from another entry to an accented heading through its Wiked slug, and to
+   a repeated heading (`-1`), reaches the intended section, including after reload.
+   Diagram navigation is unchanged. A fragment below a clickable diagram may land
+   short while that diagram loads on a fresh render; record it as a known limitation.
 
 Record viewer/renderer versions, results, unsupported behavior, and any untested
 cases. A successful installation or validator run is not browser acceptance.

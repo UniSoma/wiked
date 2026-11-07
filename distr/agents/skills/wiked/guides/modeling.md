@@ -33,6 +33,12 @@ Adoption is optional. It offers readers a visible, validated distinction between
 
 `rules.external_links` optionally enables an offline check of external link and image destinations in page bodies. Adoption offers early detection of malformed addresses and disallowed schemes during ordinary validation, without network access. It requires a governed contract change setting the rule's severity with `methodology_version` 1.8.0 or newer, and correcting or dispositioning the existing findings it reveals. It does not establish that destinations are reachable or current. See the [contract format](../contracts/README.md).
 
+## Heading Fragments
+
+Heading slugs are renderer-specific: renderers differ on accents, punctuation, and leading digits, and a renamed heading changes its slug. When a link needs a fragment, target an explicit `<a id="...">` with a stable ASCII `snake_case` identifier placed immediately before the section, and use an existing explicit anchor when the section already has one. Explicit anchors are portable and survive heading renames.
+
+`rules.heading_fragments` optionally reports Markdown fragments that resolve only through a heading slug, in the same page or another one. Adoption offers early detection of links that may open the right page at the wrong place, without a browser. It requires a governed contract change setting the rule's severity with `methodology_version` 1.9.0 or newer, and moving the existing findings it reveals to explicit anchors. Docsify consumers may also adopt the [heading resolver](docsify.md#heading-fragments). See the [contract format](../contracts/README.md).
+
 ## Pages and Navigation
 
 - Start navigation at the root index and preserve progressive top-level indexes.

@@ -258,6 +258,67 @@
   return { plugin, diagramID, association, assetKey, sourceURL, safeCSS, prepareSVG, findNode };
 });
   </script>
+  <!-- Integration source: Wiked 1.9.0. Preserve provenance when adopting updates. -->
+  <script id="wiked-docsify-headings">
+/* Optional heading-fragment resolver: Wiked heading slugs also reach their sections. */
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  if (root && root.document) {
+    root.WikedDocsifyHeadings = api;
+    root.$docsify = root.$docsify || {};
+    root.$docsify.plugins = [api.plugin, ...(root.$docsify.plugins || [])];
+  }
+})(typeof window === "undefined" ? null : window, function () {
+  "use strict";
+
+  // Mirrors the Wiked validator: reader-visible text, ASCII-folded.
+  function slug(text) {
+    return text.replace(/\r?\n/g, " ").normalize("NFKD").replace(/[^\x00-\x7F]/g, "").toLowerCase()
+      .replace(/[^a-z0-9 -]/g, "").replace(/[ -]+/g, "-").replace(/^-|-$/g, "") || "section";
+  }
+
+  // One identifier per heading, or null when the page already owns that id.
+  function anchorPlan(texts, existing) {
+    const taken = new Set(existing);
+    const counts = new Map();
+    return texts.map(text => {
+      const base = slug(text);
+      const count = counts.get(base) || 0;
+      counts.set(base, count + 1);
+      const id = count ? base + "-" + count : base;
+      if (taken.has(id)) return null;
+      taken.add(id);
+      return id;
+    });
+  }
+
+  function resolve(html, document) {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    const root = template.content;
+    // Docsify gives every rendered Markdown heading an id; raw HTML headings are not targets.
+    const headings = [...root.querySelectorAll("h1, h2, h3, h4, h5, h6")].filter(h => h.hasAttribute("id"));
+    const existing = [...root.querySelectorAll("[id]")].map(element => element.id);
+    anchorPlan(headings.map(heading => heading.textContent), existing).forEach((id, index) => {
+      if (!id) return;
+      const anchor = document.createElement("a");
+      anchor.id = id;
+      anchor.setAttribute("data-wiked-heading", "");
+      headings[index].before(anchor);
+    });
+    return template.innerHTML;
+  }
+
+  function plugin(hook) {
+    // Runs before Docsify inserts the page and scrolls to its ?id= target.
+    hook.afterEach(html => resolve(html, window.document));
+  }
+
+  return { plugin, slug, anchorPlan, resolve };
+});
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
 </body>
 </html>

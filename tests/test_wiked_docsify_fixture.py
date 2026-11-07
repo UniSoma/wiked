@@ -34,6 +34,10 @@ def write_browser_fixture(root: Path) -> None:
     (viewer / "index.html").write_text(html, encoding="utf-8")
     (root / "wiki/index.md").write_text('# Wiki\n\n[Process](handbook/process.md)\n', encoding="utf-8")
     (root / "wiki/other.md").write_text('# Other entry\n\n[Process](handbook/process.md)\n', encoding="utf-8")
+    filler = 'Filler paragraph that keeps later sections below the fold.\n\n' * 60
+    (root / "wiki/pending.md").write_text(
+        '# Pending entry\n\n' + filler + '## Pendências\n\nFirst pending list.\n\n' + filler
+        + '## Pendências\n\nSecond pending list.\n\n' + filler, encoding="utf-8")
     (content / "process.svg").write_text(svg("receive", "receive_again"), encoding="utf-8")
     (content / "other.svg").write_text(svg("receive"), encoding="utf-8")
     (content / "process.md").write_text(
@@ -44,5 +48,7 @@ def write_browser_fixture(root: Path) -> None:
         '[Back to step in diagram: Receive request - retry](process.svg#wiked-node=receive_again&section=step_receive)\n\n'
         '<a id="step_other"></a>\n\n## Receive request\n\nAnother flow.\n\n'
         '[Back to step in diagram: Receive request - other flow](other.svg#wiked-node=receive&section=step_other)\n\n'
-        '[Other entry](../other.md)\n', encoding="utf-8",
+        '[Other entry](../other.md)\n\n'
+        '[Pending items](../pending.md#pendencias)\n\n'
+        '[Repeated pending items](../pending.md#pendencias-1)\n', encoding="utf-8",
     )

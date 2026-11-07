@@ -247,7 +247,7 @@ def test_runtime_uses_only_its_distribution_manifest_for_version(tmp_path: Path)
     repository = tmp_path / "consumer"
     (repository / "wiki").mkdir(parents=True)
     value = contract()
-    value["methodology_version"] = "1.9.0"
+    value["methodology_version"] = "1.10.0"
     (repository / "wiki/wiki-structure.yaml").write_text(yaml.safe_dump(value))
     # A consumer-local manifest is not the runtime's authority.
     (repository / "wiked-manifest.yaml").write_text("namespace: wiked\ndistribution_version: 9.0.0\n")
@@ -261,7 +261,7 @@ def test_runtime_uses_only_its_distribution_manifest_for_version(tmp_path: Path)
         )
 
     assert invoke().returncode == 2
-    manifest.write_text("namespace: wiked\ndistribution_version: 1.9.0\n")
+    manifest.write_text("namespace: wiked\ndistribution_version: 1.10.0\n")
     assert invoke().returncode == 0
     for content in ("namespace: wiked\ndistribution_version: invalid\n", "[]\n"):
         manifest.write_text(content)

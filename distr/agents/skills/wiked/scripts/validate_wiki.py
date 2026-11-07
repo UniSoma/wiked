@@ -67,6 +67,17 @@ def explicit_anchors(body: str, offset: int) -> list[tuple[str, int]]:
     return anchors
 
 
+def rendered_text(inline: Any) -> str:
+    """Return the reader-visible heading text, as renderers derive their slugs from it."""
+    parts: list[str] = []
+    for child in inline.children or []:
+        if child.type in {"text", "code_inline"}:
+            parts.append(child.content)
+        elif child.type in {"softbreak", "hardbreak"}:
+            parts.append(" ")
+    return "".join(parts)
+
+
 def heading_data(body: str, offset: int, *, include_explicit: bool = True) -> tuple[list[int], set[str], set[str]]:
     h1_lines: list[int] = []
     headings: set[str] = set()
@@ -76,11 +87,11 @@ def heading_data(body: str, offset: int, *, include_explicit: bool = True) -> tu
     for index, token in enumerate(tokens):
         if token.type != "heading_open" or not token.map:
             continue
-        title = tokens[index + 1].content if index + 1 < len(tokens) and tokens[index + 1].type == "inline" else ""
-        headings.add(title)
+        inline = tokens[index + 1] if index + 1 < len(tokens) and tokens[index + 1].type == "inline" else None
+        headings.add(inline.content if inline else "")
         if token.tag == "h1":
             h1_lines.append(token.map[0] + offset + 1)
-        slug = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode().lower()
+        slug = unicodedata.normalize("NFKD", rendered_text(inline) if inline else "").encode("ascii", "ignore").decode().lower()
         slug = re.sub(r"[^a-z0-9 -]", "", slug)
         slug = re.sub(r"[ -]+", "-", slug).strip("-") or "section"
         count = counts.get(slug, 0)
@@ -189,11 +200,20 @@ def validate_references(path: Path, wiki_root: Path, contract: dict[str, Any]) -
     if parse_issue:
         return []
     problems: list[Diagnostic] = []
-    _, _, own_anchors = heading_data(body, offset, include_explicit=False)
+    _, _, own_headings = heading_data(body, offset, include_explicit=False)
+    own_anchors = set(own_headings)
+    own_explicit: set[str] = set()
     for identifier, line in explicit_anchors(body, offset):
         if identifier in own_anchors:
             problems.append(issue("reference.anchor", severity(contract, "reference"), rel, f"Explicit anchor is duplicated or collides with a heading: {identifier}.", line))
         own_anchors.add(identifier)
+        own_explicit.add(identifier)
+
+    def heading_fragment(fragment: str, headings: set[str], explicit: set[str], line: int | None) -> None:
+        # Heading slugs are renderer-specific; only explicit anchors are portable targets.
+        if "heading_fragments" in contract["rules"] and fragment in headings and fragment not in explicit:
+            problems.append(issue("reference.heading_fragment", severity(contract, "heading_fragments"), rel, f"Fragment resolves only through a heading slug, which renderers may compute differently: {fragment}. Link to an explicit ASCII snake_case <a id> anchor instead.", line))
+
     for target, line, _ in markdown_links(body, offset):
         parsed = urlsplit(target)
         if parsed.scheme or parsed.netloc:
@@ -201,6 +221,8 @@ def validate_references(path: Path, wiki_root: Path, contract: dict[str, Any]) -
         if target.startswith("#"):
             if unquote(parsed.fragment) not in own_anchors:
                 problems.append(issue("reference.fragment", severity(contract, "reference"), rel, f"Local fragment does not exist: {parsed.fragment}.", line))
+            else:
+                heading_fragment(unquote(parsed.fragment), own_headings, own_explicit, line)
             continue
         destination = local_target(path, wiki_root, target)
         if destination == Path():
@@ -213,8 +235,14 @@ def validate_references(path: Path, wiki_root: Path, contract: dict[str, Any]) -
             continue
         if parsed.fragment and destination.suffix == ".md":
             _, target_body, target_offset, target_issue = split_page(destination, contract["frontmatter"]["marker"])
-            if not target_issue and unquote(parsed.fragment) not in heading_data(target_body, target_offset)[2]:
-                problems.append(issue("reference.fragment", severity(contract, "reference"), rel, f"Target fragment does not exist: {parsed.fragment}.", line))
+            if not target_issue:
+                fragment = unquote(parsed.fragment)
+                target_headings = heading_data(target_body, target_offset, include_explicit=False)[2]
+                target_explicit = {identifier for identifier, _ in explicit_anchors(target_body, target_offset)}
+                if fragment not in target_headings | target_explicit:
+                    problems.append(issue("reference.fragment", severity(contract, "reference"), rel, f"Target fragment does not exist: {parsed.fragment}.", line))
+                else:
+                    heading_fragment(fragment, target_headings, target_explicit, line)
         params = parse_qs(parsed.fragment, keep_blank_values=True) if destination.suffix == ".svg" else {}
         if "wiked-node" in params:
             node = params.get("wiked-node", [])

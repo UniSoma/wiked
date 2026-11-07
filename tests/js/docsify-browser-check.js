@@ -125,11 +125,40 @@ async page => {
   check(await page.locator('[data-wiked-diagram]').count() === 0, "Stale load modified another entry");
   check(await originals.count() === 0, 'Stale load left original links');
   await page.unroute('**/process.svg');
+  // Wiked heading slugs reach accented and repeated sections from another entry and after reload.
+  const section = id => page.evaluate(id => {
+    const heading = document.getElementById(id)?.nextElementSibling;
+    return heading?.localName === 'h2' ? heading.nextElementSibling.textContent : null;
+  }, id);
+  const reached = async id => {
+    await page.waitForFunction(id => {
+      const top = document.getElementById(id)?.nextElementSibling?.getBoundingClientRect().top;
+      return top > -5 && top < 150;
+    }, id, { timeout: 5000 }).catch(async () => {
+      throw new Error('Heading fragment did not reach its section: ' + id + ' ' + await page.evaluate(id => JSON.stringify({
+        url: location.href, scroll: scrollY, top: document.getElementById(id)?.nextElementSibling?.getBoundingClientRect().top,
+      }), id));
+    });
+  };
+  for (const [name, id, text] of [['Pending items', 'pendencias', 'First pending list.'],
+    ['Repeated pending items', 'pendencias-1', 'Second pending list.']]) {
+    await page.goto(entryURL);
+    await host.waitFor();
+    await page.getByRole('link', { name, exact: true }).click();
+    await reached(id);
+    check(await section(id) === text, 'Heading fragment targets the wrong section: ' + id);
+  }
+  await page.reload();
+  await reached('pendencias-1');
+  await page.goto(entryURL);
+  await host.waitFor();
+  check(await page.locator('[data-wiked-diagram="process"]').count() === 1, 'Heading resolver broke diagram enhancement');
   // No adapter: normal images, headings and descriptions still render.
   await page.route('**/viewer/index.html', async route => {
     const response = await route.fetch();
     const body = (await response.text()).replace(
-      /<script id="wiked-docsify-diagrams">[\s\S]*?<\/script>/, '');
+      /<script id="wiked-docsify-diagrams">[\s\S]*?<\/script>/, '').replace(
+      /<script id="wiked-docsify-headings">[\s\S]*?<\/script>/, '');
     await route.fulfill({ response, body });
   });
   await page.goto(entryURL);
@@ -138,6 +167,10 @@ async page => {
   await page.getByRole('heading', { name: 'Receive request', exact: true }).first().waitFor();
   check(await page.locator('[data-wiked-diagram]').count() === 0, "Uninstalled adapter still enhanced an image");
   check(await originals.count() === 0, 'Uninstalled adapter exposed generated links');
+  // Without the resolver, Docsify keeps accents in ids and the Wiked slug has no target.
+  await page.getByRole('link', { name: 'Pending items', exact: true }).click();
+  await page.getByRole('heading', { name: 'Pending entry' }).waitFor();
+  check(await page.locator('#pendencias').count() === 0, 'Docsify alone resolved a Wiked heading slug');
   check(requests.every(url => !url.includes('/.agents/') && !url.includes('/distr/') &&
     !url.includes('docsify-diagrams.js')), 'Viewer requested an installed-skill dependency');
   return 'WIKED_BROWSER_PASS ' + JSON.stringify({

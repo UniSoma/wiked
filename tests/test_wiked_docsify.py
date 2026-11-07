@@ -25,6 +25,37 @@ def test_docsify_adapter_control_flow_with_dependency_free_node():
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_docsify_heading_resolver_with_dependency_free_node():
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is not installed; heading resolver checks were not run")
+    result = subprocess.run(
+        [node, "--test", str(ROOT / "tests/js/docsify-headings.test.cjs")],
+        capture_output=True, text=True, timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_heading_resolver_slugs_are_validator_targets(tmp_path):
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is not installed; resolver and validator parity was not checked")
+    from test_wiked_anchors import append
+    from test_wiked_validator import run_portable, write_instance
+
+    titles = ["Pendências", "Governança de decisão", "Ação: revisão (2026)", "Run make_check", "1. Intro", "«»", "Pendências"]
+    script = "const api=require(process.argv[1]);console.log(JSON.stringify(api.anchorPlan(JSON.parse(process.argv[2]),[])))"
+    planned = subprocess.run([node, "-e", script, str(ROOT / "tests/js/docsify-headings.cjs"), json.dumps(titles)],
+                             capture_output=True, text=True, timeout=30)
+    assert planned.returncode == 0, planned.stderr
+    repository = write_instance(tmp_path)
+    headings = "".join(f"## {title}\n\n" for title in titles)
+    links = "".join(f"[{index}](#{slug})\n" for index, slug in enumerate(json.loads(planned.stdout)))
+    append(repository / "wiki/handbook/operations.md", headings + links)
+    result = run_portable(tmp_path, repository)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_adapter_metadata_and_resource_checks_with_installed_d2(tmp_path):
     d2 = shutil.which("d2")
     node = shutil.which("node")

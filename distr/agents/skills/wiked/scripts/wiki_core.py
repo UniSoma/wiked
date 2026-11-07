@@ -133,6 +133,8 @@ def validate_contract(contract_path: Path, schema_path: Path) -> tuple[dict[str,
             relations.append(issue("contract.relation", "error", contract_label, "A page type with external authority requires rules.external_authority."))
     if "external_links" in contract["rules"] and required_version < (1, 8, 0):
         relations.append(issue("contract.relation", "error", contract_label, "External link checks require methodology_version 1.8.0 or newer."))
+    if "heading_fragments" in contract["rules"] and required_version < (1, 9, 0):
+        relations.append(issue("contract.relation", "error", contract_label, "Heading fragment checks require methodology_version 1.9.0 or newer."))
     for collection in contract.get("structured_sections", []):
         configured_types = set(collection["page_types"])
         if not configured_types <= page_types:

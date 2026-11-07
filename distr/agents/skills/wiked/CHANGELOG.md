@@ -2,6 +2,37 @@
 
 Impacts on existing wiki texts; follow [version review](guides/maintenance.md#installed-version-review).
 
+## 1.9.0 - review
+
+### Review
+
+- Heading slugs are computed from the heading's reader-visible text: link targets,
+  image text, and raw HTML no longer enter the slug.
+- `rules.heading_fragments` may report fragments that resolve only through a
+  heading slug; explicit anchors are the portable fragment targets.
+- The Docsify example includes an inline heading resolver, so links accepted
+  through Wiked heading slugs reach their sections in the reference viewer.
+
+### Rationale
+
+- Visible-text slugs: headings containing links or images produced slugs that no
+  renderer generates, so the validator accepted fragments that never resolved.
+- Heading fragments: renderers derive heading ids differently, for example keeping
+  accents, so accepted links opened the target page at its top without any error.
+- Resolver: the reference viewer did not honor fragments the validator accepted.
+
+### Action
+
+- Required: Correct fragments now reported by `reference.fragment`; they already
+  failed in renderers. Prefer explicit anchors per
+  [heading fragments](guides/modeling.md#heading-fragments).
+- Optional adoption: Propose enabling the check per
+  [heading fragments](guides/modeling.md#heading-fragments) and moving reported
+  links to explicit anchors; do not enable it automatically.
+- Optional adoption: If the wiki already uses the Docsify integration, propose
+  adopting the heading resolver per [Docsify heading fragments](guides/docsify.md#heading-fragments);
+  do not change the viewer automatically.
+
 ## 1.8.0 - review
 
 ### Review
