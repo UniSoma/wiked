@@ -19,6 +19,37 @@ An external Consumer repository explicitly selected to exercise Wiked integratio
 **Methodology evolution**:
 An authorized change to Wiked's generic behavior, interfaces, distribution, schema, runtime, development guidance, or tests, as distinct from operating or editing a consumer wiki.
 
+### Purpose and use cases
+
+**Use case**:
+A recurring purpose for which a consumer configures and operates a Wiked wiki.
+
+**Knowledge base**:
+The use case in which a wiki records how an area, project, or product operates, including its decisions and open questions.
+_Avoid_: team wiki, documentation
+
+**Consulting mapping**:
+The use case in which a wiki maps a client organisation's processes, business rules, data sources, tools, stakeholders, and gaps, in its current and proposed states.
+_Avoid_: process mapping, as-is mapping
+
+**Agent-navigable business context**:
+The use case in which agents navigate a governed wiki to obtain business meaning linked to the data it concerns.
+_Avoid_: RAG, semantic layer
+
+**Derived artifact production**:
+The use case in which documents, diagrams, or exports are generated from validated wiki content.
+_Avoid_: export
+
+**Derived view**:
+A read-only, regenerable projection of a consumer wiki, such as a navigation map or a curation panel; it is never Operational evidence.
+
+**Derived artifact**:
+A document or diagram generated from validated wiki content; it is never Operational evidence.
+
+**Source page**:
+A consumer wiki page that records the provenance of one primary source and lists the pages it grounds.
+_Avoid_: source (alone)
+
 ### Distribution and interfaces
 
 **Wiked distribution**:

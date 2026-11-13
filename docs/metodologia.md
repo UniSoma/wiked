@@ -6,6 +6,8 @@ This document describes how Wiked is developed in its source repository. Executa
 
 Wiked maintains operational knowledge in progressively navigated Markdown while separating operational evidence, governance records, ingestion material, configuration, and agent instructions. The generic distribution is contract-driven so that a consumer can declare its language and structure without embedding domain-specific knowledge in Wiked.
 
+Wiked serves two main use cases, a Knowledge base for an area, project, or product and Consulting mapping of processes, business rules, data sources, tools, stakeholders, and gaps. It supports two use cases that follow from them: Agent-navigable business context and Derived artifact production. The Instance contract sets the rigor each use case requires. Derived views and artifacts never become Operational evidence.
+
 This repository authors Wiked. Consumer repositories install the distribution and own their operational knowledge. Source changes and consumer operations use distinct entrypoints, authorities, and validation routes.
 
 ## Source architecture

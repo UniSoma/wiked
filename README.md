@@ -28,6 +28,9 @@ existing pages, and then answer: "Who is responsible for this step, and why?"
 When the wiki lacks evidence, the agent reports the gap rather than inventing
 an answer.
 
+For use cases, maturity, and positioning, see the
+[value proposition](./docs/proposta_de_valor_wiked.md).
+
 ## Try it in your repository
 
 ### 1. Prepare

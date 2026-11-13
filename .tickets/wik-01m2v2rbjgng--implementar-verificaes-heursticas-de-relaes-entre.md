@@ -6,7 +6,7 @@ type: feature
 priority: 3
 mode: hitl
 created: '2026-09-18T20:19:03.859967985Z'
-updated: '2026-10-24T13:08:04.316154815Z'
+updated: '2026-11-13T21:21:53.620503990Z'
 assignee: VolneiSantos
 tags:
 - metodologia
@@ -21,6 +21,7 @@ acceptance:
   done: false
 links:
 - wik-01m17qfp6n6c
+- wik-01m7bckkvp2b
 ---
 
 ## Description
